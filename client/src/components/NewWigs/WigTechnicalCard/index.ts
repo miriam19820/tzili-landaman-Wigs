@@ -1,0 +1,1 @@
+export { WigTechnicalCard } from './WigTechnicalCard';
