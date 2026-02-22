@@ -76,7 +76,11 @@ export const rejectService = async (
   if (!service) throw new Error('Service not found');
 
   // המבקרת מוסיפה הערה מדוע הפאה נפסלה
-  service.notes.qa = qaNote;
+  if (!service.notes) {
+    service.notes = { qa: qaNote };
+  } else {
+    service.notes.qa = qaNote;
+  }
 
   // ניתוב חזרה לעבודה לפי מקור הפאה
   if (service.origin === 'Service') {
