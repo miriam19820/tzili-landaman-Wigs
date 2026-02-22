@@ -15,11 +15,14 @@ const newWigSchema = new Schema({
     enum: ['XS', 'S', 'M', 'L', 'XL'] 
   },
 
+<<<<<<< HEAD
   hairType: { 
     type: String, 
     enum: ['חלק', 'שיער תנועתי', 'שיער גלי', 'מתולתל'] 
   },
 
+=======
+>>>>>>> f514276d700e85a8075a6e6e0830bc2843dc3126
   napeLength: { type: String }, 
   topLayering: { type: String }, 
 
@@ -33,18 +36,7 @@ const newWigSchema = new Schema({
   },
   topNotes: { type: String }, 
 
-  frontStyle: { 
-    type: String, 
-    enum: [
-      'ע"י רגילה שטוחה', 
-      'בייבי הייר קל', 
-      'בייבי הייר כבד', 
-      'פוני צד', 
-      'פוני בובה', 
-      'בייבי הייר לאסוף', 
-      'גל נמוך'
-    ] 
-  },
+
   frontNotes: { type: String }, 
 
   price: { type: Number }, 

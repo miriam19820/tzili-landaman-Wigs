@@ -1,4 +1,4 @@
-import app from './app';
+import app from './app'; 
 import { connectDB } from './Utils/connectDB';
 import './Models_Service/Customer/customerModel';
 import './Models_Service/User/userModel';
@@ -9,11 +9,12 @@ import { Service } from './Models_Service/SalonServices/serviceModel';
 import { NewWig } from './Models_Service/NewWigs/newWigModel';
 import { Repair } from './Models_Service/Repairs/repairModel';
 
-const PORT = 3000;
+const PORT = 5000;
 
 const startServer = async () => {
   try {
     await connectDB();
+    console.log('✅ Connected to MongoDB');
     
     // נתוני דמו מחני
     const customer = await Customer.create({ 
@@ -67,13 +68,13 @@ const startServer = async () => {
     
     app.listen(PORT, () => {
       console.log(`-----------------------------------------`);
-      console.log(`🚀 השרת פועל בהצלחה בפורט: ${PORT}`);
+      console.log(`🚀 The server is running at: http://localhost:${PORT}`);
       console.log(`✅ כעת ניתן לשלוח בקשות מ-Postman`);
       console.log(`-----------------------------------------`);
     });
 
   } catch (error) {
-    console.error('שגיאה בהפעלת השרת:', error);
+    console.error('❌ Error starting the server:', error);
     process.exit(1);
   }
 };

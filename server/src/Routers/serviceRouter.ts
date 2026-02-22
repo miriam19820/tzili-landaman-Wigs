@@ -1,6 +1,6 @@
 import { Router } from 'express';
 // ייבוא הקובץ של הלוגיקה שעשינו קודם (שימי לב שהנתיב תואם לתיקייה שלך)
-import * as serviceService from './serviceService'; 
+import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
 
 const serviceRouter = Router();
 
