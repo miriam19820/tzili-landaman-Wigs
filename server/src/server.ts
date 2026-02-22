@@ -8,7 +8,6 @@ const PORT = 3000;
 
 const startServer = async () => {
   try {
-    
     await connectDB();
     
     app.listen(PORT, () => {
