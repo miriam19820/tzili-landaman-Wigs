@@ -26,8 +26,9 @@ const startServer = async () => {
   
   await Service.create({ 
     customer: customer._id, 
-    serviceType: 'Comb', 
-    style: 'גלי', 
+    serviceType: 'Style Only', 
+    styleCategory: 'גלי', 
+    
     assignedWorker: user._id 
   });
   
