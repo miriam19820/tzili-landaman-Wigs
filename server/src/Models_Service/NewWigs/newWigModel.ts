@@ -1,7 +1,6 @@
 import { Schema, model } from 'mongoose';
 
 const newWigSchema = new Schema({
-
   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
   orderCode: { type: String }, 
   receivedBy: { type: String }, 
@@ -9,14 +8,12 @@ const newWigSchema = new Schema({
   receivedDate: { type: Date, default: Date.now }, 
   targetDate: { type: Date }, 
 
-
   netSize: { 
     type: String, 
     uppercase: true,
     trim: true,     
     enum: ['XS', 'S', 'M', 'L', 'XL'] 
   },
-
 
   hairType: { 
     type: String, 
@@ -30,7 +27,6 @@ const newWigSchema = new Schema({
   highlightsWefts: { type: String }, 
   highlightsSkin: { type: String }, 
 
- 
   topConstruction: { 
     type: String, 
     enum: ['סקין', 'שבלול', 'לייסטופ', 'לייס פרונט', 'דיפ לייס'] 
@@ -58,8 +54,22 @@ const newWigSchema = new Schema({
   customerSignature: { type: String },
   specialNotes: { type: String },
 
-  currentStage: { type: String, required: true },
+  currentStage: { 
+    type: String, 
+    required: true,
+    enum: [
+      'הזמנה התקבלה',     
+      'אישור התאמה ורישום', 
+      'התאמת שיער', 
+      'תפירת פאה', 
+      'צבע', 
+      'עבודת יד', 
+      'חפיפה',            
+      'בקרה'              
+    ]
+  },
   assignedWorker: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+
 }, { timestamps: true });
 
 export const NewWig = model('NewWig', newWigSchema);
