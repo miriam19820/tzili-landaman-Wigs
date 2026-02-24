@@ -29,7 +29,7 @@ const newWigSchema = new Schema({
   napeLength: { type: String }, 
   
   topLayering: { type: String }, 
->>>>>>> 6695730f8c71882d790aa50750eaf47a51bf1e1e
+
 
   baseColor: { type: String }, 
   highlightsWefts: { type: String }, 

@@ -1,29 +1,34 @@
 import { connectDB } from './Utils/connectDB';
-import { NewWig } from './Models_Service/NewWigs/newWigModel';
 import { User } from './Models_Service/User/userModel';
 import { Customer } from './Models_Service/Customer/customerModel';
 
 const debug = async () => {
-  await connectDB();
-  
-  console.log('=== בדיקת נתונים ===');
-  
-  const wigs = await NewWig.find({}).populate('customer').populate('assignedWorker');
-  console.log('פאות במערכת:', wigs.length);
-  wigs.forEach(wig => {
-    console.log(`- ${wig.orderCode}: ${wig.currentStage} (${(wig.customer as any)?.firstName} ${(wig.customer as any)?.lastName})`);
-  });
-  
-  const users = await User.find({});
-  console.log('\nעובדות במערכת:', users.length);
-  users.forEach(user => {
-    console.log(`- ${user.username}: ${user.specialty} (${user.role})`);
-  });
-  
-  const customers = await Customer.find({});
-  console.log('\nלקוחות במערכת:', customers.length);
-  
-  process.exit(0);
+  try {
+    await connectDB();
+    
+    console.log('\n=== העתיקי את ה-IDs עבור פוסטמן ===');
+    
+    // שליפת לקוחות
+    const customers = await Customer.find({});
+    console.log('\n--- לקוחות (עבור שדה customerId) ---');
+    if (customers.length === 0) console.log('לא נמצאו לקוחות במערכת.');
+    customers.forEach(c => {
+      console.log(`${c.firstName} ${c.lastName}: ${c._id}`);
+    });
+    
+    // שליפת עובדות
+    const users = await User.find({});
+    console.log('\n--- עובדות (עבור שדות washerId / adminId / assignedTo) ---');
+    if (users.length === 0) console.log('לא נמצאו עובדות במערכת.');
+    users.forEach(u => {
+      console.log(`${u.username} (${u.specialty}): ${u._id}`);
+    });
+    
+    process.exit(0);
+  } catch (error) {
+    console.error('שגיאה בהרצת הדיבאג:', error);
+    process.exit(1);
+  }
 };
 
 debug();

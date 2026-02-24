@@ -50,8 +50,8 @@ newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: N
 });
 
 /**
- * @route   GET /api/wigs/work-station/:workerId
- * @desc    שליפת כל הפאות שממתינות לעובדת מסוימת בתחנת העבודה שלה
+ * @route  
+ * @desc    
  */
 newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -69,8 +69,8 @@ newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, 
 });
 
 /**
- * @route   GET /api/wigs/status/:id
- * @desc    בדיקת סטטוס של פאה ספציפית
+ * @route   
+ * @desc    
  */
 newWigRouter.get('/status/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
