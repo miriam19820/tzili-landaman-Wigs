@@ -9,8 +9,8 @@ import {
 const newWigRouter = Router();
 
 /**
- * @route   POST /api/wigs/new
- * @desc    יצירת הזמנת פאה חדשה וניתוב לעובדת הראשונה
+ * @route   
+ * @desc    
  */
 newWigRouter.post('/new', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -26,17 +26,22 @@ newWigRouter.post('/new', async (req: Request, res: Response, next: NextFunction
 });
 
 /**
- * @route   PATCH /api/wigs/:id/next-step
- * @desc    העברת הפאה לשלב הבא בפס הייצור (כולל אופציה לבחירת עובדת ספציפית)
- * @body    { nextWorkerId?: string }
+ * @route   
+ * @desc    
+ * @body    
  */
 newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const wigId = req.params.id;
-    // משיכת ה-ID של העובדת הבאה מהקליינט (אם המשתמשת בחרה מישהי ספציפית)
-    const { nextWorkerId } = req.body; 
-    
-    // מעבירים את שני הנתונים לפונקציה בלוגיקה
+    const { nextWorkerId } = req.body;
+
+    if (!nextWorkerId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'חובה לספק את מזהה העובדת הבאה (nextWorkerId)' 
+      });
+    }
+
     const updatedWig = await moveToNextStage(wigId, nextWorkerId);
     
     res.status(200).json({
@@ -50,8 +55,8 @@ newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: N
 });
 
 /**
- * @route  
- * @desc    
+ * @route   
+ * @desc   
  */
 newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -69,8 +74,8 @@ newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, 
 });
 
 /**
- * @route   
- * @desc    
+ * @route 
+ * @desc   
  */
 newWigRouter.get('/status/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {

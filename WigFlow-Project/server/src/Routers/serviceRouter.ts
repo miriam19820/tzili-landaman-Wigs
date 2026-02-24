@@ -1,6 +1,4 @@
 import { Router } from 'express';
-
-// התיקון: נתיב מדויק לקובץ הלוגיקה של השירותים (יוצאים מ-Routers ונכנסים ל-Models_Service)
 import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
 
 const serviceRouter = Router();

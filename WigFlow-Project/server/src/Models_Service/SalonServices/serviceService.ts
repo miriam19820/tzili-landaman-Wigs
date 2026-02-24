@@ -75,9 +75,6 @@ export const rejectService = async (
   const service = await Service.findById(serviceId);
   if (!service) throw new Error('Service not found');
 
-  // --- התיקון שבוצע כאן ---
-  // TypeScript חשש ש-service.notes עשוי להיות null או undefined.
-  // אנחנו מוודאים שהוא קיים לפני הגישה לשדה qa.
   if (!service.notes) {
     service.notes = { secretary: '', worker: '', qa: '' };
   }

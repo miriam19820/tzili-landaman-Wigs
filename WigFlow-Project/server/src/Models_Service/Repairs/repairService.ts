@@ -125,22 +125,22 @@ async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string)
   const repair = await Repair.findOne({ wigCode: wigCode });
   if (!repair) throw new Error("לא נמצאה פאה עם קוד כזה");
 
-  // 2. עדכון המשימה הנוכחית לסטטוס 'בוצע' (החלק שהיה חסר) 
+  // 2. עדכון המשימה הנוכחית לסטטוס 'בוצע'
   const currentTask = repair.tasks.find(t => t.subCategory === subCategoryName && t.status === 'ממתין');
   
   if (currentTask) {
     currentTask.status = 'בוצע';
-    await repair.save(); // שמירת השינוי בדאטה-בייס
+    await repair.save();
   } else {
     throw new Error(`המשימה ${subCategoryName} לא נמצאה או שכבר בוצעה`);
   }
 
-  // 3. חיפוש המשימה הבאה בתור שעדיין בסטטוס 'ממתין' [cite: 18, 51]
+  // 3. חיפוש המשימה הבאה בתור שעדיין בסטטוס 'ממתין'
   const nextTask = repair.tasks.find(t => t.status === 'ממתין');
 
   if (nextTask) {
     return {
-      message: `המשימה ${subCategoryName} הושלמה. כעת התור של ${nextTask.subCategory} אצל העובדת המשובצת. `,
+      message: `המשימה ${subCategoryName} הושלמה. כעת התור של ${nextTask.subCategory} אצל העובדת המשובצת.`,
       nextUp: {
         category: nextTask.category,
         subCategory: nextTask.subCategory,
@@ -148,9 +148,46 @@ async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string)
       }
     };
   } else {
-    // 4. אם אין יותר משימות 'ממתין', הפאה עוברת אוטומטית לבקרה [cite: 18, 52]
+    // 4. אם אין יותר משימות 'ממתין', הפאה עוברת אוטומטית לחפיפה ובקרה
+    // בדיקה אם כבר יש חפיפה ובקרה
+    const hasWash = repair.tasks.some(t => t.category === 'חפיפה');
+    const hasQA = repair.tasks.some(t => t.category === 'בקרה');
+
+    if (!hasWash || !hasQA) {
+      // הוספת חפיפה ובקרה אוטומטית
+      const finalSteps = [];
+      
+      if (!hasWash) {
+        finalSteps.push({
+          category: 'חפיפה',
+          subCategory: 'חלק', // ברירת מחדל
+          assignedTo: repair.tasks[0]?.assignedTo, // אותה עובדת כברירת מחדל
+          status: 'ממתין',
+          notes: 'חפיפה לאחר תיקון'
+        });
+      }
+      
+      if (!hasQA) {
+        finalSteps.push({
+          category: 'בקרה',
+          subCategory: 'בדיקה סופית',
+          assignedTo: repair.tasks[0]?.assignedTo, // אותה עובדת כברירת מחדל
+          status: 'ממתין'
+        });
+      }
+
+      repair.tasks.push(...finalSteps);
+      await repair.save();
+
+      return {
+        message: 'כל התיקונים הסתיימו! הפאה עברה אוטומטית לחפיפה ובקרה.',
+        autoAdded: finalSteps,
+        allDone: false
+      };
+    }
+
     return {
-      message: "כל התיקונים והחפיפה הסתיימו בהצלחה! הפאה עברה לשלב הבקרה הסופית. [cite: 18, 58]",
+      message: 'כל התיקונים והחפיפה הסתיימו בהצלחה! הפאה בשלב הבקרה הסופית.',
       allDone: true
     };
   }

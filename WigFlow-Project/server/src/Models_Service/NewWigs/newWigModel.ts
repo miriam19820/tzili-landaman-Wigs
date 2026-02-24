@@ -25,10 +25,11 @@ const newWigSchema = new Schema({
     type: String, 
     enum: ['חלק', 'שיער תנועתי', 'שיער גלי', 'מתולתל'] 
   },
+
   napeLength: { type: String }, 
   
-  // השדה הזה הגיע מ-main והוא חשוב לכרטיס המפרט הטכני שלך:
   topLayering: { type: String }, 
+
 
   baseColor: { type: String }, 
   highlightsWefts: { type: String }, 
@@ -40,18 +41,7 @@ const newWigSchema = new Schema({
   },
   topNotes: { type: String }, 
 
-  frontStyle: { 
-    type: String, 
-    enum: [
-      'ע"י רגילה שטוחה', 
-      'בייבי הייר קל', 
-      'בייבי הייר כבד', 
-      'פוני צד', 
-      'פוני בובה', 
-      'בייבי הייר לאסוף', 
-      'גל נמוך'
-    ] 
-  },
+
   frontNotes: { type: String }, 
 
   imageUrl: { type: String },
