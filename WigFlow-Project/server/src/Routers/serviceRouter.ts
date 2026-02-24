@@ -1,6 +1,10 @@
 import { Router } from 'express';
+<<<<<<< HEAD:WigFlow-Project/server/src/Routers/serviceRouter.ts
 
 // התיקון: נתיב מדויק לקובץ הלוגיקה של השירותים (יוצאים מ-Routers ונכנסים ל-Models_Service)
+=======
+// ייבוא הקובץ של הלוגיקה שעשינו קודם (שימי לב שהנתיב תואם לתיקייה שלך)
+>>>>>>> origin/miryami:server/src/Routers/serviceRouter.ts
 import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
 
 const serviceRouter = Router();

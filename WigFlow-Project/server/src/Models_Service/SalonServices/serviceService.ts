@@ -75,6 +75,7 @@ export const rejectService = async (
   const service = await Service.findById(serviceId);
   if (!service) throw new Error('Service not found');
 
+<<<<<<< HEAD:WigFlow-Project/server/src/Models_Service/SalonServices/serviceService.ts
   // --- התיקון שבוצע כאן ---
   // TypeScript חשש ש-service.notes עשוי להיות null או undefined.
   // אנחנו מוודאים שהוא קיים לפני הגישה לשדה qa.
@@ -83,6 +84,14 @@ export const rejectService = async (
   }
   
   service.notes.qa = qaNote;
+=======
+  // המבקרת מוסיפה הערה מדוע הפאה נפסלה
+  if (!service.notes) {
+    service.notes = { qa: qaNote };
+  } else {
+    service.notes.qa = qaNote;
+  }
+>>>>>>> origin/miryami:server/src/Models_Service/SalonServices/serviceService.ts
 
   // ניתוב חזרה לעבודה לפי מקור הפאה
   if (service.origin === 'Service') {
