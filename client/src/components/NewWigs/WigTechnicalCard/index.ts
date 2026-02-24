@@ -1,1 +1,0 @@
-export { WigTechnicalCard } from './WigTechnicalCard';

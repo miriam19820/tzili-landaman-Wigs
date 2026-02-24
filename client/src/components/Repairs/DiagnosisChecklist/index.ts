@@ -1,1 +1,0 @@
-export { DiagnosisChecklist } from './DiagnosisChecklist';

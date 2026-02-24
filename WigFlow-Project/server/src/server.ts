@@ -3,12 +3,12 @@ import { connectDB } from './Utils/connectDB';
 import './Models_Service/Customer/customerModel';
 import './Models_Service/User/userModel';
 import './Models_Service/NewWigs/newWigModel';
+import './Models_Service/SalonServices/serviceModel';
 
 const PORT = 3000;
 
 const startServer = async () => {
   try {
-    
     await connectDB();
     
     app.listen(PORT, () => {
