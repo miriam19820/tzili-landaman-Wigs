@@ -4,7 +4,6 @@ import axios from 'axios';
 import { SignaturePad } from '../../Shared/SignaturePad';
 import './NewOrderForm.css';
 
-
 interface NewOrderFormInputs {
   idNumberSearch: string;
   firstName: string;
@@ -49,15 +48,12 @@ export const NewOrderForm: React.FC = () => {
   const watchedLastName = watch("lastName");
 
   useEffect(() => {
-
     axios.get('http://localhost:3000/api/users')
       .then((res: any) => setWorkers(res.data.filter((u: any) => u.role === 'Worker')))
       .catch(err => console.error('שגיאה בטעינת עובדות'));
   }, []);
 
   const handleIdSearch = async () => {
-
-
     if (!idSearchValue || idSearchValue.length < 8) {
       alert("נא להזין מספר תעודת זהות תקין"); 
       return;
