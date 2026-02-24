@@ -8,6 +8,9 @@ function App() {
 
   return (
     <div className="App" dir="rtl">
+      {/* הוספנו את הכותרת שהגיעה מ-main */}
+      <h1 style={{ textAlign: 'center', fontFamily: 'sans-serif' }}>WigFlow</h1>
+      
       <nav style={{ padding: '20px', backgroundColor: '#f5f5f5', marginBottom: '20px' }}>
         <button 
           onClick={() => setCurrentPage('newOrder')}

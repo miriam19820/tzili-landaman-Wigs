@@ -1,7 +1,6 @@
 import { Schema, model } from 'mongoose';
 
 const newWigSchema = new Schema({
- 
   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
   orderCode: { type: String, required: true, unique: true }, 
   receivedBy: { type: String }, 
@@ -9,7 +8,6 @@ const newWigSchema = new Schema({
   receivedDate: { type: Date, default: Date.now }, 
   targetDate: { type: Date }, 
 
- 
   measurements: {
     circumference: { type: Number, required: true }, 
     earToEar: { type: Number, required: true },      
@@ -22,11 +20,15 @@ const newWigSchema = new Schema({
     trim: true,     
     enum: ['XS', 'S', 'M', 'L', 'XL'] 
   },
+
   hairType: { 
     type: String, 
     enum: ['חלק', 'שיער תנועתי', 'שיער גלי', 'מתולתל'] 
   },
   napeLength: { type: String }, 
+  
+  // השדה הזה הגיע מ-main והוא חשוב לכרטיס המפרט הטכני שלך:
+  topLayering: { type: String }, 
 
   baseColor: { type: String }, 
   highlightsWefts: { type: String }, 
@@ -53,7 +55,6 @@ const newWigSchema = new Schema({
   frontNotes: { type: String }, 
 
   imageUrl: { type: String },
-
 
   price: { type: Number }, 
   advancePayment: { type: Number },
