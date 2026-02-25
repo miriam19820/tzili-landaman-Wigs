@@ -1,14 +1,6 @@
 import { User } from './userModel';
-<<<<<<< HEAD:WigFlow-Project/server/src/Models_Service/User/userService.ts
-import { Customer } from '../Customer/customerModel'; 
-=======
-<<<<<<< HEAD
-import { Customer } from '../Customer/customerModel'; 
-=======
-import bcrypt from 'bcryptjs'; 
-import jwt from 'jsonwebtoken';  
->>>>>>> f514276d700e85a8075a6e6e0830bc2843dc3126
->>>>>>> origin/miryami:server/src/Models_Service/User/userService.ts
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 // הגדרת ה"חוזה" של הנתונים - זה מה שמעלים את האדום מ-userData
 interface UserData {

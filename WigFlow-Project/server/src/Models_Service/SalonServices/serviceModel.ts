@@ -1,13 +1,31 @@
-import { Schema, model } from 'mongoose';
+
+import { Schema, model, Document } from 'mongoose';
+
+export interface IService extends Document {
+  customer: Schema.Types.ObjectId;
+  serviceType: 'חפיפה וסירוק' | 'חפיפה בלבד' | 'סירוק בלבד' | 'בקרת ייצור' | 'בקרת תיקון';
+  origin: 'Service' | 'NewWig' | 'Repair';
+  newWigReference?: Schema.Types.ObjectId;
+  repairReference?: Schema.Types.ObjectId;
+  styleCategory: 'חלק' | 'מוברש' | 'גלי' | 'תלתלים' | 'טבעי' | 'בייביליס' | 'ללא';
+  notes?: {
+    secretary?: string;
+    worker?: string;
+    qa?: string;
+  };
+  dryingStartTime?: Date;
+  isUrgent: boolean;
+  status: 'ממתין לחפיפה' | 'ממתין לסירוק' | 'בביצוע' | 'בייבוש' | 'בבדיקה' | 'מוכן';
+}
 
 const serviceSchema = new Schema({
   // קישור ללקוחה
   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
 
-  // סוג השירות המבוקש 
+  // סוג השירות המבוקש [cite: 139, 120]
   serviceType: { 
     type: String, 
-    enum: ['Wash & Style', 'Wash Only', 'Style Only', 'Production QA', 'Repair QA'], 
+     enum: ['חפיפה וסירוק', 'חפיפה בלבד', 'סירוק בלבד', 'בקרת ייצור', 'בקרת תיקון'],
     required: true 
   },
 
@@ -23,34 +41,30 @@ const serviceSchema = new Schema({
   newWigReference: { type: Schema.Types.ObjectId, ref: 'NewWig' },
   repairReference: { type: Schema.Types.ObjectId, ref: 'Repair' },
 
-  // סגנון הסירוק
+  // סגנון הסירוק [cite: 141, 121]
   styleCategory: { 
     type: String, 
-    // תיקון: הורדנו את הרווח לפני "טבעי"
     enum: ['חלק', 'מוברש', 'גלי', 'תלתלים', 'טבעי', 'בייביליס', 'ללא'],
-    // תיקון: שונה מ-'None' ל-'ללא' כדי שיתאים ל-enum
     default: 'ללא'
   },
 
-  // שדות הערות דינמיים המשותפים למזכירה, לעובדת ולמבקרת
-  notes: {
-    secretary: String,
-    worker: String,
-    qa: String
-  },
+// חפשי את האזור הזה בתוך ה-new Schema({ ... })
+notes: {
+  secretary: { type: String, default: "" },
+  worker: { type: String, default: "" },
+  qa: { type: String, default: "" } // כאן נשמרת הערת הפסילה שלך
+},
 
-  // ניהול זמני ייבוש לצורך התראות
-  dryingStartTime: Date,
+// ומיד מתחת לזה, ודאי שגם הסטטוס מעודכן:
+status: { 
+  type: String, 
+  enum: ['ממתין לחפיפה', 'ממתין לסירוק', 'בביצוע', 'בייבוש', 'בבדיקה', 'מוכן', 'תיקון'], 
+  default: 'ממתין לחפיפה' 
+},
 
-  // לטובת סנכרון דחיפות והקפצה לראש התור 
-  isUrgent: { type: Boolean, default: false }, 
+// ואפשר להוסיף גם את המחיר לסיום שבוע 2/תחילת 3:
+price: { type: Number, default: 0 }
+},
+ { timestamps: true });
 
-  // ניהול סטטוס המשימה עד למסירה 
-  status: { 
-    type: String, 
-    enum: ['Pending Wash', 'Pending Style', 'In Progress', 'Drying', 'QA', 'Ready'], 
-    default: 'Pending Wash' 
-  }
-}, { timestamps: true });
-
-export const Service = model('Service', serviceSchema);
+export const Service = model<IService>('Service', serviceSchema);
