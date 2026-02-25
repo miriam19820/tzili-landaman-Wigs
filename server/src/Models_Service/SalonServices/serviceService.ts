@@ -3,12 +3,11 @@ import { Service } from './serviceModel';
 // 1. יצירת הזמנת שירות חדשה - שודרג עם הדילוג האוטומטי של שבוע 2
 export const createService = async (serviceData: any) => {
   // אם הלקוחה ביקשה "סירוק בלבד", המערכת מדלגת על החופפת ושולחת את המשימה ישירות לסורקת
-  if (serviceData.serviceType === 'Style Only') {
-    serviceData.status = 'Pending Style'; 
-  } else {
-    // אם הלקוחה הזמינה "חפיפה בלבד" או "חפיפה וסירוק", הפאה מתחילה אצל החופפת
-    serviceData.status = 'Pending Wash';
-  }
+if (serviceData.serviceType === 'סירוק בלבד') {
+    serviceData.status = 'ממתין לסירוק'; 
+} else {
+    serviceData.status = 'ממתין לחפיפה';
+}
 
   return await Service.create(serviceData);
 };
@@ -23,7 +22,7 @@ export const moveToDrying = async (serviceId: string) => {
   return await Service.findByIdAndUpdate(
     serviceId,
     { 
-      status: 'Drying',
+      status: 'בייבוש',
       dryingStartTime: new Date() // שמירת השעה המדויקת של תחילת הייבוש
     },
     { new: true }
@@ -35,14 +34,15 @@ export const finishDrying = async (serviceId: string) => {
   const service = await Service.findById(serviceId);
   if (!service) throw new Error('Service not found');
 
-  if (service.serviceType === 'Wash & Style') {
-    // הפאה יבשה ועכשיו צריכה סירוק - עוברת לסורקת
-    service.status = 'Pending Style';
-  } else if (service.serviceType === 'Wash Only') {
+ if (service.serviceType === 'חפיפה וסירוק') {
+    service.status = 'ממתין לסירוק';
+} else if (service.serviceType === 'חפיפה בלבד') {
+    service.status = 'בבדיקה'; // עובר ל-QA
+}
     // דילוג אוטומטי: אין צורך בסירוק, עוברת ישירות לבקרת איכות (QA)
-    service.status = 'QA';
-  }
-
+    else if (service.serviceType === 'סירוק בלבד') {
+    service.status = 'בבדיקה';
+}
   await service.save();
   return service;
 };
@@ -51,7 +51,7 @@ export const finishDrying = async (serviceId: string) => {
 export const finishStyling = async (serviceId: string) => {
   return await Service.findByIdAndUpdate(
     serviceId,
-    { status: 'QA' },
+    { status: 'בבדיקה' },
     { new: true }
   );
 };
@@ -60,31 +60,33 @@ export const finishStyling = async (serviceId: string) => {
 export const approveService = async (serviceId: string) => {
   return await Service.findByIdAndUpdate(
     serviceId,
-    { status: 'Ready' },
+    { status: 'מוכן' },
     { new: true }
   );
 };
 
 // 6. מנגנון "החזרה לתיקון" משודרג למבקרת
+// 6. מנגנון "החזרה לתיקון" משודרג למבקרת
 export const rejectService = async (
   serviceId: string, 
   qaNote: string, 
-  returnTo?: 'Wash' | 'Style', 
+  // עדכנתי גם פה את האפשרויות לעברית כדי שתהיה עקביות
+  returnTo?: 'חפיפה' | 'סירוק', 
   repairTaskId?: string
 ) => {
   const service = await Service.findById(serviceId);
   if (!service) throw new Error('Service not found');
 
   // המבקרת מוסיפה הערה מדוע הפאה נפסלה
-  service.notes.qa = qaNote;
-
+service.set('notes.qa', qaNote);
   // ניתוב חזרה לעבודה לפי מקור הפאה
   if (service.origin === 'Service') {
-    service.status = returnTo === 'Wash' ? 'Pending Wash' : 'Pending Style';
-  } else if (service.origin === 'NewWig') {
-    service.status = 'In Progress';
-  } else if (service.origin === 'Repair') {
-    service.status = 'In Progress';
+    // כאן שיניתי לסטטוסים בעברית מה-Model שלך
+    service.status = returnTo === 'חפיפה' ? 'ממתין לחפיפה' : 'ממתין לסירוק';
+  } 
+  else if (service.origin === 'NewWig' || service.origin === 'Repair') {
+    // בייצור או תיקון, מחזירים לסטטוס "בביצוע"
+    service.status = 'בביצוע';
   }
 
   await service.save();

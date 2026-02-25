@@ -1,10 +1,10 @@
 import { Router } from 'express';
-// ייבוא הקובץ של הלוגיקה שעשינו קודם (שימי לב שהנתיב תואם לתיקייה שלך)
-import * as serviceService from './serviceService'; 
+// ודאי שהנתיב מוביל לקובץ ה-service שלך
+import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
 
 const serviceRouter = Router();
 
-// 1. פתיחת הזמנת שירות חדשה (הדילוג האוטומטי שלנו)
+// 1. פתיחת הזמנת שירות חדשה
 serviceRouter.post('/', async (req, res) => {
   try {
     const newService = await serviceService.createService(req.body);
@@ -25,7 +25,7 @@ serviceRouter.get('/:id', async (req, res) => {
   }
 });
 
-// 3. תחילת ייבוש - שומר זמן להתראות
+// 3. תחילת ייבוש
 serviceRouter.patch('/:id/start-drying', async (req, res) => {
   try {
     const updatedService = await serviceService.moveToDrying(req.params.id);
@@ -35,7 +35,7 @@ serviceRouter.patch('/:id/start-drying', async (req, res) => {
   }
 });
 
-// 4. סיום ייבוש - הניתוב החכם לסורקת או ל-QA
+// 4. סיום ייבוש
 serviceRouter.patch('/:id/finish-drying', async (req, res) => {
   try {
     const updatedService = await serviceService.finishDrying(req.params.id);
@@ -61,7 +61,10 @@ serviceRouter.patch('/:id/finish-styling', async (req, res) => {
 serviceRouter.patch('/:id/approve', async (req, res) => {
   try {
     const approvedService = await serviceService.approveService(req.params.id);
-    res.status(200).json({ message: 'הפאה אושרה ומוכנה למסירה!', service: approvedService });
+    res.status(200).json({ 
+      message: 'הפאה אושרה ומוכנה למסירה!', 
+      service: approvedService 
+    });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }
@@ -70,7 +73,10 @@ serviceRouter.patch('/:id/approve', async (req, res) => {
 // 7. החזרה לתיקון (פסילה)
 serviceRouter.patch('/:id/reject', async (req, res) => {
   try {
+    // חשוב: כשאת שולחת בקשה מה-Frontend או מ-Postman,
+    // השדה returnTo צריך להכיל 'חפיפה' או 'סירוק' (בעברית)
     const { qaNote, returnTo, repairTaskId } = req.body; 
+    
     const rejectedService = await serviceService.rejectService(
       req.params.id, 
       qaNote, 

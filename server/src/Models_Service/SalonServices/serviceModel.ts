@@ -1,47 +1,3 @@
-// import { Schema, model } from 'mongoose';
-
-// const serviceSchema = new Schema({
-//   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
-//   serviceType: { type: String, enum: ['Comb', 'Wash'], required: true },
-//   style: { type: String, required: true },
-//   assignedWorker: { type: Schema.Types.ObjectId, ref: 'User', required: true }
-// });
-
-// export const Service = model('Service', serviceSchema);
-
-// import { Schema, model } from 'mongoose';
-
-// const serviceSchema = new Schema({
-//   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
-//   // סוג השירות המבוקש [cite: 139, 120]
-//   serviceType: { 
-//     type: String, 
-//     enum: ['Wash & Style', 'Wash Only', 'Style Only'], 
-//     required: true 
-//   },
-//   // סגנון הסירוק [cite: 141, 121]
-//   styleCategory: { 
-//     type: String, 
-//     enum: ['חלק', 'מוברש', 'גלי', 'תלתלים', ' יבוש טבעי', 'ביביליס'],
-//     required: true
-//   },
-//   // שדות הערות דינמיים [cite: 142, 159]
-//   notes: {
-//     secretary: String,
-//     worker: String,
-//     qa: String
-//   },
-//   // ניהול זמני ייבוש [cite: 150, 123]
-  // dryingStartTime: Date,
-//   isUrgent: { type: Boolean, default: false }, // לטובת סנכרון דחיפות [cite: 164, 126]
-//   status: { 
-//     type: String, 
-//     enum: ['Pending', 'In Progress', 'Drying', 'QA', 'Ready'], 
-//     default: 'Pending' 
-//   }
-// }, { timestamps: true });
-
-// export const Service = model('Service', serviceSchema);
 
 import { Schema, model } from 'mongoose';
 
@@ -52,7 +8,7 @@ const serviceSchema = new Schema({
   // סוג השירות המבוקש [cite: 139, 120]
   serviceType: { 
     type: String, 
-    enum: ['Wash & Style', 'Wash Only', 'Style Only', 'Production QA', 'Repair QA'], 
+     enum: ['חפיפה וסירוק', 'חפיפה בלבד', 'סירוק בלבד', 'בקרת ייצור', 'בקרת תיקון'],
     required: true 
   },
 
@@ -72,7 +28,7 @@ const serviceSchema = new Schema({
   styleCategory: { 
     type: String, 
     enum: ['חלק', 'מוברש', 'גלי', 'תלתלים', ' טבעי', 'בייביליס', 'ללא'],
-    default: 'None'
+    default: 'ללא'
   },
 
   // שדות הערות דינמיים המשותפים למזכירה, לעובדת ולמבקרת [cite: 142, 159]
@@ -91,8 +47,8 @@ const serviceSchema = new Schema({
   // ניהול סטטוס המשימה עד למסירה [cite: 131, 157]
 status: { 
     type: String, 
-    enum: ['Pending Wash', 'Pending Style', 'In Progress', 'Drying', 'QA', 'Ready'], 
-    default: 'Pending Wash' 
+    enum: ['ממתין לחפיפה', 'ממתין לסירוק', 'בביצוע', 'בייבוש', 'בבדיקה', 'מוכן'], 
+    default: 'ממתין לחפיפה' 
   }
 }, { timestamps: true });
 
