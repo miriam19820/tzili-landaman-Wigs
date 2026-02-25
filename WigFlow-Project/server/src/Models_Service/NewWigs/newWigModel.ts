@@ -43,6 +43,7 @@ const newWigSchema = new Schema({
 
 
   frontNotes: { type: String }, 
+  frontStyle: { type: String },
 
   imageUrl: { type: String },
 

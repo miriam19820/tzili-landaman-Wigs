@@ -13,7 +13,6 @@ const STAGES_FLOW = [
   'בקרה'
 ];
 
-
 export const createNewWig = async (wigData: any) => {
   if (!wigData.measurements) {
     throw new AppError('חובה להזין מידות לקוחה בשלב פתיחת ההזמנה', 400);
@@ -45,21 +44,38 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     throw new AppError('סטטוס פאה אינו תקין', 400);
   }
 
-  // טיפול בסיום תהליך - השלב האחרון (בקרה)
-  if (currentStageIndex === STAGES_FLOW.length - 1) {
-    console.log('Final stage reached, creating service');
+  // --- התיקון: הבדיקה היא אם סיימנו את שלב החפיפה ---
+  // אם השלב הנוכחי הוא 'חפיפה' (העובדת סיימה לחפוף ולחצה אישור)
+  if (wig.currentStage === 'חפיפה') {
+    console.log('Finished Wash stage, moving to QA and creating service');
+    
+    // 1. מעביר את המשימה למפתחת 4 (מחלקת QA)
     await Service.create({
       customer: wig.customer,
       serviceType: 'Production QA',
       origin: 'NewWig',
       newWigReference: wig._id,
       status: 'QA',
-      notes: { secretary: 'פאה חדשה מסיום ייצור' }
+      notes: { secretary: 'פאה חדשה מסיום ייצור (עברה חפיפה)' }
     });
 
-    return await NewWig.findByIdAndUpdate(wigId, { currentStage: 'בקרה' }, { new: true });
+    // 2. מעדכן את הפאה לשלב 'בקרה' (ומנקה את העובדת כי זה כבר ב-QA)
+    return await NewWig.findByIdAndUpdate(
+      wigId, 
+      { 
+        currentStage: 'בקרה',
+        assignedWorker: null 
+      }, 
+      { new: true }
+    ).populate('customer');
   }
 
+  // הגנה: אם מנסים להעביר פאה שכבר נמצאת בבקרה
+  if (currentStageIndex >= STAGES_FLOW.length - 2) {
+      throw new AppError('הפאה כבר בשלבי סיום (בקרה) ולא ניתן להעביר אותה הלאה מפס הייצור', 400);
+  }
+
+  // --- לוגיקה רגילה לשאר השלבים (מתפירה לצבע וכו') ---
   const nextStage = STAGES_FLOW[currentStageIndex + 1];
   console.log('Next stage:', nextStage);
   
@@ -82,7 +98,7 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
   console.log('Next worker found:', nextWorker ? nextWorker.username : 'None');
   
   if (!nextWorker) {
-    throw new AppError('לא נמצאה עובדת מתאימה לשלב הבא', 404);
+    throw new AppError(`לא נמצאה עובדת מתאימה לשלב הבא (${nextStage})`, 404);
   }
 
   const updatedWig = await NewWig.findByIdAndUpdate(

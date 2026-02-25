@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './ProductionStation.css';
 
-const STAGES_FLOW = [
-  'התאמת שיער',
-  'תפירת פאה',
-  'צבע',
-  'עבודת יד',
-  'חפיפה',
-  'בקרה'
-];
+const STAGES_FLOW = ['התאמת שיער', 'תפירת פאה', 'צבע', 'עבודת יד', 'חפיפה', 'בקרה'];
 const SPECIALTY_MAP: Record<string, string> = {
   'התאמת שיער': 'התאמת שיער',
   'תפירת פאה': 'תפירה',
@@ -18,12 +11,23 @@ const SPECIALTY_MAP: Record<string, string> = {
   'בקרה': 'בקרת איכות'
 };
 
+const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+if (recognition) {
+  recognition.lang = 'he-IL';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+}
+
 export const ProductionStation: React.FC = () => {
   const [currentWorkerId, setCurrentWorkerId] = useState<string>('');
   const [allWorkers, setAllWorkers] = useState<any[]>([]);
   const [myWigs, setMyWigs] = useState<any[]>([]);
   const [notification, setNotification] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const [selectedNextWorker, setSelectedNextWorker] = useState<Record<string, string>>({});
+  const [isListening, setIsListening] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false); // שדרוג QR
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -40,7 +44,6 @@ export const ProductionStation: React.FC = () => {
     fetchWorkers();
   }, []);
 
-  // טעינת הפאות שמחכות לעובדת הספציפית שנבחרה
   useEffect(() => {
     if (!currentWorkerId) {
       setMyWigs([]);
@@ -60,28 +63,39 @@ export const ProductionStation: React.FC = () => {
     fetchStationData();
   }, [currentWorkerId]);
 
-  const handleCompleteTask = async (wig: any) => {
-    const currentStageIndex = STAGES_FLOW.indexOf(wig.currentStage);
-    const nextStage = STAGES_FLOW[currentStageIndex + 1];
-    const neededSpecialty = nextStage ? SPECIALTY_MAP[nextStage] : null;
-    const availableWorkers = allWorkers.filter(w => w.specialty === neededSpecialty);
+  const showNotification = (type: 'success' | 'error', text: string) => {
+    setNotification({ type, text });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
-    // בדיקה אם יש צורך לבחור עובדת ספציפית לשלב הבא
-    if (availableWorkers.length > 1 && !selectedNextWorker[wig._id] && nextStage !== 'בקרה') {
+  const handleCompleteTask = async (wig: any) => {
+    // וידוא שליחת ה-ID כטקסט למניעת שגיאת 404 שראינו בצילום המסך
+    const wigId = typeof wig === 'string' ? wig : wig._id;
+    const currentWig = typeof wig === 'string' ? myWigs.find(w => w._id === wig) : wig;
+
+    if (!currentWig) return;
+
+    const nextStageWorkers = getAvailableWorkersForNextStage(currentWig.currentStage);
+    const nextStage = STAGES_FLOW[STAGES_FLOW.indexOf(currentWig.currentStage) + 1];
+
+    if (nextStageWorkers.length > 1 && !selectedNextWorker[wigId] && nextStage !== 'בקרה') {
       showNotification('error', 'יש לבחור עובדת לשלב הבא מתוך הרשימה.');
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/wigs/${wig._id}/next-step`, {
+      const response = await fetch(`http://localhost:3000/api/wigs/${wigId}/next-step`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nextWorkerId: selectedNextWorker[wig._id] }) 
+        body: JSON.stringify({ nextWorkerId: selectedNextWorker[wigId] }) 
       });
 
       if (response.ok) {
         showNotification('success', 'הפאה עברה בהצלחה לתחנה הבאה!');
-        setMyWigs(prev => prev.filter(w => w._id !== wig._id));
+        setMyWigs(prev => prev.filter(w => w._id !== wigId));
+        const newSelectedWorkers = { ...selectedNextWorker };
+        delete newSelectedWorkers[wigId];
+        setSelectedNextWorker(newSelectedWorkers);
       } else {
         const errorData = await response.json();
         showNotification('error', `שגיאה: ${errorData.message}`);
@@ -91,31 +105,67 @@ export const ProductionStation: React.FC = () => {
     }
   };
 
-  const showNotification = (type: 'success' | 'error', text: string) => {
-    setNotification({ type, text });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
   const getAvailableWorkersForNextStage = (currentStage: string) => {
     const currentStageIndex = STAGES_FLOW.indexOf(currentStage);
     const nextStage = STAGES_FLOW[currentStageIndex + 1];
     if (!nextStage) return [];
-    const neededSpecialty = SPECIALTY_MAP[nextStage];
-    return allWorkers.filter(w => w.specialty === neededSpecialty);
+    return allWorkers.filter(w => w.specialty === SPECIALTY_MAP[nextStage]);
   };
+
+  // לוגיקת סריקת QR (שדרוג מפתחת 2)
+  const handleScanClick = () => {
+    setIsScannerOpen(!isScannerOpen);
+    // כאן תבוא הקריאה לרכיב הסריקה שמפתחת 1 תספק
+    console.log("Scanner toggled");
+  };
+
+  const toggleListening = () => {
+    if (!recognition) {
+      alert("הדפדפן שלך לא תומך בזיהוי קולי");
+      return;
+    }
+    isListening ? recognition.stop() : (setIsListening(true), recognition.start());
+  };
+
+  if (recognition) {
+    recognition.onresult = (event: any) => {
+      const command = event.results[0][0].transcript.toLowerCase();
+      setIsListening(false);
+      if (command.includes('סיימתי') || command.includes('העבר')) {
+        if (myWigs.length > 0) handleCompleteTask(myWigs[0]);
+        else showNotification('error', 'לא נמצאה פאה פעילה');
+      }
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+  }
 
   return (
     <div className="station-container" dir="rtl">
       <div className="station-header">
-        <h2>ניהול ייצור פאות - המשימות שלי</h2>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <label>בחר עובדת:</label>
+        <div className="header-actions">
+          <h2>ניהול ייצור - המשימות שלי</h2>
+          <div className="btn-group">
+            <button 
+              onClick={toggleListening}
+              className={`voice-btn ${isListening ? 'listening' : ''}`}
+            >
+              {isListening ? '🎤 מקשיב...' : '🎙️ פקודה קולית'}
+            </button>
+            
+            {/* כפתור סריקה חדש - שדרוג מפתחת 2 */}
+            <button onClick={handleScanClick} className="scan-btn">
+              📷 סרקי ברקוד (QR)
+            </button>
+          </div>
+        </div>
+        
+        <div className="worker-selector">
+          <label>עובדת:</label>
           <select value={currentWorkerId} onChange={(e) => setCurrentWorkerId(e.target.value)}>
-            <option value="">-- בחר שם מהרשימה --</option>
+            <option value="">-- בחרי שם --</option>
             {allWorkers.map(worker => (
-              <option key={worker._id} value={worker._id}>
-                {worker.username} ({worker.specialty})
-              </option>
+              <option key={worker._id} value={worker._id}>{worker.username} ({worker.specialty})</option>
             ))}
           </select>
         </div>
@@ -123,10 +173,17 @@ export const ProductionStation: React.FC = () => {
 
       {notification && <div className={`notification ${notification.type}`}>{notification.text}</div>}
 
+      {isScannerOpen && (
+        <div className="qr-placeholder">
+          <p>המצלמה נפתחת... (כאן יופיע רכיב הסריקה של מפתחת 1)</p>
+          <button onClick={() => setIsScannerOpen(false)}>סגור מצלמה</button>
+        </div>
+      )}
+
       {!currentWorkerId ? (
         <div className="empty-state"><h3>אנא בחרי שם מהרשימה למעלה 👋</h3></div>
       ) : myWigs.length === 0 ? (
-        <div className="empty-state"><h3>אין פאות שממתינות לביצוע בתחנה זו.</h3></div>
+        <div className="empty-state"><h3>אין פאות שממתינות לביצוע.</h3></div>
       ) : (
         <div className="wigs-grid">
           {myWigs.map(wig => {
@@ -140,15 +197,15 @@ export const ProductionStation: React.FC = () => {
                 <div className="wig-card-body">
                   <p><strong>קוד הזמנה:</strong> {wig.orderCode}</p>
                   <p><strong>סוג שיער:</strong> {wig.hairType}</p>
+                  
                   {nextStageWorkers.length > 1 && (
-                    <div className="next-worker-selection" style={{ marginTop: '10px' }}>
-                      <label style={{ display: 'block', fontSize: '0.9em', color: '#666' }}>העבר להמשך טיפול אצל:</label>
+                    <div className="next-worker-selection">
+                      <label>העברי לטיפול אצל:</label>
                       <select 
-                        style={{ width: '100%', padding: '5px' }}
                         value={selectedNextWorker[wig._id] || ''} 
                         onChange={(e) => setSelectedNextWorker({ ...selectedNextWorker, [wig._id]: e.target.value })}
                       >
-                        <option value="">-- בחר עובדת לשלב הבא --</option>
+                        <option value="">-- בחרי עובדת --</option>
                         {nextStageWorkers.map(w => <option key={w._id} value={w._id}>{w.username}</option>)}
                       </select>
                     </div>
