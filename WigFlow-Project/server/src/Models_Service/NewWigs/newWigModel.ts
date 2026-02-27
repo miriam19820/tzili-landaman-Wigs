@@ -7,6 +7,8 @@ const newWigSchema = new Schema({
   wigMakerName: { type: String }, 
   receivedDate: { type: Date, default: Date.now }, 
   targetDate: { type: Date }, 
+  // הוספה בתוך newWigSchema
+isUrgent: { type: Boolean, default: false },
 
   measurements: {
     circumference: { type: Number, required: true }, 
