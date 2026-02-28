@@ -92,9 +92,12 @@
 .message-banner.success { background: #d4edda; color: #155724; }
 .message-banner.error { background: #f8d7da; color: #721c24; }
 
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 .sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; }
 =======
+=======
+>>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8
 .sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; }
 /* --- עיצוב המדבקה על המסך --- */
 .sticker-overlay {
@@ -133,6 +136,7 @@
     border: none;
   }
   .no-print { display: none; } /* מסתיר את כפתורי ההדפסה בזמן ההדפסה עצמה */
+<<<<<<< HEAD
 }
 /* --- תיקון האנימציה שגרמה לאלמנט לברוח הצידה --- */
 @keyframes simpleFadeIn {
@@ -176,3 +180,6 @@
   margin-top: 15px;
 }
 >>>>>>> Stashed changes
+=======
+}
+>>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8

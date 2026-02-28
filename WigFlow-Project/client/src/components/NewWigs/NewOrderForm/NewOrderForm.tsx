@@ -40,6 +40,7 @@ export const NewOrderForm: React.FC = () => {
   const [workers, setWorkers] = useState<any[]>([]);
   const [signatureData, setSignatureData] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [savedWigData, setSavedWigData] = useState<any>(null); // לטובת המדבקה
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<NewOrderFormInputs>();
   
@@ -77,15 +78,28 @@ export const NewOrderForm: React.FC = () => {
     setLoading(true);
     try {
       let finalCustomerId = customer?._id;
+      
+      // אם זו לקוחה חדשה - יוצרים אותה קודם בשרת
       if (step === 3 && !customer?._id) {
         const newRes = await axios.post('http://localhost:3000/api/customers', {
-          firstName: data.firstName, lastName: data.lastName, idNumber: customer.idNumber,
-          phoneNumber: data.phoneNumber, email: data.email, address: data.address, city: data.city
+          firstName: data.firstName, 
+          lastName: data.lastName, 
+          idNumber: customer.idNumber,
+          phoneNumber: data.phoneNumber, 
+          email: data.email, 
+          address: data.address, 
+          city: data.city
         });
         finalCustomerId = newRes.data._id;
       }
 
+      // מציאת עובדת לשלב הראשון
       const firstStageWorker = workers.find(w => w.specialty === 'התאמת שיער') || workers[0];
+      if (!firstStageWorker) {
+        alert("שגיאה: לא נמצאו עובדות במערכת! אנא ודאי שהרצת npm run seed.");
+        setLoading(false);
+        return;
+      }
 
       const payload = {
         ...data,
@@ -93,16 +107,28 @@ export const NewOrderForm: React.FC = () => {
         assignedWorker: firstStageWorker._id, 
         currentStage: 'התאמת שיער', 
         measurements: { 
-          circumference: Number(data.circumference), earToEar: Number(data.earToEar), frontToBack: Number(data.frontToBack) 
+          circumference: Number(data.circumference), 
+          earToEar: Number(data.earToEar), 
+          frontToBack: Number(data.frontToBack) 
         },
         balancePayment: Number(data.price) - (Number(data.advancePayment) || 0),
         customerSignature: signatureData 
       };
 
-      await axios.post('http://localhost:3000/api/wigs/new', payload);
-      alert("העסקה נסגרה! הפאה הועברה אוטומטית לייצור.");
-      window.location.reload();
-    } catch (error) { alert("שגיאה בשמירה"); } finally { setLoading(false); }
+      const response = await axios.post('http://localhost:3000/api/wigs/new', payload);
+      
+      // במקום רענון, נציג את נתוני המדבקה
+      setSavedWigData({
+        ...payload,
+        _id: response.data._id,
+        customerName: `${customer?.firstName || data.firstName} ${customer?.lastName || data.lastName}`
+      });
+
+    } catch (error) { 
+      alert("שגיאה בשמירה"); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
@@ -135,7 +161,7 @@ export const NewOrderForm: React.FC = () => {
           </fieldset>
         )}
 
-        {step === 3 && (
+        {step === 3 && !savedWigData && (
           <div className="animate-in">
             <div className="customer-banner">
               מזמינה: <strong>{customer.firstName || watchedFirstName} {customer.lastName || watchedLastName}</strong> | ת"ז: {customer.idNumber}
@@ -171,7 +197,6 @@ export const NewOrderForm: React.FC = () => {
             <fieldset className="form-section">
               <legend>מפרט טכני</legend>
               <div className="form-grid">
-            
                 <div className="input-group">
                   <label className="input-label">מידת רשת</label>
                   <select className="form-input" {...register('netSize', { required: true })} defaultValue="">
@@ -213,7 +238,6 @@ export const NewOrderForm: React.FC = () => {
                     <option value='ע"י רגילה שטוחה'>ע"י רגילה שטוחה</option><option value="בייבי הייר קל">בייבי הייר קל</option><option value="בייבי הייר כבד">בייבי הייר כבד</option><option value="פוני צד">פוני צד</option><option value="פוני בובה">פוני בובה</option><option value="בייבי הייר לאסוף">בייבי הייר לאסוף</option><option value="גל נמוך">גל נמוך</option>
                   </select>
                 </div>
-
               </div>
               <textarea className="form-input full-width" style={{marginTop:'10px'}} {...register('specialNotes')} placeholder="הערות מיוחדות"></textarea>
             </fieldset>
@@ -235,6 +259,33 @@ export const NewOrderForm: React.FC = () => {
           </div>
         )}
       </form>
+
+      {/* חלונית מדבקת QR לאחר שמירה מוצלחת */}
+      {savedWigData && (
+        <div className="sticker-overlay animate-in">
+          <div className="print-sticker" id="wig-sticker">
+            <div className="sticker-header">WigFlow - Tzili Landaman</div>
+            <div className="sticker-content">
+              <h3>{savedWigData.customerName}</h3>
+              <p><strong>קוד הזמנה:</strong> {savedWigData.orderCode}</p>
+              <p><strong>סוג שיער:</strong> {savedWigData.hairType}</p>
+              
+              <div className="qr-code">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=wigflow://scan/${savedWigData._id}`} 
+                  alt="QR Code" 
+                />
+              </div>
+            </div>
+            <div className="sticker-footer">סרוק למפרט טכני מלא</div>
+            
+            <div className="no-print sticker-actions">
+              <button className="btn-print" onClick={() => window.print()}>הדפס מדבקה 🖨️</button>
+              <button className="btn-close" onClick={() => window.location.reload()}>סיום וסגירה</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
