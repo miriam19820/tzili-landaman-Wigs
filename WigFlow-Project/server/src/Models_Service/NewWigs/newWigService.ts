@@ -3,6 +3,7 @@ import { User } from '../User/userModel';
 import { AppError } from '../../Utils/AppError';
 import { Customer } from '../Customer/customerModel'; 
 import { Service } from '../SalonServices/serviceModel'; 
+import { sendCustomerUpdate } from '../../Services/notificationService';
 
 const STAGES_FLOW = [
   'התאמת שיער',
@@ -25,10 +26,6 @@ export const getNewWigById = async (id: string) => {
   return await NewWig.findById(id).populate('customer').populate('assignedWorker');
 };
 
-/**
- * העברה לשלב הבא וניהול סיום תהליך מול מפתחת 4
- * הוספנו תמיכה ב- specificWorkerId כדי לאפשר בחירה חכמה של עובדת
- */
 export const moveToNextStage = async (wigId: string, specificWorkerId?: string) => {
   console.log('moveToNextStage called with:', { wigId, specificWorkerId });
   
@@ -37,9 +34,7 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     throw new AppError('הפאה לא נמצאה במערכת', 404);
   }
 
-  console.log('Current wig stage:', wig.currentStage);
   const currentStageIndex = STAGES_FLOW.indexOf(wig.currentStage);
-  console.log('Current stage index:', currentStageIndex);
 
   if (currentStageIndex === -1) {
     throw new AppError('סטטוס פאה אינו תקין', 400);
@@ -61,25 +56,16 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
   }
 
   const nextStage = STAGES_FLOW[currentStageIndex + 1];
-  console.log('Next stage:', nextStage);
   
-  // בחירת העובדת לשלב הבא
   let nextWorker;
-  
   if (specificWorkerId) {
-    console.log('Using specific worker ID:', specificWorkerId);
-    // אם המשתמשת בחרה עובדת ספציפית מהמסך - נשתמש בה
     nextWorker = await User.findById(specificWorkerId);
   } else {
-    console.log('Finding worker for specialty:', getSpecialtyForStage(nextStage));
-    // אחרת - נחפש באופן אוטומטי עובדת (מתאים למקרים שיש רק עובדת אחת באותו תפקיד)
     nextWorker = await User.findOne({ 
       role: 'Worker',
       specialty: getSpecialtyForStage(nextStage)
     });
   }
-  
-  console.log('Next worker found:', nextWorker ? nextWorker.username : 'None');
   
   if (!nextWorker) {
     throw new AppError('לא נמצאה עובדת מתאימה לשלב הבא', 404);
@@ -93,6 +79,11 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     },
     { new: true }
   ).populate('customer').populate('assignedWorker');
+
+  // --- שדרוג: שליחת הודעה על מעבר שלב רגיל ---
+  if (updatedWig && updatedWig.customer) {
+    await sendCustomerUpdate(updatedWig.customer, nextStage);
+  }
 
   console.log('Wig updated successfully');
   return updatedWig;

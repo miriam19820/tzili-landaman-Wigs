@@ -26,13 +26,10 @@ const serviceSchema = new Schema({
   // סגנון הסירוק
   styleCategory: { 
     type: String, 
-    // תיקון: הורדנו את הרווח לפני "טבעי"
     enum: ['חלק', 'מוברש', 'גלי', 'תלתלים', 'טבעי', 'בייביליס', 'ללא'],
-    // תיקון: שונה מ-'None' ל-'ללא' כדי שיתאים ל-enum
     default: 'ללא'
   },
 
-  // שדות הערות דינמיים המשותפים למזכירה, לעובדת ולמבקרת
   notes: {
     secretary: String,
     worker: String,
@@ -45,7 +42,6 @@ const serviceSchema = new Schema({
   // לטובת סנכרון דחיפות והקפצה לראש התור 
   isUrgent: { type: Boolean, default: false }, 
 
-  // ניהול סטטוס המשימה עד למסירה 
   status: { 
     type: String, 
     enum: ['Pending Wash', 'Pending Style', 'In Progress', 'Drying', 'QA', 'Ready'], 

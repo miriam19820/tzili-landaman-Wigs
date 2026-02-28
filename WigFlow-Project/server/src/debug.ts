@@ -8,7 +8,6 @@ const debug = async () => {
     
     console.log('\n=== העתיקי את ה-IDs עבור פוסטמן ===');
     
-    // שליפת לקוחות
     const customers = await Customer.find({});
     console.log('\n--- לקוחות (עבור שדה customerId) ---');
     if (customers.length === 0) console.log('לא נמצאו לקוחות במערכת.');
@@ -16,7 +15,6 @@ const debug = async () => {
       console.log(`${c.firstName} ${c.lastName}: ${c._id}`);
     });
     
-    // שליפת עובדות
     const users = await User.find({});
     console.log('\n--- עובדות (עבור שדות washerId / adminId / assignedTo) ---');
     if (users.length === 0) console.log('לא נמצאו עובדות במערכת.');

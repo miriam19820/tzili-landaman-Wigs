@@ -1,1 +1,15 @@
+<<<<<<< Updated upstream
 {}
+=======
+{
+  "dependencies": {
+    "axios": "^1.13.5",
+    "html5-qrcode": "^2.3.8",
+    "nodemailer": "^8.0.1",
+    "react-router-dom": "^7.13.1"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^7.0.11"
+  }
+}
+>>>>>>> Stashed changes

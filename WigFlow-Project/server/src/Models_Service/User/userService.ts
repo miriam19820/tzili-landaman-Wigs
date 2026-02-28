@@ -80,10 +80,7 @@ export const loginUser = async (username: string, password: string) => {
     };
 };
 
-/**
- * 1. הצגת כל העובדות
- * משמש את המזכירה לראות רשימה ואת שאר המפתחות למילוי תיבות בחירה (Dropdown)
- */
+
 export const getAllUsers = async () => {
     // מביא את כל המשתמשים ומוריד את שדה הסיסמה מהתוצאה
     return await User.find().select('-password');
