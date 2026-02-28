@@ -1,4 +1,7 @@
-"dependencies": {
+{
+  "name": "tzili-landaman-wigs",
+  "version": "1.0.0",
+  "dependencies": {
     "axios": "^1.13.5",
     "html5-qrcode": "^2.3.8",
     "nodemailer": "^8.0.1",
@@ -7,3 +10,4 @@
   "devDependencies": {
     "@types/nodemailer": "^7.0.11"
   }
+}
