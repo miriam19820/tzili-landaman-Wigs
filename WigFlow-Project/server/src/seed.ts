@@ -9,12 +9,11 @@ const seedData = async () => {
   try {
     await connectDB();
 
-    // 1. ניקוי הנתונים הישנים מכל הטבלאות
     await Customer.deleteMany({});
     await User.deleteMany({});
     await Service.deleteMany({});
     await NewWig.deleteMany({});
-    await Repair.deleteMany({}); // ניקוי תיקונים ישנים
+    await Repair.deleteMany({}); 
 
     // 2. יצירת לקוחה לדוגמה
     const customer = await Customer.create({
@@ -73,7 +72,7 @@ const seedData = async () => {
       username: 'תהילה', 
       fullName: 'תהילה מנהלת', 
       password: commonPassword, 
-      role: 'QC', // תפקיד בקרת איכות
+      role: 'QC', 
       specialty: 'בקרת איכות' 
     });
 

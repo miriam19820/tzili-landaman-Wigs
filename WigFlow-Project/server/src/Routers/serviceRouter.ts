@@ -3,7 +3,6 @@ import * as serviceService from '../Models_Service/SalonServices/serviceService'
 
 const serviceRouter = Router();
 
-// 1. פתיחת הזמנת שירות חדשה (הדילוג האוטומטי שלנו)
 serviceRouter.post('/', async (req, res) => {
   try {
     const newService = await serviceService.createService(req.body);
@@ -13,7 +12,6 @@ serviceRouter.post('/', async (req, res) => {
   }
 });
 
-// 2. שליפת פרטי פאה ספציפית לפי ID
 serviceRouter.get('/:id', async (req, res) => {
   try {
     const service = await serviceService.getServiceById(req.params.id);
@@ -24,7 +22,6 @@ serviceRouter.get('/:id', async (req, res) => {
   }
 });
 
-// 3. תחילת ייבוש - שומר זמן להתראות
 serviceRouter.patch('/:id/start-drying', async (req, res) => {
   try {
     const updatedService = await serviceService.moveToDrying(req.params.id);
@@ -34,7 +31,6 @@ serviceRouter.patch('/:id/start-drying', async (req, res) => {
   }
 });
 
-// 4. סיום ייבוש - הניתוב החכם לסורקת או ל-QA
 serviceRouter.patch('/:id/finish-drying', async (req, res) => {
   try {
     const updatedService = await serviceService.finishDrying(req.params.id);
@@ -44,7 +40,7 @@ serviceRouter.patch('/:id/finish-drying', async (req, res) => {
   }
 });
 
-// 5. סיום סירוק
+
 serviceRouter.patch('/:id/finish-styling', async (req, res) => {
   try {
     const updatedService = await serviceService.finishStyling(req.params.id);
@@ -54,9 +50,7 @@ serviceRouter.patch('/:id/finish-styling', async (req, res) => {
   }
 });
 
-// --- אזור מבקרת האיכות (QA) ---
 
-// 6. אישור סופי של המבקרת
 serviceRouter.patch('/:id/approve', async (req, res) => {
   try {
     const approvedService = await serviceService.approveService(req.params.id);
@@ -66,7 +60,6 @@ serviceRouter.patch('/:id/approve', async (req, res) => {
   }
 });
 
-// 7. החזרה לתיקון (פסילה)
 serviceRouter.patch('/:id/reject', async (req, res) => {
   try {
     const { qaNote, returnTo, repairTaskId } = req.body; 

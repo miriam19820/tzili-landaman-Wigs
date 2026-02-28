@@ -71,6 +71,10 @@ export const loginUser = async (username: string, password: string) => {
     };
 };
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8
 export const getAllUsers = async () => {
     return await User.find().select('-password');
 };

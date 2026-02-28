@@ -10,11 +10,17 @@
     "seed": "ts-node tzili-landaman-Wigs/src/seed.ts"
   },
   "dependencies": {
+    "@types/nodemailer": "^7.0.11",
+    "axios": "^1.13.5",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "express": "^4.18.0",
     "jsonwebtoken": "^9.0.3",
+    "mongodb-memory-server": "^10.4.3",
     "mongoose": "^8.0.0",
+    "nodemailer": "^8.0.1",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.34.6",
     "winston": "^3.19.0"
   },
   "devDependencies": {
