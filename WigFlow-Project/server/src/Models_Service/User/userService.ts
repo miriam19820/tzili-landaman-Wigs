@@ -1,14 +1,7 @@
 import { User } from './userModel';
-<<<<<<< HEAD:WigFlow-Project/server/src/Models_Service/User/userService.ts
 import { Customer } from '../Customer/customerModel'; 
-=======
-<<<<<<< HEAD
-import { Customer } from '../Customer/customerModel'; 
-=======
 import bcrypt from 'bcryptjs'; 
 import jwt from 'jsonwebtoken';  
->>>>>>> f514276d700e85a8075a6e6e0830bc2843dc3126
->>>>>>> origin/miryami:server/src/Models_Service/User/userService.ts
 
 // הגדרת ה"חוזה" של הנתונים
 interface UserData {
@@ -71,10 +64,6 @@ export const loginUser = async (username: string, password: string) => {
     };
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8
 export const getAllUsers = async () => {
     return await User.find().select('-password');
 };
@@ -82,7 +71,8 @@ export const getAllUsers = async () => {
 export const getUserById = async (userId: string) => {
     const user = await User.findById(userId)
     .select('-password')
-    .populate('workload');;
+    .populate('workload');
+    
     if (!user) {
         throw new Error('העובדת לא נמצאה במערכת');
     }
@@ -92,7 +82,8 @@ export const getUserById = async (userId: string) => {
 export const getUserByUsername = async (username: string) => {
     const user = await User.findOne({ username })
         .select('-password')
-        .populate('workload'); // הוספת השורה הזו
+        .populate('workload');
+        
     if (!user) {
         throw new Error(`לא נמצאה עובדת עם שם המשתמש: ${username}`);
     }
