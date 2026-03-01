@@ -39,12 +39,10 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     throw new AppError('סטטוס פאה אינו תקין', 400);
   }
 
-  // --- התיקון: הבדיקה היא אם סיימנו את שלב החפיפה ---
-  // אם השלב הנוכחי הוא 'חפיפה' (העובדת סיימה לחפוף ולחצה אישור)
+  // טיפול במעבר מסיום חפיפה ל-QA
   if (wig.currentStage === 'חפיפה') {
     console.log('Finished Wash stage, moving to QA and creating service');
     
-    // 1. מעביר את המשימה למפתחת 4 (מחלקת QA)
     await Service.create({
       customer: wig.customer,
       serviceType: 'Production QA',
@@ -54,7 +52,6 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
       notes: { secretary: 'פאה חדשה מסיום ייצור (עברה חפיפה)' }
     });
 
-    // 2. מעדכן את הפאה לשלב 'בקרה' (ומנקה את העובדת כי זה כבר ב-QA)
     return await NewWig.findByIdAndUpdate(
       wigId, 
       { 
@@ -65,18 +62,29 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     ).populate('customer');
   }
 
-  // הגנה: אם מנסים להעביר פאה שכבר נמצאת בבקרה
   if (currentStageIndex >= STAGES_FLOW.length - 2) {
       throw new AppError('הפאה כבר בשלבי סיום (בקרה) ולא ניתן להעביר אותה הלאה מפס הייצור', 400);
   }
 
-  // --- לוגיקה רגילה לשאר השלבים (מתפירה לצבע וכו') ---
   const nextStage = STAGES_FLOW[currentStageIndex + 1];
   
-  let nextWorker;
+  // ---> הלוגיקה המשופרת לבדיקת תכנון שיבוץ <---
+  let nextWorkerIdToAssign;
+
+  // 1. אם העובדת הקודמת בחרה מישהי ספציפית דרך המסך שלה
   if (specificWorkerId) {
-    nextWorker = await User.findById(specificWorkerId);
+    nextWorkerIdToAssign = specificWorkerId;
+  } 
+  // 2. אם המזכירה קבעה עובדת מראש לשלב הזה בעת פתיחת ההזמנה
+  else if (wig.stageAssignments && wig.stageAssignments.get(nextStage)) {
+    nextWorkerIdToAssign = wig.stageAssignments.get(nextStage);
+  }
+  
+  let nextWorker;
+  if (nextWorkerIdToAssign) {
+    nextWorker = await User.findById(nextWorkerIdToAssign);
   } else {
+    // 3. מנגנון אוטומטי - אם לא שובץ אף אחד, בוחרים עובדת אקראית מאותה התמחות
     nextWorker = await User.findOne({ 
       role: 'Worker',
       specialty: getSpecialtyForStage(nextStage)
@@ -96,7 +104,6 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     { new: true }
   ).populate('customer').populate('assignedWorker');
 
-  // --- שדרוג: שליחת הודעה על מעבר שלב רגיל ---
   if (updatedWig && updatedWig.customer) {
     await sendCustomerUpdate(updatedWig.customer, nextStage);
   }

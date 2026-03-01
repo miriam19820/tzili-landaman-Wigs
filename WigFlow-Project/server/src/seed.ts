@@ -4,6 +4,7 @@ import { User } from './Models_Service/User/userModel';
 import { Service } from './Models_Service/SalonServices/serviceModel';
 import { NewWig } from './Models_Service/NewWigs/newWigModel';
 import { Repair } from './Models_Service/Repairs/repairModel';
+import bcrypt from 'bcryptjs'; // <-- הוספנו את ספריית ההצפנה!
 
 const seedData = async () => {
   try {
@@ -25,13 +26,14 @@ const seedData = async () => {
       address: 'רחוב יפו 100, ירושלים'
     });
 
-    // 3. יצירת צוות עובדות עם שדות חובה (fullName ו-password)
-    const commonPassword = 'password123';
+    // 3. הצפנת הסיסמה לפני השמירה (זה מה שהיה חסר!)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
 
     const worker1 = await User.create({ 
       username: 'הני', 
       fullName: 'הני כהן', 
-      password: commonPassword, 
+      password: hashedPassword, 
       role: 'Worker', 
       specialty: 'התאמת שיער' 
     });
@@ -39,7 +41,7 @@ const seedData = async () => {
     const worker2 = await User.create({ 
       username: 'טעמא', 
       fullName: 'טעמא לוי', 
-      password: commonPassword, 
+      password: hashedPassword, 
       role: 'Worker', 
       specialty: 'תפירה' 
     });
@@ -47,7 +49,7 @@ const seedData = async () => {
     const worker3 = await User.create({ 
       username: 'הודיה', 
       fullName: 'הודיה אברהם', 
-      password: commonPassword, 
+      password: hashedPassword, 
       role: 'Worker', 
       specialty: 'צבע' 
     });
@@ -55,7 +57,7 @@ const seedData = async () => {
     const worker4 = await User.create({ 
       username: 'מירי', 
       fullName: 'מירי שטרן', 
-      password: commonPassword, 
+      password: hashedPassword, 
       role: 'Worker', 
       specialty: 'עבודת יד' 
     });
@@ -63,7 +65,7 @@ const seedData = async () => {
     const worker5 = await User.create({ 
       username: 'מרים', 
       fullName: 'מרים וייס', 
-      password: commonPassword, 
+      password: hashedPassword, 
       role: 'Worker', 
       specialty: 'חפיפה' 
     });
@@ -71,9 +73,16 @@ const seedData = async () => {
     const worker6 = await User.create({ 
       username: 'תהילה', 
       fullName: 'תהילה מנהלת', 
-      password: commonPassword, 
+      password: hashedPassword, 
       role: 'QC', 
       specialty: 'בקרת איכות' 
+    });
+    const adminUser = await User.create({ 
+      username: 'admin', 
+      fullName: 'מזכירה ראשית', 
+      password: hashedPassword, 
+      role: 'Admin', 
+      specialty: 'כללי' 
     });
 
     // 4. יצירת הזמנת פאה חדשה לדוגמה
@@ -99,7 +108,7 @@ const seedData = async () => {
       assignedWorker: worker1._id
     });
 
-    console.log('✅ הנתונים עודכנו בהצלחה כולל שדות חובה וניקוי תיקונים!');
+    console.log('✅ הנתונים עודכנו בהצלחה כולל סיסמאות מוצפנות!');
     process.exit(0);
   } catch (error) {
     console.error('❌ שגיאה במהלך הרצת ה-Seed:', error);

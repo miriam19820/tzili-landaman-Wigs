@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 
 export const connectDB = async () => {
   try {
-    // חיבור מקומי למסד נתונים
     await mongoose.connect('mongodb://localhost:27017/wigflow');
     console.log('✅ MongoDB connected successfully');
   } catch (error) {

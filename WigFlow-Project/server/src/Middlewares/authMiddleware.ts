@@ -7,9 +7,7 @@ interface AuthRequest extends Request {
 
 const SECRET_KEY = 'SECRET_KEY_123';
 
-/**
- * 1. verifyToken: בדיקה בסיסית - האם המשתמשת מחוברת?
- */
+
 export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -26,9 +24,7 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
     }
 };
 
-/**
- * 2. verifyAdmin: הרשאה למזכירה/מנהלת בלבד
- */
+
 export const verifyAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
         if (req.user && req.user.role === 'Admin') {
@@ -39,9 +35,7 @@ export const verifyAdmin = (req: AuthRequest, res: Response, next: NextFunction)
     });
 };
 
-/**
- * 3. verifyWorker: הרשאה לעובדת (וגם למנהלת)
- */
+
 export const verifyWorker = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
         if (req.user && (req.user.role === 'Worker' || req.user.role === 'Admin')) {
@@ -52,10 +46,7 @@ export const verifyWorker = (req: AuthRequest, res: Response, next: NextFunction
     });
 };
 
-/**
- * 4. verifyQC: הרשאה לבקרת איכות (וגם למנהלת)
- * זה החלק שהיה חסר וגרם לשגיאה בראוטר!
- */
+
 export const verifyQC = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
         if (req.user && (req.user.role === 'QC' || req.user.role === 'Admin')) {

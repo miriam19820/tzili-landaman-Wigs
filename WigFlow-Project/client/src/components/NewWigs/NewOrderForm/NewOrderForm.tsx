@@ -41,6 +41,18 @@ export const NewOrderForm: React.FC = () => {
   const [signatureData, setSignatureData] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [savedWigData, setSavedWigData] = useState<any>(null); // לטובת המדבקה
+  
+  // הוספת ה-State לשמירת שיבוצי העובדות
+  const [plannedAssignments, setPlannedAssignments] = useState<Record<string, string>>({});
+
+  // מערך עזר למיפוי השלבים לפס הייצור
+  const REQUIRED_STAGES = [
+    { name: 'התאמת שיער', specialty: 'התאמת שיער' },
+    { name: 'תפירת פאה', specialty: 'תפירה' },
+    { name: 'צבע', specialty: 'צבע' },
+    { name: 'עבודת יד', specialty: 'עבודת יד' },
+    { name: 'חפיפה', specialty: 'חפיפה' }
+  ];
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<NewOrderFormInputs>();
   
@@ -75,6 +87,13 @@ export const NewOrderForm: React.FC = () => {
   const onSubmit = async (data: NewOrderFormInputs) => {
     if (!signatureData) { alert('חובה להחתים את הלקוחה!'); return; }
 
+    // וידוא שנבחרה עובדת לפחות לשלב הראשון
+    const firstWorker = plannedAssignments['התאמת שיער'];
+    if (!firstWorker) {
+      alert("חובה לשבץ עובדת לשלב 'התאמת שיער'!");
+      return;
+    }
+
     setLoading(true);
     try {
       let finalCustomerId = customer?._id;
@@ -93,18 +112,12 @@ export const NewOrderForm: React.FC = () => {
         finalCustomerId = newRes.data._id;
       }
 
-      // מציאת עובדת לשלב הראשון
-      const firstStageWorker = workers.find(w => w.specialty === 'התאמת שיער') || workers[0];
-      if (!firstStageWorker) {
-        alert("שגיאה: לא נמצאו עובדות במערכת! אנא ודאי שהרצת npm run seed.");
-        setLoading(false);
-        return;
-      }
-
+      // יצירת האובייקט לשליחה לשרת (כולל השיבוצים)
       const payload = {
         ...data,
         customer: finalCustomerId,
-        assignedWorker: firstStageWorker._id, 
+        assignedWorker: firstWorker, // משתמשים בעובדת שנבחרה מהטופס החדש
+        stageAssignments: plannedAssignments, // הוספנו את שיבוץ כלל הצוות!
         currentStage: 'התאמת שיער', 
         measurements: { 
           circumference: Number(data.circumference), 
@@ -240,6 +253,29 @@ export const NewOrderForm: React.FC = () => {
                 </div>
               </div>
               <textarea className="form-input full-width" style={{marginTop:'10px'}} {...register('specialNotes')} placeholder="הערות מיוחדות"></textarea>
+            </fieldset>
+
+            {/* ---> אזור שיבוץ העובדות שהוספנו <--- */}
+            <fieldset className="form-section highlight-section" style={{ backgroundColor: '#f0f8ff' }}>
+              <legend>שיבוץ צוות (תכנון פס ייצור)</legend>
+              <div className="form-grid">
+                {REQUIRED_STAGES.map(stage => (
+                  <div className="input-group" key={stage.name}>
+                    <label className="input-label">{stage.name} {stage.name === 'התאמת שיער' && '*'}</label>
+                    <select 
+                      className="form-input"
+                      value={plannedAssignments[stage.name] || ''}
+                      onChange={(e) => setPlannedAssignments({...plannedAssignments, [stage.name]: e.target.value})}
+                      required={stage.name === 'התאמת שיער'}
+                    >
+                      <option value="" disabled>-- בחרי עובדת --</option>
+                      {workers.filter(w => w.specialty === stage.specialty).map(w => (
+                        <option key={w._id} value={w._id}>{w.fullName || w.username}</option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
             </fieldset>
 
             <fieldset className="form-section highlight-section">

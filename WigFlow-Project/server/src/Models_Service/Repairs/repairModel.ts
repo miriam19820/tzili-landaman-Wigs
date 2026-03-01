@@ -1,6 +1,5 @@
 import { Schema, model } from 'mongoose';
 
-// ריכוז כל הנתונים של הסלון במקום אחד לניהול קל
 const CATEGORY_MAP = {
   'צבע': ['גוונים', 'שורש', 'שטיפה לעש', 'הבהרה לבלונד'],
   'מכונה': [
@@ -13,7 +12,6 @@ const CATEGORY_MAP = {
   'בקרה': ['בדיקה סופית']
 };
 
-// סכימה עבור משימה בודדת (משימה אחת בתוך רשימת תיקונים)
 const taskSchema = new Schema({
   category: { 
     type: String, 
@@ -40,7 +38,6 @@ assignedTo: {
   }
 });
 
-// הסכימה הראשית של התיקונים
 const repairSchema = new Schema({
   wigCode: { type: String, required: true, unique: true },
   customer: { 
@@ -56,7 +53,7 @@ const repairSchema = new Schema({
     enum: ['בתיקון', 'בחפיפה', 'בבקרה', 'מוכן'], 
     default: 'בתיקון' 
   },
-  // רשימה משתנה של משימות עבור פאה אחת
+  
   tasks: [taskSchema],
   createdAt: { 
     type: Date, 

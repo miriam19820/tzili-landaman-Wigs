@@ -3,7 +3,6 @@ import { Customer } from '../Customer/customerModel';
 import bcrypt from 'bcryptjs'; 
 import jwt from 'jsonwebtoken';  
 
-// הגדרת ה"חוזה" של הנתונים
 interface UserData {
     username: string;
     password: string;
@@ -12,9 +11,6 @@ interface UserData {
     specialty: string;
 }
 
-/**
- * פונקציה ליצירת עובדת חדשה (הרשמה)
- */
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });
     if (existingUser) {
@@ -32,9 +28,7 @@ export const createUser = async (userData: UserData) => {
     return await newUser.save();
 };
 
-/**
- * פונקציה לכניסה למערכת (Login)
- */
+
 export const loginUser = async (username: string, password: string) => {
     const user = await User.findOne({ username });
     if (!user) {
@@ -46,7 +40,6 @@ export const loginUser = async (username: string, password: string) => {
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
-    // יצירת ה-Token
     const token = jwt.sign(
         { id: user._id, role: user.role }, 
         'SECRET_KEY_123', 
