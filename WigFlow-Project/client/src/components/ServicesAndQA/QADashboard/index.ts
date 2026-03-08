@@ -1,1 +1,1 @@
-export { QADashboard } from './QADashboard';
+export * from './QADashboard';
