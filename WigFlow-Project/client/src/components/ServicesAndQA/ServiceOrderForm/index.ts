@@ -1,1 +1,1 @@
-export { ServiceOrderForm } from './ServiceOrderForm';
+export * from './ServiceOrderForm';
