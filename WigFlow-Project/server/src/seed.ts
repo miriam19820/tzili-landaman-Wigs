@@ -13,15 +13,17 @@ const seedData = async () => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('password123', salt);
+    console.log('🔑 סיסמה: password123');
+    console.log('🔐 סיסמה מוצפנת:', hashedPassword);
 
-    // 1. יצירת הלקוחה שרה כהן עם הת"ז שמופיעה בשגיאה שלך
+    
     const customer = await Customer.create({
-      firstName: 'שרה',
-      lastName: 'כהן',
+      firstName: 'מרים',
+      lastName: 'גליק',
       idNumber: '329520449', 
-      phoneNumber: '050-1234567',
-      email: 'sara@example.com',
-      address: 'רחוב יפו 100, ירושלים'
+      phoneNumber: '0583241344',
+      email: 'miriamm41344@gmail.com',
+      address: 'ישעיהו הנביא 1, בית שמש'
     });
 
     // 2. יצירת צוות - עובדת אחת לכל קטגוריה שקיימת בטופס שלך
@@ -34,7 +36,11 @@ const seedData = async () => {
     // הפתרון לרשימת ה-QA הריקה:
     await User.create({ username: 'racheli', fullName: 'רחלי (בקרה)', password: hashedPassword, role: 'Worker', specialty: 'בקרה' });
 
+    // משתמש מנהל
+    await User.create({ username: 'admin', fullName: 'מנהל המערכת', password: hashedPassword, role: 'Admin', specialty: 'ניהול' });
+
     console.log('✅ הנתונים עודכנו! כל העובדות והמחלקות מאוישות.');
+    console.log('👤 כניסה כמנהל: admin / password123');
     process.exit(0);
   } catch (error) {
     console.error('❌ שגיאה:', error);

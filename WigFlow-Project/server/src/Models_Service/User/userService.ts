@@ -11,6 +11,7 @@ interface UserData {
     specialty: string;
 }
 
+// יצירת משתמש חדש (כולל הצפנה)
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });
     if (existingUser) {
@@ -28,23 +29,37 @@ export const createUser = async (userData: UserData) => {
     return await newUser.save();
 };
 
+// פונקציית ההתחברות המרכזית
+export const loginUser = async (username: string, passwordInput: string) => {
+    console.log("--- ניסיון התחברות חדש ---");
+    console.log("שם משתמש שהוזן:", username);
 
-export const loginUser = async (username: string, password: string) => {
+    // 1. חיפוש המשתמש
     const user = await User.findOne({ username });
     if (!user) {
+        console.log("❌ שגיאה: המשתמש לא נמצא בבסיס הנתונים!");
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    console.log("✅ המשתמש נמצא. בודק סיסמה...");
+
+    // 2. השוואת סיסמה (bcrypt)
+    const isMatch = await bcrypt.compare(passwordInput, user.password);
+    console.log("האם הסיסמה תואמת?", isMatch);
+
     if (!isMatch) {
+        console.log("❌ שגיאה: הסיסמה לא תואמת!");
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
+    // 3. יצירת Token (JWT)
     const token = jwt.sign(
         { id: user._id, role: user.role }, 
         'SECRET_KEY_123', 
         { expiresIn: '1d' }
     );
+
+    console.log("🚀 התחברות הצליחה! תפקיד:", user.role);
 
     return {
         token,
@@ -62,9 +77,9 @@ export const getAllUsers = async () => {
 };
 
 export const getUserById = async (userId: string) => {
+    // הערה: ודאי שהשדה workload קיים במודל שלך, אחרת הסירי את ה-populate
     const user = await User.findById(userId)
-    .select('-password')
-    .populate('workload');
+        .select('-password');
     
     if (!user) {
         throw new Error('העובדת לא נמצאה במערכת');
@@ -74,8 +89,7 @@ export const getUserById = async (userId: string) => {
 
 export const getUserByUsername = async (username: string) => {
     const user = await User.findOne({ username })
-        .select('-password')
-        .populate('workload');
+        .select('-password');
         
     if (!user) {
         throw new Error(`לא נמצאה עובדת עם שם המשתמש: ${username}`);
