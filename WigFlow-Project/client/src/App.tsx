@@ -1,10 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
-// ייבוא הקומפוננטות
+// ייבוא הקומפוננטות של מפתחת 1 ומפתחת 2
 import { ProductionStation } from './components/NewWigs/ProductionStation/ProductionStation';
 import { NewOrderForm } from './components/NewWigs/NewOrderForm/NewOrderForm';
 import { LoginForm } from './components/Auth/LoginForm/LoginForm';
+
+// === תוספות של מפתחת 3 (מחלקת תיקונים) ===
+import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
+import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
 
 // תפריט ניווט שמוצג רק למי שמחובר
 const Navigation = () => {
@@ -18,38 +22,41 @@ const Navigation = () => {
     window.location.href = '/login';
   };
 
+  // פונקציית עזר לעיצוב הכפתורים בתפריט כדי למנוע כפילויות קוד
+  const linkStyle = (path: string) => ({
+    padding: '10px 20px', 
+    color: 'white', 
+    border: 'none', 
+    borderRadius: '5px', 
+    textDecoration: 'none',
+    backgroundColor: location.pathname === path ? '#6f42c1' : '#6c757d', // סגול לבחירה, אפור לרגיל
+    fontWeight: 'bold',
+    transition: 'background-color 0.3s'
+  });
+
   return (
-    <nav style={{ padding: '20px', backgroundColor: '#f5f5f5', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div>
-        {/* המזכירה רואה הכל, העובדת רואה רק את התחנה שלה */}
+    <nav style={{ padding: '20px', backgroundColor: '#f5f5f5', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', gap: '15px' }}>
+        
+        {/* המזכירה רואה את מסכי פתיחת ההזמנות */}
         {(user?.role === 'Admin' || user?.role === 'Secretary') && (
-          <Link 
-            to="/"
-            style={{ 
-              marginRight: '10px', padding: '10px 20px', color: 'white', border: 'none', borderRadius: '5px', textDecoration: 'none',
-              backgroundColor: location.pathname === '/' ? '#007bff' : '#6c757d'
-            }}
-          >
-            פאה חדשה
-          </Link>
+          <>
+            <Link to="/" style={linkStyle('/')}>הזמנת פאה חדשה</Link>
+            <Link to="/repairs/new" style={linkStyle('/repairs/new')}>קבלת פאה לתיקון</Link>
+          </>
         )}
         
-        <Link 
-          to="/production"
-          style={{ 
-            padding: '10px 20px', color: 'white', border: 'none', borderRadius: '5px', textDecoration: 'none',
-            backgroundColor: location.pathname === '/production' ? '#007bff' : '#6c757d'
-          }}
-        >
-          תחנת ייצור
-        </Link>
+        {/* העובדות (וגם המזכירה יכולה להציץ) רואות את תחנות העבודה */}
+        <Link to="/production" style={linkStyle('/production')}>תחנת ייצור (חדשות)</Link>
+        <Link to="/repairs/tasks" style={linkStyle('/repairs/tasks')}>תחנת תיקונים</Link>
+        
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <span style={{ fontWeight: 'bold' }}>שלום, {user?.username} ({user?.role})</span>
+        <span style={{ fontWeight: 'bold', color: '#333' }}>שלום, {user?.username} ({user?.role})</span>
         <button 
           onClick={handleLogout}
-          style={{ padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+          style={{ padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
         >
           התנתק
         </button>
@@ -74,39 +81,63 @@ function App() {
 
   return (
     <Router>
-      <div className="App" dir="rtl">
+      <div className="App" dir="rtl" style={{ fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
+        
         {/* הכותרת והניווט יוצגו רק אם המשתמש מחובר */}
-        {token && <h1 style={{ textAlign: 'center', fontFamily: 'sans-serif', color: '#004085', marginTop: '20px' }}>WigFlow System</h1>}
+        {token && <h1 style={{ textAlign: 'center', color: '#6f42c1', marginTop: '20px' }}>מערכת WigFlow ✂️</h1>}
         {token && <Navigation />}
         
-        <Routes>
-          {/* מסך ההתחברות הפתוח לכולם - אם המשתמשת כבר מחוברת, היא תועבר ישירות למערכת! */}
-          <Route 
-            path="/login" 
-            element={token ? <Navigate to={user?.role === 'Worker' ? "/production" : "/"} replace /> : <LoginForm />} 
-          />
+        <div style={{ padding: '0 20px' }}>
+          <Routes>
+            {/* מסך ההתחברות הפתוח לכולם - אם המשתמשת כבר מחוברת, היא תועבר ישירות למערכת! */}
+            <Route 
+              path="/login" 
+              element={token ? <Navigate to={user?.role === 'Worker' ? "/repairs/tasks" : "/"} replace /> : <LoginForm />} 
+            />
 
-          {/* נתיבים מוגנים (דורשים התחברות) */}
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <NewOrderForm />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/production" 
-            element={
-              <ProtectedRoute>
-                <ProductionStation />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* נתיב ברירת מחדל אם מקישים כתובת לא קיימת */}
-          <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
-        </Routes>
+            {/* ---> נתיבים מוגנים (דורשים התחברות) <--- */}
+            
+            {/* נתיבי מפתחת 2: פאות חדשות */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <NewOrderForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/production" 
+              element={
+                <ProtectedRoute>
+                  <ProductionStation />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* ---> נתיבי מפתחת 3: מערך תיקונים <--- */}
+            <Route 
+              path="/repairs/new" 
+              element={
+                <ProtectedRoute>
+                  <DiagnosisChecklist />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/repairs/tasks" 
+              element={
+                <ProtectedRoute>
+                  {/* מעבירים את ה-ID של העובדת המחוברת מה-localStorage */}
+                  <RepairWorkerList workerId={user?.id || user?._id || ''} />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* נתיב ברירת מחדל אם מקישים כתובת לא קיימת */}
+            <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
+          </Routes>
+        </div>
       </div>
     </Router>
   );

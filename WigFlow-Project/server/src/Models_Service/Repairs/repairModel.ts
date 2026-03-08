@@ -1,6 +1,7 @@
 import { Schema, model } from 'mongoose';
 
-const CATEGORY_MAP = {
+// הגדרת טיפוס כדי למנוע שגיאות TypeScript
+const CATEGORY_MAP: Record<string, string[]> = {
   'צבע': ['גוונים', 'שורש', 'שטיפה לעש', 'הבהרה לבלונד'],
   'מכונה': [
     'העברת רשת', 'תיקון רשת', 'התקנת לייס', 'התקנת ריבן', 
@@ -18,11 +19,19 @@ const taskSchema = new Schema({
     required: true, 
     enum: Object.keys(CATEGORY_MAP) 
   },
-subCategory: { 
-  type: String, 
-  required: true
-},
-assignedTo: { 
+  subCategory: { 
+    type: String, 
+    required: true,
+    validate: {
+      validator: function(this: any, value: string) {
+        // מוודא שהתת-קטגוריה אכן קיימת בתוך הקטגוריה שנבחרה
+        const category = this.category;
+        return CATEGORY_MAP[category] && CATEGORY_MAP[category].includes(value);
+      },
+      message: (props: any) => `${props.value} אינו תת-תיקון תקין עבור הקטגוריה שנבחרה`
+    }
+  },
+  assignedTo: { 
     type: Schema.Types.ObjectId, 
     ref: 'User', 
     required: true 
@@ -39,7 +48,11 @@ assignedTo: {
 });
 
 const repairSchema = new Schema({
-  wigCode: { type: String, required: true, unique: true },
+  wigCode: { 
+    type: String, 
+    required: true 
+    // הוסר unique: true כי לקוחה יכולה להביא את אותה הפאה לתיקון פעמים שונות בעתיד
+  },
   customer: { 
     type: Schema.Types.ObjectId, 
     ref: 'Customer', 
@@ -48,12 +61,12 @@ const repairSchema = new Schema({
   isUrgent: { 
     type: Boolean, 
     default: false 
-  },overallStatus: { 
+  },
+  overallStatus: { 
     type: String, 
     enum: ['בתיקון', 'בחפיפה', 'בבקרה', 'מוכן'], 
     default: 'בתיקון' 
   },
-  
   tasks: [taskSchema],
   createdAt: { 
     type: Date, 
