@@ -8,7 +8,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-
 export const sendCustomerUpdate = async (customer: any, stage: string) => {
   const message = `היי ${customer.firstName}, הפאה שלך התקדמה לשלב: ${stage}  נמשיך לעדכן, צוות WigFlow.`;
 
@@ -16,7 +15,8 @@ export const sendCustomerUpdate = async (customer: any, stage: string) => {
 
   if (customer.email) {
     const mailOptions = {
-      from: `"צילי לנדמן - WigFlow" <${process.env.EMAIL_USER}>`,
+      from: `"צילי לנדמן 
+      - WigFlow" <${process.env.EMAIL_USER}>`,
       to: customer.email,
       subject: `עדכון על הפאה שלך - ${stage}`,
       html: `
