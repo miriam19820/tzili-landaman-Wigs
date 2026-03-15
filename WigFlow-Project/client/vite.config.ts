@@ -1,13 +1,14 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react' // תוקן: זה השם הנכון של הספרייה
+import react from '@vitejs/plugin-react'
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // הגדרת המתווך שמעביר בקשות לשרת בפורט 3000
+      // מעביר כל בקשה שמתחילה ב-api/ לשרת שרץ בפורט 5000
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
       }

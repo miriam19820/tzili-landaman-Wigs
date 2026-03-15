@@ -15,7 +15,8 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/users/login', {
+      // עדכון הפורט ל-5000 כדי שיתאים לשרת המעודכן שלנו
+      const response = await axios.post('http://localhost:5000/api/users/login', {
         username,
         password
       });

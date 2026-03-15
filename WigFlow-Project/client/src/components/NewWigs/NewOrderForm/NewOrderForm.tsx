@@ -40,12 +40,10 @@ export const NewOrderForm: React.FC = () => {
   const [workers, setWorkers] = useState<any[]>([]);
   const [signatureData, setSignatureData] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [savedWigData, setSavedWigData] = useState<any>(null); // לטובת המדבקה
+  const [savedWigData, setSavedWigData] = useState<any>(null); 
   
-  // הוספת ה-State לשמירת שיבוצי העובדות
   const [plannedAssignments, setPlannedAssignments] = useState<Record<string, string>>({});
 
-  // מערך עזר למיפוי השלבים לפס הייצור
   const REQUIRED_STAGES = [
     { name: 'התאמת שיער', specialty: 'התאמת שיער' },
     { name: 'תפירת פאה', specialty: 'תפירה' },
@@ -61,7 +59,8 @@ export const NewOrderForm: React.FC = () => {
   const watchedLastName = watch("lastName");
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/users')
+    // עדכון לפורט 5000
+    axios.get('http://localhost:5000/api/users')
       .then((res: any) => setWorkers(res.data.filter((u: any) => u.role === 'Worker')))
       .catch(err => console.error('שגיאה בטעינת עובדות'));
   }, []);
@@ -73,7 +72,8 @@ export const NewOrderForm: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:3000/api/customers/search/${idSearchValue}`);
+      // עדכון לפורט 5000
+      const res = await axios.get(`http://localhost:5000/api/customers/search/${idSearchValue}`);
       if (res.data.exists) {
         setCustomer(res.data.customer);
         setStep(3);
@@ -87,7 +87,6 @@ export const NewOrderForm: React.FC = () => {
   const onSubmit = async (data: NewOrderFormInputs) => {
     if (!signatureData) { alert('חובה להחתים את הלקוחה!'); return; }
 
-    // וידוא שנבחרה עובדת לפחות לשלב הראשון
     const firstWorker = plannedAssignments['התאמת שיער'];
     if (!firstWorker) {
       alert("חובה לשבץ עובדת לשלב 'התאמת שיער'!");
@@ -98,9 +97,9 @@ export const NewOrderForm: React.FC = () => {
     try {
       let finalCustomerId = customer?._id;
       
-      // אם זו לקוחה חדשה - יוצרים אותה קודם בשרת
       if (step === 3 && !customer?._id) {
-        const newRes = await axios.post('http://localhost:3000/api/customers', {
+        // עדכון לפורט 5000
+        const newRes = await axios.post('http://localhost:5000/api/customers', {
           firstName: data.firstName, 
           lastName: data.lastName, 
           idNumber: customer.idNumber,
@@ -112,12 +111,11 @@ export const NewOrderForm: React.FC = () => {
         finalCustomerId = newRes.data._id;
       }
 
-      // יצירת האובייקט לשליחה לשרת (כולל השיבוצים)
       const payload = {
         ...data,
         customer: finalCustomerId,
-        assignedWorker: firstWorker, // משתמשים בעובדת שנבחרה מהטופס החדש
-        stageAssignments: plannedAssignments, // הוספנו את שיבוץ כלל הצוות!
+        assignedWorker: firstWorker,
+        stageAssignments: plannedAssignments,
         currentStage: 'התאמת שיער', 
         measurements: { 
           circumference: Number(data.circumference), 
@@ -128,9 +126,9 @@ export const NewOrderForm: React.FC = () => {
         customerSignature: signatureData 
       };
 
-      const response = await axios.post('http://localhost:3000/api/wigs/new', payload);
+      // עדכון לפורט 5000
+      const response = await axios.post('http://localhost:5000/api/wigs/new', payload);
       
-      // במקום רענון, נציג את נתוני המדבקה
       setSavedWigData({
         ...payload,
         _id: response.data._id,
@@ -255,7 +253,6 @@ export const NewOrderForm: React.FC = () => {
               <textarea className="form-input full-width" style={{marginTop:'10px'}} {...register('specialNotes')} placeholder="הערות מיוחדות"></textarea>
             </fieldset>
 
-            {/* ---> אזור שיבוץ העובדות שהוספנו <--- */}
             <fieldset className="form-section highlight-section" style={{ backgroundColor: '#f0f8ff' }}>
               <legend>שיבוץ צוות (תכנון פס ייצור)</legend>
               <div className="form-grid">
@@ -296,7 +293,6 @@ export const NewOrderForm: React.FC = () => {
         )}
       </form>
 
-      {/* חלונית מדבקת QR לאחר שמירה מוצלחת */}
       {savedWigData && (
         <div className="sticker-overlay animate-in">
           <div className="print-sticker" id="wig-sticker">

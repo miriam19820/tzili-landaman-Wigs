@@ -1,19 +1,23 @@
 import nodemailer from 'nodemailer';
 
+// הגדרת המנוע לשליחת מיילים - משתמש במשתני סביבה ב-env.
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER, // המייל שלך (למשל tzili.wigs@gmail.com)
+    user: process.env.EMAIL_USER, // המייל של הסלון
     pass: process.env.EMAIL_PASS  // סיסמת אפליקציה של גוגל
   }
 });
 
-
+/**
+ * שליחת עדכון ללקוחה על התקדמות הפאה (במייל ובוואטסאפ)
+ */
 export const sendCustomerUpdate = async (customer: any, stage: string) => {
-  const message = `היי ${customer.firstName}, הפאה שלך התקדמה לשלב: ${stage}  נמשיך לעדכן, צוות WigFlow.`;
+  const message = `היי ${customer.firstName}, הפאה שלך התקדמה לשלב: ${stage}. נמשיך לעדכן, צוות WigFlow.`;
 
-  console.log(`--- מפעיל שליחת הודעות חינמיות ל${customer.firstName} ---`);
+  console.log(`--- מפעיל שליחת עדכונים ללקוחה: ${customer.firstName} ---`);
 
+  // 1. שליחת מייל מעוצב (אם קיים מייל)
   if (customer.email) {
     const mailOptions = {
       from: `"צילי לנדמן - WigFlow" <${process.env.EMAIL_USER}>`,
@@ -32,15 +36,18 @@ export const sendCustomerUpdate = async (customer: any, stage: string) => {
 
     try {
       await transporter.sendMail(mailOptions);
-      console.log(` מייל נשלח בהצלחה ל: ${customer.email}`);
+      console.log(`✅ מייל נשלח בהצלחה ל: ${customer.email}`);
     } catch (err) {
       console.error("❌ שגיאה בשליחת מייל:", err);
     }
   }
 
+  // 2. הכנת קישור לוואטסאפ (אם קיים מספר טלפון)
   if (customer.phoneNumber) {
-    console.log(`📱 וואטסאפ ללקוחה: wa.me/${customer.phoneNumber.replace(/-/g, '')}?text=${encodeURIComponent(message)}`);
-    // בשלב הבא אפשר להטמיע את whatsapp-web.js לשליחה אוטומטית לגמרי בלי כפתור
+    const cleanPhone = customer.phoneNumber.replace(/-/g, '');
+    const whatsappLink = `wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    console.log(`📱 קישור וואטסאפ מוכן לשימוש: ${whatsappLink}`);
+    // הערה: כאן אפשר להוסיף בעתיד שליחה אוטומטית עם whatsapp-web.js
   }
 
   return true;

@@ -4,7 +4,7 @@ import { AppError } from '../../Utils/AppError';
 import { Customer } from '../Customer/customerModel'; 
 import { Service } from '../SalonServices/serviceModel'; 
 import { sendCustomerUpdate } from '../../Services/notificationService';
-
+import mongoose from 'mongoose'; 
 const STAGES_FLOW = [
   'התאמת שיער',
   'תפירת פאה',
@@ -14,6 +14,7 @@ const STAGES_FLOW = [
   'בקרה'
 ];
 
+// הגירסה שלך - עם הוולידציה החשובה
 export const createNewWig = async (wigData: any) => {
   if (!wigData.measurements) {
     throw new AppError('חובה להזין מידות לקוחה בשלב פתיחת ההזמנה', 400);
@@ -25,6 +26,7 @@ export const getNewWigById = async (id: string) => {
   return await NewWig.findById(id).populate('customer').populate('assignedWorker');
 };
 
+// הגירסה שלך - ליבת ניהול השלבים
 export const moveToNextStage = async (wigId: string, specificWorkerId?: string) => {
   console.log('moveToNextStage called with:', { wigId, specificWorkerId });
   
@@ -126,4 +128,40 @@ const getSpecialtyForStage = (stage: string): string => {
 
 export const getWigsByWorker = async (workerId: string) => {
   return await NewWig.find({ assignedWorker: workerId }).populate('customer');
+};
+
+// ==============================================================
+// ---> התוספות של איילה עבור הדשבורד של המזכירה <---
+// ==============================================================
+
+/**
+ * שליפת כל הפאות עם חיבור שם העובדת (Lookup)
+ */
+export const getAllWigsWithWorkers = async () => {
+  return await NewWig.aggregate([
+    {
+      $lookup: {
+        from: 'users', 
+        localField: 'assignedWorker', 
+        foreignField: '_id', 
+        as: 'workerDetails'
+      }
+    },
+    {
+      $addFields: {
+        workerName: { $arrayElemAt: ['$workerDetails.fullName', 0] } 
+      }
+    }
+  ]);
+};
+
+/**
+ * עדכון דחיפות לפאה
+ */
+export const updateWigUrgency = async (id: string, isUrgent: boolean) => {
+  return await NewWig.findByIdAndUpdate(
+    id, 
+    { $set: { isUrgent: isUrgent } },
+    { new: true } // מחזיר את האובייקט המעודכן
+  );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner } from 'html5-qrcode'
 import './ProductionStation.css';
 
 const STAGES_FLOW = ['התאמת שיער', 'תפירת פאה', 'צבע', 'עבודת יד', 'חפיפה', 'בקרה'];
@@ -36,7 +36,8 @@ export const ProductionStation: React.FC = () => {
   useEffect(() => {
     const fetchWorkers = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/users');
+        // עדכון לפורט 5000
+        const res = await fetch('http://localhost:5000/api/users');
         if (res.ok) {
           const users = await res.json();
           setAllWorkers(users.filter((u: any) => u.role === 'Worker'));
@@ -75,7 +76,8 @@ export const ProductionStation: React.FC = () => {
 
   const fetchStationData = async () => {
     try {
-      const wigsRes = await fetch(`http://localhost:3000/api/wigs/work-station/${currentWorkerId}`);
+      // עדכון לפורט 5000
+      const wigsRes = await fetch(`http://localhost:5000/api/wigs/work-station/${currentWorkerId}`);
       if (wigsRes.ok) {
         const wigsData = await wigsRes.json();
         setMyWigs(wigsData.data || []);
@@ -120,7 +122,8 @@ export const ProductionStation: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/wigs/${wigId}/next-step`, {
+      // עדכון לפורט 5000
+      const response = await fetch(`http://localhost:5000/api/wigs/${wigId}/next-step`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nextWorkerId: selectedNextWorker[wigId] }) 

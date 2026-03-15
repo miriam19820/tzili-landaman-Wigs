@@ -77,7 +77,6 @@ export const getAllUsers = async () => {
 };
 
 export const getUserById = async (userId: string) => {
-    // הערה: ודאי שהשדה workload קיים במודל שלך, אחרת הסירי את ה-populate
     const user = await User.findById(userId)
         .select('-password');
     
