@@ -1,61 +1,34 @@
 import React, { useState } from 'react';
+import './RejectionModal.css';
 
-// הגדרת ה-Props שהמודאל מקבל
-interface IRejectionModalProps {
+interface Props {
   isOpen: boolean;
+  customerName: string;
   onClose: () => void;
   onConfirm: (reason: string) => void;
-  customerName: string;
 }
 
-export const RejectionModal: React.FC<IRejectionModalProps> = ({ isOpen, onClose, onConfirm, customerName }) => {
+export const RejectionModal: React.FC<Props> = ({ isOpen, customerName, onClose, onConfirm }) => {
   const [reason, setReason] = useState('');
 
-  if (!isOpen) return null; // אם המודאל סגור, אל תרנדר כלום
-
-  const handleSubmit = () => {
-    if (!reason.trim()) {
-      alert('חובה להזין סיבת פסילה!');
-      return;
-    }
-    onConfirm(reason);
-    setReason(''); // ניקוי השדה
-  };
+  if (!isOpen) return null;
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: 'white', padding: '25px', borderRadius: '12px', width: '400px', direction: 'rtl', boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-      }}>
-        <h3 style={{ marginTop: 0, color: '#d32f2f' }}>פסילת פאה והחזרה לתיקון</h3>
-        <p>את פוסלת את הפאה של: <strong>{customerName}</strong></p>
-        
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>סיבת הפסילה (הערה לעובדת):</label>
-        <textarea
-          style={{ width: '100%', minHeight: '100px', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
-          placeholder="לדוגמה: הסירוק לא מספיק עמיד, יש קשרים בעורף..."
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2 className="modal-title">פסילת פאה - {customerName}</h2>
+        <p>נא לציין סיבה להחזרה לתיקון:</p>
+        <textarea 
+          className="modal-textarea"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
+          placeholder="לדוגמה: הקצוות עדיין רטובים..."
         />
-
-        <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-          <button 
-            onClick={handleSubmit}
-            style={{ flex: 1, backgroundColor: '#d32f2f', color: 'white', border: 'none', padding: '10px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            אשר פסילה
-          </button>
-          <button 
-            onClick={onClose}
-            style={{ flex: 1, backgroundColor: '#f5f5f5', color: '#333', border: '1px solid #ccc', padding: '10px', borderRadius: '4px', cursor: 'pointer' }}
-          >
-            ביטול
-          </button>
+        <div className="modal-actions">
+          <button className="btn-cancel" onClick={onClose}>ביטול</button>
+          <button className="btn-confirm-reject" onClick={() => onConfirm(reason)}>אישור פסילה</button>
         </div>
       </div>
     </div>
   );
-}
+};

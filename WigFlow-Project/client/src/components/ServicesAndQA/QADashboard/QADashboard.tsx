@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { RejectionModal } from '../RejectionModal'; // ייבוא המודאל שיצרת
+import { RejectionModal } from '../RejectionModal'; 
+import './QADashboard.css'; // הייבוא של העיצוב ששמנו למעלה
 
 interface IQATask {
   _id: string;
@@ -11,10 +12,8 @@ interface IQATask {
 
 export const QADashboard: React.FC = () => {
   const [tasks, setTasks] = useState<IQATask[]>([]);
-  
-  // --- כאן הוספתי את ה-STATE החדש ---
-  const [isModalOpen, setIsModalOpen] = useState(false); // האם המודאל פתוח?
-  const [selectedTask, setSelectedTask] = useState<IQATask | null>(null); // איזו פאה בחרנו לפסול?
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<IQATask | null>(null);
 
   useEffect(() => {
     const mockTasks: IQATask[] = [
@@ -24,36 +23,38 @@ export const QADashboard: React.FC = () => {
     setTasks(mockTasks);
   }, []);
 
-  // פונקציה לפתיחת המודאל
   const openRejectionModal = (task: IQATask) => {
     setSelectedTask(task);
     setIsModalOpen(true);
   };
 
-  // פונקציה שמופעלת כשהמבקרת מאשרת את הפסילה בתוך המודאל
   const handleRejectConfirm = (reason: string) => {
     console.log(`פסילת פאה ${selectedTask?._id} מסיבת: ${reason}`);
-    // כאן יבוא ה-API של ה-Reject בשבוע 4
-    setIsModalOpen(false); // סגירת המודאל
-    setTasks(tasks.filter(t => t._id !== selectedTask?._id)); // הסרה מהרשימה
+    setIsModalOpen(false);
+    setTasks(tasks.filter(t => t._id !== selectedTask?._id));
   };
 
   return (
-    <div style={{ padding: '20px', direction: 'rtl' }}>
-      <h1>ניהול בקרת איכות</h1>
+    <div className="qa-dashboard-container">
+      <h1 className="qa-title">ניהול בקרת איכות</h1>
       
-      <table>
-        {/* ... הראש של הטבלה ... */}
+      <table className="qa-table">
+        <thead>
+          <tr>
+            <th>שם לקוחה</th>
+            <th>סוג שירות</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
         <tbody>
           {tasks.map(task => (
             <tr key={task._id}>
               <td>{task.customer.name}</td>
+              <td>{task.serviceType}</td>
               <td>
-                <button onClick={() => console.log('Approved')}>אישור</button>
-                
-                {/* לחיצה כאן פותחת את המודאל */}
+                <button className="btn-approve" onClick={() => console.log('Approved')}>אישור</button>
                 <button 
-                  style={{ backgroundColor: 'red', color: 'white' }}
+                  className="btn-reject"
                   onClick={() => openRejectionModal(task)}
                 >
                   החזרה לתיקון
@@ -64,7 +65,6 @@ export const QADashboard: React.FC = () => {
         </tbody>
       </table>
 
-      {/* --- כאן אנחנו "שותלים" את המודאל בתוך הדף --- */}
       <RejectionModal 
         isOpen={isModalOpen} 
         customerName={selectedTask?.customer.name || ''}
