@@ -9,6 +9,8 @@ import { LoginForm } from './components/Auth/LoginForm/LoginForm';
 // === תוספות של מפתחת 3 (מחלקת תיקונים) ===
 import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
 import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
+// 1. ייבוא הקומפוננטה החדשה לרישום מהיר
+import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister/QuickCustomerRegister';
 
 // תפריט ניווט שמוצג רק למי שמחובר
 const Navigation = () => {
@@ -22,14 +24,14 @@ const Navigation = () => {
     window.location.href = '/login';
   };
 
-  // פונקציית עזר לעיצוב הכפתורים בתפריט כדי למנוע כפילויות קוד
+  // פונקציית עזר לעיצוב הכפתורים בתפריט
   const linkStyle = (path: string) => ({
     padding: '10px 20px', 
     color: 'white', 
     border: 'none', 
     borderRadius: '5px', 
     textDecoration: 'none',
-    backgroundColor: location.pathname === path ? '#6f42c1' : '#6c757d', // סגול לבחירה, אפור לרגיל
+    backgroundColor: location.pathname === path ? '#6f42c1' : '#6c757d',
     fontWeight: 'bold',
     transition: 'background-color 0.3s'
   });
@@ -46,7 +48,7 @@ const Navigation = () => {
           </>
         )}
         
-        {/* העובדות (וגם המזכירה יכולה להציץ) רואות את תחנות העבודה */}
+        {/* העובדות (וגם המזכירה) רואות את תחנות העבודה */}
         <Link to="/production" style={linkStyle('/production')}>תחנת ייצור (חדשות)</Link>
         <Link to="/repairs/tasks" style={linkStyle('/repairs/tasks')}>תחנת תיקונים</Link>
         
@@ -65,7 +67,7 @@ const Navigation = () => {
   );
 };
 
-// קומפוננטת עזר להגנה על נתיבים - אם אין טוקן, נזרוק למסך התחברות
+// קומפוננטת עזר להגנה על נתיבים
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -83,20 +85,16 @@ function App() {
     <Router>
       <div className="App" dir="rtl" style={{ fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
         
-        {/* הכותרת והניווט יוצגו רק אם המשתמש מחובר */}
         {token && <h1 style={{ textAlign: 'center', color: '#6f42c1', marginTop: '20px' }}>מערכת WigFlow ✂️</h1>}
         {token && <Navigation />}
         
         <div style={{ padding: '0 20px' }}>
           <Routes>
-            {/* מסך ההתחברות הפתוח לכולם - אם המשתמשת כבר מחוברת, היא תועבר ישירות למערכת! */}
             <Route 
               path="/login" 
               element={token ? <Navigate to={user?.role === 'Worker' ? "/repairs/tasks" : "/"} replace /> : <LoginForm />} 
             />
 
-            {/* ---> נתיבים מוגנים (דורשים התחברות) <--- */}
-            
             {/* נתיבי מפתחת 2: פאות חדשות */}
             <Route 
               path="/" 
@@ -115,7 +113,7 @@ function App() {
               } 
             />
 
-            {/* ---> נתיבי מפתחת 3: מערך תיקונים <--- */}
+            {/* נתיבי מפתחת 3: מערך תיקונים */}
             <Route 
               path="/repairs/new" 
               element={
@@ -128,13 +126,21 @@ function App() {
               path="/repairs/tasks" 
               element={
                 <ProtectedRoute>
-                  {/* מעבירים את ה-ID של העובדת המחוברת מה-localStorage */}
                   <RepairWorkerList workerId={user?.id || user?._id || ''} />
                 </ProtectedRoute>
               } 
             />
             
-            {/* נתיב ברירת מחדל אם מקישים כתובת לא קיימת */}
+            {/* 2. הוספת הנתיב החדש לרישום לקוחה מהיר (עבור תיקונים) */}
+            <Route 
+              path="/repairs/quick-register" 
+              element={
+                <ProtectedRoute>
+                  <QuickCustomerRegister />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
           </Routes>
         </div>

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StaffAllocator } from '../StaffAllocator/StaffAllocator';
 import './DiagnosisChecklist.css';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-// הגדרת סוגי התיקונים לפי האפיון (שבוע 1) [cite: 7, 8, 9]
 const REPAIR_CATEGORIES = [
   { id: 'machine', name: 'מכונה', subTypes: ['העברת רשת', 'תיקון רשת', 'התקנת לייס', 'השטחת סקין', 'דילול/מילוי'] },
   { id: 'color', name: 'צבע', subTypes: ['גוונים', 'שורש', 'שטיפה', 'הבהרה'] },
@@ -10,26 +10,37 @@ const REPAIR_CATEGORIES = [
 ];
 
 export const DiagnosisChecklist: React.FC = () => {
-  const [idNumber, setIdNumber] = useState(''); // לחיפוש לקוחה
-  const [customerId, setCustomerId] = useState(''); // ה-ID שנדרש לשרת [cite: 34]
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [idNumber, setIdNumber] = useState('');
+  const [customerId, setCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [wigCode, setWigCode] = useState('');
   const [isUrgent, setIsUrgent] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  const [categoryWorkers, setCategoryWorkers] = useState<Record<string, string>>({});
 
-  // פונקציה לחיפוש לקוחה וקבלת ה-ID שלה מהשרת [cite: 43]
-  const handleSearchCustomer = async () => {
-    if (!idNumber) return;
+  // מנגנון קליטת לקוחה חדשה שחזרה מרישום מהיר
+  useEffect(() => {
+    if (location.state?.idNumber) {
+      const returnedId = location.state.idNumber;
+      setIdNumber(returnedId);
+      handleSearchById(returnedId);
+    }
+  }, [location.state]);
+
+  const handleSearchById = async (id: string) => {
+    if (!id) return;
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/customers/search/${idNumber}`);
+      const response = await fetch(`http://localhost:3000/api/customers/search/${id}`);
       const data = await response.json();
+      
       if (data.exists) {
         setCustomerId(data.customer._id);
         setCustomerName(`${data.customer.firstName} ${data.customer.lastName}`);
-      } else {
-        alert("לקוחה לא נמצאה. יש לרשום אותה במערכת תחילה.");
       }
     } catch (error) {
       console.error("Search error", error);
@@ -38,7 +49,37 @@ export const DiagnosisChecklist: React.FC = () => {
     }
   };
 
-  // פונקציה להוספת/הסרת תיקון מהרשימה (שבוע 3) [cite: 22]
+  const handleSearchCustomer = async () => {
+    if (!idNumber) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/api/customers/search/${idNumber}`);
+      const data = await response.json();
+      
+      if (data.exists) {
+        setCustomerId(data.customer._id);
+        setCustomerName(`${data.customer.firstName} ${data.customer.lastName}`);
+      } else {
+        if (window.confirm("לקוחה לא נמצאה. האם תרצי לעבור לדף רישום לקוחה חדשה?")) {
+          // שינוי קריטי: הפניה לדף הרישום המהיר הייעודי לתיקונים שבנינו
+          navigate('/repairs/quick-register', { state: { idNumber } });
+        }
+      }
+    } catch (error) {
+      alert("שגיאה בחיפוש הלקוחה");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryWorkerChange = (categoryName: string, workerId: string) => {
+    setCategoryWorkers(prev => ({ ...prev, [categoryName]: workerId }));
+    
+    setSelectedTasks(prev => prev.map(t => 
+      t.category === categoryName ? { ...t, assignedTo: workerId } : t
+    ));
+  };
+
   const toggleTask = (category: string, subCategory: string) => {
     const exists = selectedTasks.find(t => t.category === category && t.subCategory === subCategory);
     if (exists) {
@@ -47,29 +88,27 @@ export const DiagnosisChecklist: React.FC = () => {
       setSelectedTasks([...selectedTasks, { 
         category, 
         subCategory, 
-        assignedTo: '', // השדה המדויק שהשרת מצפה לו [cite: 10]
+        assignedTo: categoryWorkers[category] || '', 
         notes: '',
         status: 'ממתין' 
       }]);
     }
   };
 
-  // עדכון העובדת שנבחרה למשימה ספציפית דרך ה-StaffAllocator [cite: 24, 55]
-  const updateWorker = (subCategory: string, workerId: string) => {
-    setSelectedTasks(prev => prev.map(t => 
-      t.subCategory === subCategory ? { ...t, assignedTo: workerId } : t
-    ));
-  };
-
-  // שליחת הטופס לשרת (POST /api/repairs) [cite: 34]
   const handleSubmit = async () => {
     if (!customerId || !wigCode || selectedTasks.length === 0) {
-      alert("נא לוודא זיהוי לקוחה, קוד פאה ובחירת תיקונים כולל שיבוץ עובדות");
+      alert("נא לוודא זיהוי לקוחה, קוד פאה ובחירת תיקונים");
+      return;
+    }
+
+    const unassigned = selectedTasks.find(t => !t.assignedTo);
+    if (unassigned) {
+      alert(`נא לבחור עובדת עבור קטגוריית ${unassigned.category}`);
       return;
     }
 
     const repairData = {
-      customerId, // ה-ID של הלקוחה עבור הקישור ב-DB [cite: 34]
+      customerId,
       wigCode,
       isUrgent,
       tasks: selectedTasks,
@@ -84,16 +123,16 @@ export const DiagnosisChecklist: React.FC = () => {
       });
 
       if (response.ok) {
-        alert("כרטיס תיקון נפתח בהצלחה! המשימות הועברו לעובדות. ✅");
-        // איפוס טופס
+        alert("כרטיס תיקון נפתח בהצלחה! ✅");
         setSelectedTasks([]);
+        setCategoryWorkers({});
         setWigCode('');
         setCustomerId('');
         setCustomerName('');
         setIdNumber('');
       } else {
         const errorData = await response.json();
-        alert(`שגיאה מהשרת: ${errorData.message}`);
+        alert(`שגיאה: ${errorData.message}`);
       }
     } catch (error) {
       alert("שגיאת תקשורת בפתיחת התיקון");
@@ -102,58 +141,58 @@ export const DiagnosisChecklist: React.FC = () => {
 
   return (
     <div className="diagnosis-container" dir="rtl">
-      <h2 style={{ color: '#6f42c1' }}>אבחון ושיבוץ פאה לתיקון 📝</h2>
+      <h2 className="diagnosis-title">אבחון ושיבוץ פאה לתיקון 📝</h2>
       
-      <div className="search-section" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-        <p>זיהוי לקוחה לפי ת"ז:</p>
-        <div style={{ display: 'flex', gap: '10px' }}>
+      <div className="search-section">
+        <p className="search-label">זיהוי לקוחה לפי ת"ז:</p>
+        <div className="search-controls">
           <input 
             type="text" 
             placeholder="הזיני תעודת זהות..." 
             value={idNumber} 
             onChange={e => setIdNumber(e.target.value)} 
           />
-          <button onClick={handleSearchCustomer} disabled={loading}>
+          <button className="search-btn" onClick={handleSearchCustomer} disabled={loading}>
             {loading ? 'מחפש...' : 'חיפוש לקוחה'}
           </button>
         </div>
-        {customerName && <p style={{ marginTop: '10px', fontWeight: 'bold' }}>לקוחה מזוהה: {customerName}</p>}
+        {customerName && <p className="customer-found-msg">לקוחה מזוהה: {customerName}</p>}
       </div>
 
-      <div className="basic-info">
+      <div className="basic-info-row">
         <input 
+          className="wig-code-input"
           placeholder="קוד פאה (REP-XXXXX)" 
           value={wigCode} 
           onChange={e => setWigCode(e.target.value)} 
         />
-        <label className="urgent-label" style={{ color: isUrgent ? 'red' : 'inherit', fontWeight: 'bold' }}>
+        <label className={`urgent-toggle ${isUrgent ? 'is-urgent' : ''}`}>
           <input type="checkbox" checked={isUrgent} onChange={e => setIsUrgent(e.target.checked)} />
-          סימון כדחוף! 🔴 [cite: 31, 66]
+          סימון כדחוף! 🔴
         </label>
       </div>
 
       <div className="categories-grid">
         {REPAIR_CATEGORIES.map(cat => (
-          <div key={cat.id} className="category-section" style={{ border: '1px solid #eee', padding: '15px', marginBottom: '15px' }}>
-            <h3 style={{ color: '#6f42c1', marginTop: 0 }}>{cat.name}</h3>
+          <div key={cat.id} className="category-card">
+            <h3 className="category-title">{cat.name}</h3>
+            
+            <div className="category-worker-box">
+              <p className="category-worker-label">בחרי עובדת ל{cat.name}:</p>
+              <StaffAllocator 
+                category={cat.name} 
+                onSelect={(workerId) => handleCategoryWorkerChange(cat.name, workerId)} 
+              />
+            </div>
+
             {cat.subTypes.map(sub => {
               const isSelected = selectedTasks.find(t => t.subCategory === sub);
               return (
-                <div key={sub} className={`task-row ${isSelected ? 'selected' : ''}`} style={{ marginBottom: '10px' }}>
-                  <label>
+                <div key={sub} className={`task-selection-row ${isSelected ? 'active' : ''}`}>
+                  <label className="task-checkbox-label">
                     <input type="checkbox" checked={!!isSelected} onChange={() => toggleTask(cat.name, sub)} />
                     {sub}
                   </label>
-                  
-                  {isSelected && (
-                    <div className="allocator-wrapper" style={{ marginTop: '5px', marginRight: '20px' }}>
-                      {/* שימוש בקומפוננטה המציגה עובדות פנויות ועומס בזמן אמת (שבוע 3) [cite: 24, 35, 56] */}
-                      <StaffAllocator 
-                        category={cat.name} 
-                        onSelect={(workerId) => updateWorker(sub, workerId)} 
-                      />
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -161,11 +200,7 @@ export const DiagnosisChecklist: React.FC = () => {
         ))}
       </div>
 
-      <button 
-        className="submit-repair-btn" 
-        onClick={handleSubmit}
-        style={{ width: '100%', padding: '15px', backgroundColor: '#6f42c1', color: 'white', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-      >
+      <button className="main-submit-btn" onClick={handleSubmit}>
         אישור ופתיחת כרטיס תיקון 🖨️
       </button>
     </div>

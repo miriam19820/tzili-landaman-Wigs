@@ -1,0 +1,104 @@
+/* קונטיינר ראשי למרכז הדף */
+.quick-reg-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 20px;
+  direction: rtl;
+}
+
+/* כרטיס הרישום */
+.quick-reg-card {
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  border: 1px solid #e2d5ff;
+}
+
+.quick-reg-card h2 {
+  color: #6f42c1;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.quick-reg-card p {
+  color: #666;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* עיצוב הטופס */
+.quick-reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row input {
+  flex: 1;
+}
+
+.quick-reg-form input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.quick-reg-form input:focus {
+  border-color: #6f42c1;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.1);
+}
+
+/* כפתורי פעולה */
+.reg-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.reg-btn-submit {
+  padding: 14px;
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.reg-btn-submit:hover {
+  background-color: #5a32a3;
+}
+
+.reg-btn-submit:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.reg-btn-cancel {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.reg-btn-cancel:hover {
+  color: #555;
+}
