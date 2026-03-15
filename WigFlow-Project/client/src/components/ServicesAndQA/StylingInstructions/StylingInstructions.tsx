@@ -1,4 +1,5 @@
 import React from 'react';
+import './StylingInstructions.css'; // <-- הוספנו את ה-CSS
 
 interface IStylingProps {
   category: string;
@@ -8,17 +9,16 @@ interface IStylingProps {
 
 export const StylingInstructions: React.FC<IStylingProps> = ({ category, notes, isUrgent }) => {
   return (
-    <div style={{ 
-      padding: '15px', 
-      border: isUrgent ? '2px solid red' : '1px solid #ccc', 
-      borderRadius: '8px', 
-      backgroundColor: '#fefefe',
-      marginTop: '10px' 
-    }}>
-      <h3 style={{ color: '#333', marginTop: 0 }}>הוראות עיצוב לסורקת:</h3>
-      <p><strong>סגנון מבוקש:</strong> {category}</p>
-      {notes && <p><strong>הערות ספציפיות:</strong> {notes}</p>}
-      {isUrgent && <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ דחוף - נא לתת עדיפות!</p>}
+    <div className={`styling-container ${isUrgent ? 'urgent' : ''}`}>
+      <h3 className="styling-title">הוראות עיצוב לסורקת:</h3>
+      <p className="styling-detail"><strong>סגנון מבוקש:</strong> {category}</p>
+      {notes && <p className="styling-detail"><strong>הערות ספציפיות:</strong> {notes}</p>}
+      
+      {isUrgent && (
+        <p className="urgent-warning">
+          ⚠️ דחוף - נא לתת עדיפות!
+        </p>
+      )}
     </div>
   );
 }

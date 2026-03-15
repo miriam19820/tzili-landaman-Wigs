@@ -1,0 +1,45 @@
+.styling-container {
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fcfcfc;
+  margin-top: 15px;
+  direction: rtl;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+/* המחלקה הזו תתווסף כשהפאה מסומנת כדחופה */
+.styling-container.urgent {
+  border: 2px solid #dc3545;
+  background-color: #fff8f8;
+}
+
+.styling-title {
+  color: #333;
+  margin-top: 0;
+  font-size: 1.1rem;
+  border-bottom: 1px dashed #ccc;
+  padding-bottom: 8px;
+}
+
+.styling-detail {
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+.styling-detail strong {
+  color: #495057;
+}
+
+.urgent-warning {
+  color: #dc3545;
+  font-weight: bold;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #ffe6e6;
+  padding: 8px;
+  border-radius: 4px;
+}

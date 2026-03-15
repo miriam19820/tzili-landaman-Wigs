@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './ServiceOrderForm.css'; // <-- הוספנו את ה-CSS
 
 // הגדרת המבנה של הנתונים (Interface) כדי שהטייפסקריפט יהיה מרוצה
 interface IServiceForm {
@@ -26,28 +27,28 @@ export const ServiceOrderForm: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', direction: 'rtl', border: '1px solid #ddd', borderRadius: '8px', backgroundColor: '#fff' }}>
-      <h2 style={{ textAlign: 'center' }}>פתיחת הזמנת שירות - מזכירה</h2>
+    <div className="service-form-container">
+      <h2 className="service-form-title">פתיחת הזמנת שירות - מזכירה</h2>
       
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+      <form onSubmit={handleSubmit}>
         
         {/* שם הלקוחה */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>שם הלקוחה:</label>
+        <div className="form-group">
+          <label className="form-label">שם הלקוחה:</label>
           <input 
             type="text"
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="form-input"
             value={formData.customerName}
             onChange={(e) => setFormData({...formData, customerName: e.target.value})}
             required
           />
         </div>
 
-        {/* סוג השירות - כולל לוגיקת הדילוג שלך משבוע 2 */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>סוג השירות:</label>
+        {/* סוג השירות */}
+        <div className="form-group">
+          <label className="form-label">סוג השירות:</label>
           <select 
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="form-input"
             value={formData.serviceType}
             onChange={(e) => setFormData({...formData, serviceType: e.target.value})}
           >
@@ -58,10 +59,10 @@ export const ServiceOrderForm: React.FC = () => {
         </div>
 
         {/* סגנון עיצוב */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>סגנון מבוקש:</label>
+        <div className="form-group">
+          <label className="form-label">סגנון מבוקש:</label>
           <select 
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+            className="form-input"
             value={formData.styleCategory}
             onChange={(e) => setFormData({...formData, styleCategory: e.target.value})}
           >
@@ -74,33 +75,31 @@ export const ServiceOrderForm: React.FC = () => {
         </div>
 
         {/* הערות מיוחדות */}
-        <div>
-          <label style={{ display: 'block', fontWeight: 'bold' }}>הערות (למשל: בייביליס פתוח):</label>
+        <div className="form-group">
+          <label className="form-label">הערות (למשל: בייביליס פתוח):</label>
           <textarea 
-            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc', minHeight: '60px' }}
+            className="form-input"
+            style={{ minHeight: '60px' }}
             value={formData.note}
             onChange={(e) => setFormData({...formData, note: e.target.value})}
           />
         </div>
 
         {/* סימון דחיפות */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="form-group urgent-checkbox-group">
           <input 
             type="checkbox" 
             id="isUrgent"
             checked={formData.isUrgent}
             onChange={(e) => setFormData({...formData, isUrgent: e.target.checked})}
           />
-          <label htmlFor="isUrgent" style={{ fontWeight: 'bold', color: 'red' }}>דחוף!</label>
+          <label htmlFor="isUrgent" className="urgent-label">דחוף!</label>
         </div>
 
-        <button 
-          type="submit" 
-          style={{ backgroundColor: '#007bff', color: 'white', padding: '12px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-        >
+        <button type="submit" className="btn-submit">
           צור משימה במערכת
         </button>
       </form>
     </div>
   );
-};
+}
