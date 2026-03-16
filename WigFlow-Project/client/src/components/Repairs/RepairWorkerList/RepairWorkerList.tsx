@@ -1,15 +1,15 @@
-<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 interface Task {
-  _id: string;
   category: string;
   subCategory: string;
-  status: 'ממתין' | 'בוצע';
+  assignedTo: string;
+  status: string;
   notes: string;
 }
 
-interface RepairWithTask {
+interface RepairTask {
   repairId: string;
   wigCode: string;
   customerName: string;
@@ -18,218 +18,112 @@ interface RepairWithTask {
   task: Task;
 }
 
-interface Props {
+interface RepairWorkerListProps {
   workerId: string;
 }
 
-export const RepairWorkerList: React.FC<Props> = ({ workerId }) => {
-  const [tasks, setTasks] = useState<RepairWithTask[]>([]);
+export const RepairWorkerList: React.FC<RepairWorkerListProps> = ({ workerId }) => {
+  const [tasks, setTasks] = useState<RepairTask[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchTasks = async () => {
-    try {
-      const res = await fetch(`http://localhost:3000/api/repairs/worker-tasks/${workerId}`);
-      const data = await res.json();
-      if (data.success) setTasks(data.data);
-    } catch (error) {
-      console.error('שגיאה בשליפת משימות', error);
-    } finally {
-      setLoading(false);
-=======
-import React, { useState, useEffect } from 'react';
-import { TaskItem, WorkerTask } from '../TaskItem/TaskItem';
-import './RepairWorkerList.css';
-interface RepairWorkerListProps {
-  workerId: string; 
-}
-
-export const RepairWorkerList: React.FC<RepairWorkerListProps> = ({ workerId }) => {
-  const [tasks, setTasks] = useState<WorkerTask[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // משיכת המשימות מהשרת - חיבור ל-API של מפתחת #3 
-  const fetchTasks = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    const userString = localStorage.getItem('user');
-    const user = userString ? JSON.parse(userString) : null;
-    const isAdmin = user?.role === 'Admin';
-
-    try {
-      // ניתוב חכם: אדמין רואה הכל (דשבורד), עובדת רואה רק את משימותיה האישיות
-      const endpoint = isAdmin 
-        ? `http://localhost:3000/api/repairs/dashboard-view` 
-        : `http://localhost:3000/api/repairs/worker-tasks/${workerId}`;
-
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error('שגיאה בתקשורת מול השרת');
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        // התאמת נתונים לתצוגה אחידה ב-TaskItem
-        const displayData = isAdmin 
-          ? result.data.map((item: any) => ({
-              repairId: item._id,
-              wigCode: item.wigCode,
-              customerName: item.customerName,
-              isUrgent: item.isUrgent,
-              category: item.overallStatus, // מציג את הסטטוס הכללי (למשל: "בתיקון")
-              subCategory: item.currentStation, // מציג את התחנה הנוכחית
-              notes: `משובץ ל: ${item.assignedTo || 'טרם נקבע'}`,
-              status: 'ממתין'
-            }))
-          : result.data;
-
-        // מיון משימות: משימות דחופות תמיד יופיעו בראש הרשימה
-        const sortedTasks = [...displayData].sort((a, b) => Number(b.isUrgent) - Number(a.isUrgent));
-        setTasks(sortedTasks);
-      } else {
-        throw new Error(result.message || 'שגיאה בשליפת המשימות');
-      }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
-    }
-  };
-
   useEffect(() => {
-<<<<<<< HEAD
-    if (workerId) fetchTasks();
+    fetchTasks();
   }, [workerId]);
 
-  const handleComplete = async (repairId: string, taskIndex: number) => {
+  const fetchTasks = async () => {
     try {
-      await fetch(`http://localhost:3000/api/repairs/${repairId}/task/${taskIndex}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'בוצע' })
-      });
-      fetchTasks();
+      setLoading(true);
+      const res = await axios.get(`http://localhost:3000/api/repairs/worker-tasks/${workerId}`);
+      if (res.data.success) {
+        setTasks(res.data.data);
+      }
     } catch (error) {
-      console.error('שגיאה בעדכון משימה', error);
+      console.error('Error fetching tasks', error);
+      alert('שגיאה בטעינת המשימות');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) return <div dir="rtl" style={{ padding: '20px' }}>טוען משימות...</div>;
+  const handleStatusUpdate = async (repairId: string, taskIndex: number, newStatus: string) => {
+    try {
+      const res = await axios.patch(`http://localhost:3000/api/repairs/${repairId}/task/${taskIndex}`, {
+        status: newStatus
+      });
+      
+      if (res.data.success) {
+        fetchTasks();
+        if (res.data.message) {
+          alert(res.data.message); 
+        }
+      }
+    } catch (error) {
+      console.error('Error updating task status', error);
+      alert('שגיאה בעדכון הסטטוס');
+    }
+  };
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: '20px' }}>טוען משימות...</div>;
+  }
 
   return (
     <div dir="rtl" style={{ maxWidth: '800px', margin: 'auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2 style={{ borderBottom: '3px solid #6f42c1', paddingBottom: '10px' }}>המשימות שלי</h2>
-
-      {tasks.length === 0 ? (
-        <p style={{ color: '#6c757d', textAlign: 'center', marginTop: '40px' }}>אין משימות פתוחות כרגע ✅</p>
-      ) : (
-        tasks.map((item) => (
-          <div key={item.repairId + item.taskIndex} style={{
-            border: `2px solid ${item.isUrgent ? '#dc3545' : '#dee2e6'}`,
-            borderRadius: '8px',
-            padding: '15px',
-            marginBottom: '15px',
-            background: item.isUrgent ? '#fff5f5' : '#fff'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                {item.isUrgent && <span style={{ color: '#dc3545', fontWeight: 'bold', marginLeft: '10px' }}>🔴 דחוף</span>}
-                <strong>{item.wigCode}</strong> — {item.customerName}
-              </div>
-              <span style={{ background: '#6f42c1', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '0.85rem' }}>
-                {item.task.category}
-              </span>
-            </div>
-            <div style={{ marginTop: '10px', color: '#495057' }}>
-              משימה: <strong>{item.task.subCategory}</strong>
-              {item.task.notes && <span style={{ marginRight: '10px', color: '#6c757d' }}>({item.task.notes})</span>}
-            </div>
-            <button
-              onClick={() => handleComplete(item.repairId, item.taskIndex)}
-              style={{ marginTop: '10px', padding: '8px 20px', background: '#28a745', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              סמני כבוצע ✓
-            </button>
-          </div>
-        ))
-      )}
-    </div>
-  );
-};
-=======
-    if (workerId) {
-      fetchTasks();
-    }
-  }, [workerId]);
-
-  // פונקציה לעדכון ה-UI לאחר שהעובדת לחצה על "סיימתי" ב-TaskItem 
-  const handleTaskComplete = async (repairId: string, taskIndex: number) => {
-    // הסרת המשימה שבוצעה מהרשימה המקומית מיד (Optimistic Update)
-    setTasks(prevTasks => prevTasks.filter(t => !(t.repairId === repairId && t.taskIndex === taskIndex)));
-    console.log(`משימה ${taskIndex} בתיקון ${repairId} סומנה כבוצעה בהצלחה.`);
-    
-    // במידה ורוצים לראות אם נוספו משימות אוטומטיות כמו חפיפה או בקרה, ניתן לרענן את הרשימה מהשרת
-    // fetchTasks(); 
-  };
-
-  if (isLoading) return <div style={{ textAlign: 'center', padding: '20px' }}>טוען משימות עבודה... ⏳</div>;
-  if (error) return <div style={{ color: 'red', textAlign: 'center', padding: '20px' }}>שגיאה: {error}</div>;
-
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const title = user.role === 'Admin' ? 'מעקב תיקונים כללי - מבט על 📋' : 'רשימת המשימות האישית שלי ✂️';
-
-  return (
-    <div dir="rtl" style={{ maxWidth: '850px', margin: '0 auto', padding: '20px' }}>
-      <header style={{ 
-        borderBottom: '2px solid #6f42c1', 
-        marginBottom: '20px', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        paddingBottom: '10px'
-      }}>
-        <h2 style={{ color: '#6f42c1', margin: 0 }}>{title}</h2>
-        <button 
-          onClick={fetchTasks} 
-          style={{ 
-            background: 'none', 
-            border: '1px solid #ccc', 
-            cursor: 'pointer', 
-            borderRadius: '4px', 
-            padding: '5px 15px',
-            fontWeight: 'bold'
-          }}
-        >
-          🔄 רענן רשימה
-        </button>
-      </header>
+      <h2 style={{ borderBottom: '3px solid #6f42c1', paddingBottom: '10px' }}>
+        תחנת תיקונים - משימות פתוחות
+      </h2>
       
       {tasks.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px', 
-          backgroundColor: '#f8f9fa', 
-          borderRadius: '8px', 
-          color: '#666' 
-        }}>
-          <h3>אין כרגע משימות פתוחות לביצוע. 🎉</h3>
-        </div>
+        <p style={{ textAlign: 'center', fontSize: '1.2rem', color: '#666', marginTop: '40px' }}>
+          אין לך משימות פתוחות כרגע. עבודה נעימה! 🎉
+        </p>
       ) : (
-        <div className="tasks-container">
-          <p style={{ fontWeight: 'bold', color: '#555', marginBottom: '15px' }}>
-             נמצאו {tasks.length} משימות הממתינות לטיפולך:
-          </p>
-          {tasks.map((task, index) => (
-            <TaskItem 
-              key={`${task.repairId}-${task.taskIndex || index}`} 
-              task={task} 
-              onComplete={handleTaskComplete} 
-            />
+        <div style={{ display: 'grid', gap: '15px', marginTop: '20px' }}>
+          {tasks.map((taskData) => (
+            <div 
+              key={`${taskData.repairId}-${taskData.taskIndex}`} 
+              style={{ 
+                border: taskData.isUrgent ? '2px solid red' : '1px solid #ddd', 
+                padding: '15px', 
+                borderRadius: '8px',
+                backgroundColor: taskData.isUrgent ? '#fffafa' : '#fff'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h3 style={{ margin: 0 }}>
+                  פאה קוד: {taskData.wigCode} 
+                  {taskData.isUrgent ? <span style={{ color: 'red', marginLeft: '10px' }}> 🔴 דחוף!</span> : null}
+                </h3>
+                <span style={{ fontWeight: 'bold', backgroundColor: '#e9ecef', padding: '5px 10px', borderRadius: '4px' }}>
+                  לקוחה: {taskData.customerName}
+                </span>
+              </div>
+              
+              <div style={{ marginBottom: '15px' }}>
+                <p style={{ margin: '5px 0' }}><strong>סוג תיקון:</strong> {taskData.task.category} - {taskData.task.subCategory}</p>
+                {taskData.task.notes ? <p style={{ margin: '5px 0', color: '#666' }}><strong>הערות:</strong> {taskData.task.notes}</p> : null}
+              </div>
+              
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button 
+                  onClick={() => handleStatusUpdate(taskData.repairId, taskData.taskIndex, 'בוצע')}
+                  style={{ 
+                    padding: '8px 15px', 
+                    backgroundColor: '#28a745', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  סיום משימה ✅
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}
     </div>
   );
 };
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40

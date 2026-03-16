@@ -73,7 +73,7 @@ async function FullWorkloadReportCloseJobs() {
 }
 
 async function getAvailableWorkersByCategory(category: string) {
- const workers = await User.find({ 
+  const workers = await User.find({ 
     role: 'Worker',
     specialty: category
   });
@@ -209,7 +209,7 @@ async function createRepairOrder(repairData: any) {
     wigCode: repairData.wigCode,       
     customer: repairData.customerId,  
     isUrgent: isUrgent,               
-    tasks: allTasks                   
+    tasks: allTasks                  
   });
 
   return await newRepair.save();
@@ -245,7 +245,7 @@ async function getDashboardView() {
     };
   });
 }
-<<<<<<< HEAD
+
 //ייצוא של כל הפונקציות שיצרנו כדי שנוכל להשתמש בהן בקונטרולרים שלנו
 async function getTasksByWorker(workerId: string) {
   const repairs = await Repair.find({ 'tasks.assignedTo': workerId })
@@ -264,45 +264,12 @@ async function getTasksByWorker(workerId: string) {
           isUrgent: repair.isUrgent,
           taskIndex: index,
           task
-=======
-
-// ---> הפונקציה שהייתה חסרה עבור הראוטר <---
-async function getTasksForWorker(workerId: string) {
-  const activeRepairs = await Repair.find({
-    'tasks.assignedTo': workerId,
-    'tasks.status': 'ממתין'
-  }).populate('customer', 'firstName lastName');
-
-  const workerTasks: any[] = [];
-
-  activeRepairs.forEach(repair => {
-    repair.tasks.forEach((task: any, index: number) => {
-      if (task.assignedTo.toString() === workerId && task.status === 'ממתין') {
-        const customer = repair.customer as any;
-        workerTasks.push({
-          repairId: repair._id,
-          wigCode: repair.wigCode,
-          customerName: customer ? `${customer.firstName} ${customer.lastName}` : "לקוחה",
-          isUrgent: repair.isUrgent,
-          taskIndex: index,
-          category: task.category,
-          subCategory: task.subCategory,
-          notes: task.notes,
-          status: task.status
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
         });
       }
     });
   });
 
-<<<<<<< HEAD
   return result.sort((a, b) => (b.isUrgent ? 1 : 0) - (a.isUrgent ? 1 : 0));
-=======
-  // מיון כך שמשימות דחופות יופיעו ראשונות
-  workerTasks.sort((a, b) => Number(b.isUrgent) - Number(a.isUrgent));
-
-  return workerTasks;
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
 
 export {
@@ -319,10 +286,5 @@ export {
   updateTaskAndMoveToNext,
   createRepairOrder,
   getDashboardView,
-<<<<<<< HEAD
   getTasksByWorker
-  };
-=======
-  getTasksForWorker // ---> ייצוא הפונקציה כדי שהראוטר יזהה אותה <---
 };
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
