@@ -42,6 +42,15 @@ repairRouter.get('/available-workers/:category', async (req, res, next) => {
 });
 
 
+repairRouter.get('/worker-tasks/:workerId', async (req, res, next) => {
+  try {
+    const tasks = await repairService.getTasksByWorker(req.params.workerId);
+    res.json({ success: true, data: tasks });
+  } catch (error) {
+    next(error);
+  }
+});
+
 repairRouter.get('/:id', async (req, res, next) => {
   try {
     const repair = await repairService.getRepairById(req.params.id);

@@ -264,6 +264,31 @@ async function createRepairOrder(repairData:any) {
   });
 }
 //ייצוא של כל הפונקציות שיצרנו כדי שנוכל להשתמש בהן בקונטרולרים שלנו
+async function getTasksByWorker(workerId: string) {
+  const repairs = await Repair.find({ 'tasks.assignedTo': workerId })
+    .populate('customer', 'firstName lastName');
+
+  const result: any[] = [];
+  repairs.forEach(repair => {
+    const customer = repair.customer as any;
+    const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'לא ידוע';
+    repair.tasks.forEach((task, index) => {
+      if (task.assignedTo?.toString() === workerId && task.status === 'ממתין') {
+        result.push({
+          repairId: repair._id,
+          wigCode: repair.wigCode,
+          customerName,
+          isUrgent: repair.isUrgent,
+          taskIndex: index,
+          task
+        });
+      }
+    });
+  });
+
+  return result.sort((a, b) => (b.isUrgent ? 1 : 0) - (a.isUrgent ? 1 : 0));
+}
+
 export {
   getRepairById,  
   updateTaskStatus,
@@ -277,5 +302,6 @@ export {
   checkRepairCompletion,
   updateTaskAndMoveToNext,
   createRepairOrder,
-  getDashboardView
+  getDashboardView,
+  getTasksByWorker
   };

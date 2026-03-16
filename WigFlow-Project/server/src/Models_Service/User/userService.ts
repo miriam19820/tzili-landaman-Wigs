@@ -1,16 +1,8 @@
 import { User } from './userModel';
-<<<<<<< HEAD:WigFlow-Project/server/src/Models_Service/User/userService.ts
 import { Customer } from '../Customer/customerModel'; 
-=======
-<<<<<<< HEAD
-import { Customer } from '../Customer/customerModel'; 
-=======
 import bcrypt from 'bcryptjs'; 
 import jwt from 'jsonwebtoken';  
->>>>>>> f514276d700e85a8075a6e6e0830bc2843dc3126
->>>>>>> origin/miryami:server/src/Models_Service/User/userService.ts
 
-// הגדרת ה"חוזה" של הנתונים
 interface UserData {
     username: string;
     password: string;
@@ -19,9 +11,8 @@ interface UserData {
     specialty: string;
 }
 
-/**
- * פונקציה ליצירת עובדת חדשה (הרשמה)
- */
+const SECRET_KEY = 'SECRET_KEY_123'; // כדאי להעביר ל-.env בהמשך
+
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });
     if (existingUser) {
@@ -39,9 +30,6 @@ export const createUser = async (userData: UserData) => {
     return await newUser.save();
 };
 
-/**
- * פונקציה לכניסה למערכת (Login)
- */
 export const loginUser = async (username: string, password: string) => {
     const user = await User.findOne({ username });
     if (!user) {
@@ -53,10 +41,9 @@ export const loginUser = async (username: string, password: string) => {
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
-    // יצירת ה-Token
     const token = jwt.sign(
         { id: user._id, role: user.role }, 
-        'SECRET_KEY_123', 
+        SECRET_KEY, 
         { expiresIn: '1d' }
     );
 
@@ -71,10 +58,6 @@ export const loginUser = async (username: string, password: string) => {
     };
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8
 export const getAllUsers = async () => {
     return await User.find().select('-password');
 };
@@ -82,7 +65,7 @@ export const getAllUsers = async () => {
 export const getUserById = async (userId: string) => {
     const user = await User.findById(userId)
     .select('-password')
-    .populate('workload');;
+    .populate('workload');
     if (!user) {
         throw new Error('העובדת לא נמצאה במערכת');
     }
@@ -92,7 +75,7 @@ export const getUserById = async (userId: string) => {
 export const getUserByUsername = async (username: string) => {
     const user = await User.findOne({ username })
         .select('-password')
-        .populate('workload'); // הוספת השורה הזו
+        .populate('workload');
     if (!user) {
         throw new Error(`לא נמצאה עובדת עם שם המשתמש: ${username}`);
     }

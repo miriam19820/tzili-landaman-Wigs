@@ -42,7 +42,7 @@ export const ProductionStation: React.FC = () => {
   useEffect(() => {
     const fetchWorkers = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/users');
+        const res = await fetch('http://localhost:3000/api/users');
         if (res.ok) {
           const users = await res.json();
           setAllWorkers(users.filter((u: any) => u.role === 'Worker'));
@@ -83,7 +83,7 @@ export const ProductionStation: React.FC = () => {
 
   const fetchStationData = async () => {
     try {
-      const wigsRes = await fetch(`http://localhost:5000/api/wigs/work-station/${currentWorkerId}`);
+      const wigsRes = await fetch(`http://localhost:3000/api/wigs/work-station/${currentWorkerId}`);
       if (wigsRes.ok) {
         const wigsData = await wigsRes.json();
         setMyWigs(wigsData.data || []);
@@ -129,7 +129,7 @@ export const ProductionStation: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/wigs/${wigId}/next-step`, {
+      const response = await fetch(`http://localhost:3000/api/wigs/${wigId}/next-step`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nextWorkerId: selectedNextWorker[wigId] }) 
