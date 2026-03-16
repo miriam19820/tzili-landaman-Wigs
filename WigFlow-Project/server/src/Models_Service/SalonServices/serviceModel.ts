@@ -1,17 +1,14 @@
 import { Schema, model } from 'mongoose';
 
 const serviceSchema = new Schema({
-  // קישור ללקוחה
   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
 
-  // סוג השירות המבוקש 
   serviceType: { 
     type: String, 
     enum: ['Wash & Style', 'Wash Only', 'Style Only', 'Production QA', 'Repair QA'], 
     required: true 
   },
 
-  // מקור המשימה - זהו השדה הקריטי שמאפשר לקבל משימות ממפתחת 2 ומפתחת 3 
   origin: { 
     type: String, 
     enum: ['Service', 'NewWig', 'Repair'], 
@@ -19,11 +16,9 @@ const serviceSchema = new Schema({
     required: true
   },
 
-  // קישורים טכניים למזהים של המפתחות האחרות (כדי שתוכלי למשוך את פרטי הפאה שלהן) 
   newWigReference: { type: Schema.Types.ObjectId, ref: 'NewWig' },
   repairReference: { type: Schema.Types.ObjectId, ref: 'Repair' },
 
-  // סגנון הסירוק
   styleCategory: { 
     type: String, 
     enum: ['חלק', 'מוברש', 'גלי', 'תלתלים', 'טבעי', 'בייביליס', 'ללא'],
@@ -36,10 +31,8 @@ const serviceSchema = new Schema({
     qa: String
   },
 
-  // ניהול זמני ייבוש לצורך התראות
   dryingStartTime: Date,
 
-  // לטובת סנכרון דחיפות והקפצה לראש התור 
   isUrgent: { type: Boolean, default: false }, 
 
   status: { 

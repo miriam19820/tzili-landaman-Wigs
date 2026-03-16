@@ -1,7 +1,6 @@
 import winston from 'winston';
 import path from 'path';
 
-// פורמט התאריך לשם הקובץ (YYYY-MM-DD)
 const getLogFileName = () => {
   const today = new Date();
   const year = today.getFullYear();
@@ -10,7 +9,6 @@ const getLogFileName = () => {
   return `${year}-${month}-${day}.log`;
 };
 
-// יצירת Logger
 const logger = winston.createLogger({
   level: 'error',
   format: winston.format.combine(
@@ -21,12 +19,10 @@ const logger = winston.createLogger({
     })
   ),
   transports: [
-    // כתיבה לקובץ יומי
     new winston.transports.File({ 
       filename: path.join(__dirname, '../../logs', getLogFileName()),
       level: 'error'
     }),
-    // כתיבה ל-console
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),

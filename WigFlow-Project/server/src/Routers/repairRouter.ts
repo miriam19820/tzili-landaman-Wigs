@@ -3,6 +3,7 @@ import * as repairService from '../Models_Service/Repairs/repairService';
 
 const repairRouter = Router();
 
+// 1. פתיחת כרטיס תיקון חדש (על ידי המזכירה)
 repairRouter.post('/', async (req, res, next) => {
   try {
     const newRepair = await repairService.createRepairOrder(req.body);
@@ -12,7 +13,7 @@ repairRouter.post('/', async (req, res, next) => {
   }
 });
 
-
+// 2. שליפת נתונים מרוכזים למסך המזכירה
 repairRouter.get('/dashboard-view', async (req, res, next) => {
   try {
     const dashboard = await repairService.getDashboardView();
@@ -22,7 +23,7 @@ repairRouter.get('/dashboard-view', async (req, res, next) => {
   }
 });
 
-
+// 3. שליפת דוח עומסי עבודה של הצוות
 repairRouter.get('/worker-load', async (req, res, next) => {
   try {
     const report = await repairService.FullWorkloadReportOpenJobs();
@@ -32,6 +33,7 @@ repairRouter.get('/worker-load', async (req, res, next) => {
   }
 });
 
+// 4. שליפת עובדות פנויות לפי קטגוריית תיקון
 repairRouter.get('/available-workers/:category', async (req, res, next) => {
   try {
     const workers = await repairService.getAvailableWorkersByCategory(req.params.category);
@@ -41,7 +43,7 @@ repairRouter.get('/available-workers/:category', async (req, res, next) => {
   }
 });
 
-
+// 5. שליפת הרשימה האישית של המשימות לעובדת המחוברת
 repairRouter.get('/worker-tasks/:workerId', async (req, res, next) => {
   try {
     const tasks = await repairService.getTasksByWorker(req.params.workerId);
@@ -51,6 +53,7 @@ repairRouter.get('/worker-tasks/:workerId', async (req, res, next) => {
   }
 });
 
+// 6. שליפת תיקון בודד לפי ה-ID שלו
 repairRouter.get('/:id', async (req, res, next) => {
   try {
     const repair = await repairService.getRepairById(req.params.id);
@@ -60,13 +63,27 @@ repairRouter.get('/:id', async (req, res, next) => {
   }
 });
 
-
+// 7. עדכון סטטוס המשימה ובדיקה האם התיקון כולו הסתיים
 repairRouter.patch('/:id/task/:index', async (req, res, next) => {
   try {
     const { id, index } = req.params;
     const { status } = req.body;
-    const updated = await repairService.updateTaskStatus(id, parseInt(index), status);
-    res.json({ success: true, data: updated });
+    
+    // מעדכנים את המשימה הספציפית ל"בוצע"
+    const updatedRepair = await repairService.updateTaskStatus(id, parseInt(index), status);
+    
+    // בודקים אם עכשיו הפאה סיימה את *כל* התיקונים שלה
+    const isComplete = await repairService.checkRepairCompletion(updatedRepair.wigCode);
+    
+    if (isComplete) {
+      console.log(`✅ כל התיקונים של פאה ${updatedRepair.wigCode} הסתיימו בהצלחה!`);
+    }
+
+    res.json({ 
+      success: true, 
+      data: updatedRepair, 
+      message: isComplete ? 'המשימה והתיקונים כולם הסתיימו!' : 'המשימה עודכנה בהצלחה'
+    });
   } catch (error) {
     next(error);
   }

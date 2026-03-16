@@ -1,110 +1,50 @@
 import { connectDB } from './Utils/connectDB';
 import { Customer } from './Models_Service/Customer/customerModel';
 import { User } from './Models_Service/User/userModel';
-import { Service } from './Models_Service/SalonServices/serviceModel';
-import { NewWig } from './Models_Service/NewWigs/newWigModel';
 import { Repair } from './Models_Service/Repairs/repairModel';
+import bcrypt from 'bcryptjs';
 
 const seedData = async () => {
   try {
     await connectDB();
-
     await Customer.deleteMany({});
     await User.deleteMany({});
-    await Service.deleteMany({});
-    await NewWig.deleteMany({});
     await Repair.deleteMany({}); 
 
-    // 2. יצירת לקוחה לדוגמה
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+    console.log('🔑 סיסמה: password123');
+    console.log('🔐 סיסמה מוצפנת:', hashedPassword);
+
+    
     const customer = await Customer.create({
-      firstName: 'שרה',
-      lastName: 'כהן',
-      idNumber: '012345678',
-      phoneNumber: '050-1234567',
-      email: 'sara@example.com',
-      address: 'רחוב יפו 100, ירושלים'
+      firstName: 'מרים',
+      lastName: 'גליק',
+      idNumber: '329520449', 
+      phoneNumber: '0583241344',
+      email: 'miriamm41344@gmail.com',
+      address: 'ישעיהו הנביא 1, בית שמש'
     });
 
-    // 3. יצירת צוות עובדות עם שדות חובה (fullName ו-password)
-    const commonPassword = 'password123';
+    // 2. יצירת צוות - עובדת אחת לכל קטגוריה שקיימת בטופס שלך
+    // חשוב: כולן role: 'Worker' כדי שהחיפוש בשרת ימצא אותן!
+    await User.create({ username: 'הודיה', fullName: 'הודיה (צבע)', password: hashedPassword, role: 'Worker', specialty: 'צבע' });
+    await User.create({ username: 'ליפשי', fullName: 'ליפשי (מכונה)', password: hashedPassword, role: 'Worker', specialty: 'מכונה' });
+    await User.create({ username: 'מירי', fullName: 'מירי (עבודת יד)', password: hashedPassword, role: 'Worker', specialty: 'עבודת יד' });
+    await User.create({ username: 'מרים', fullName: 'מרים (חפיפה)', password: hashedPassword, role: 'Worker', specialty: 'חפיפה' });
+    
+    // הפתרון לרשימת ה-QA הריקה:
+    await User.create({ username: 'רחלי', fullName: 'רחלי (בקרה)', password: hashedPassword, role: 'Worker', specialty: 'בקרה' });
 
-    const worker1 = await User.create({ 
-      username: 'הני', 
-      fullName: 'הני כהן', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'התאמת שיער' 
-    });
-    
-    const worker2 = await User.create({ 
-      username: 'טעמא', 
-      fullName: 'טעמא לוי', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'תפירה' 
-    });
-    
-    const worker3 = await User.create({ 
-      username: 'הודיה', 
-      fullName: 'הודיה אברהם', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'צבע' 
-    });
-    
-    const worker4 = await User.create({ 
-      username: 'מירי', 
-      fullName: 'מירי שטרן', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'עבודת יד' 
-    });
-    
-    const worker5 = await User.create({ 
-      username: 'מרים', 
-      fullName: 'מרים וייס', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'חפיפה' 
-    });
-    
-    const worker6 = await User.create({ 
-      username: 'תהילה', 
-      fullName: 'תהילה מנהלת', 
-      password: commonPassword, 
-      role: 'QC', 
-      specialty: 'בקרת איכות' 
-    });
+    // משתמש מנהל
+    await User.create({ username: 'admin', fullName: 'מנהל המערכת', password: hashedPassword, role: 'Admin', specialty: 'ניהול' });
 
-    // 4. יצירת הזמנת פאה חדשה לדוגמה
-    await NewWig.create({
-      customer: customer._id,
-      orderCode: 'ORD-9876',
-      receivedBy: 'המזכירה',
-      wigMakerName: 'הני',
-      measurements: { circumference: 54, earToEar: 30, frontToBack: 35 },
-      netSize: 'XS', 
-      hairType: 'שיער גלי',
-      napeLength: 'ארוך',
-      baseColor: 'חום כהה',
-      highlightsWefts: 'בלונד עדין',
-      highlightsSkin: 'ללא',
-      topConstruction: 'לייס פרונט',
-      topNotes: 'להקפיד על שביל טבעי',
-      frontStyle: 'בייבי הייר קל',
-      frontNotes: 'לא צפוף מדי',
-      price: 9500,
-      advancePayment: 3000,
-      currentStage: 'התאמת שיער',
-      assignedWorker: worker1._id
-    });
-
-    console.log('✅ הנתונים עודכנו בהצלחה כולל שדות חובה וניקוי תיקונים!');
+    console.log('✅ הנתונים עודכנו! כל העובדות והמחלקות מאוישות.');
+    console.log('👤 כניסה כמנהל: admin / password123');
     process.exit(0);
   } catch (error) {
-    console.error('❌ שגיאה במהלך הרצת ה-Seed:', error);
+    console.error('❌ שגיאה:', error);
     process.exit(1);
   }
 };
-
 seedData();

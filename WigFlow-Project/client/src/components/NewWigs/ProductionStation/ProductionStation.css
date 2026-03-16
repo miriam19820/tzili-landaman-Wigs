@@ -1,70 +1,101 @@
 /* --- קונטיינר ראשי --- */
 .station-container {
+<<<<<<< HEAD
   max-width: 1200px; /* מותאם להצגת שני כפתורי פעולה בשורה */
   margin: 20px auto;
   padding: 20px;
+=======
+  max-width: 1200px; /* רוחב אופטימלי למסכי מחשב */
+  margin: 30px auto;
+  padding: 25px;
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
   direction: rtl;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #fcfcfc;
+  min-height: 100vh;
 }
 
-/* --- כותרת התחנה וסידור הפעולות --- */
+/* --- כותרת התחנה --- */
 .station-header {
-  border-bottom: 2px solid #004085;
-  padding-bottom: 15px;
-  margin-bottom: 25px;
+  border-bottom: 3px solid #004085;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .header-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+<<<<<<< HEAD
   flex-wrap: wrap; /* תמיכה במסכים קטנים */
   gap: 15px;
   margin-bottom: 15px;
+=======
+  flex-wrap: wrap; /* תמיכה במובייל */
+  gap: 20px;
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
 
 .header-actions h2 {
   color: #004085;
   margin: 0;
+  font-size: 1.8rem;
 }
 
+<<<<<<< HEAD
+=======
+/* קבוצת כפתורים (קול + סריקה) */
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .btn-group {
   display: flex;
-  gap: 12px;
+  gap: 15px;
 }
 
 .worker-selector {
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: #f8f9fa;
-  padding: 10px 15px;
-  border-radius: 8px;
+  gap: 12px;
+  background: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-top: 15px;
   width: fit-content;
 }
 
 .worker-selector select {
+<<<<<<< HEAD
   padding: 6px;
   border-radius: 4px;
   border: 1px solid #ced4da;
 }
 
 /* --- כפתורים (קול וסריקה) --- */
+=======
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+/* --- כפתורים מעוצבים --- */
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .voice-btn, .scan-btn {
   color: white;
   border: none;
-  padding: 12px 22px;
-  font-size: 0.95rem;
+  padding: 12px 25px;
+  font-size: 1rem;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 600;
 }
 
+<<<<<<< HEAD
 .voice-btn { 
   background: linear-gradient(135deg, #007bff, #0069d9); 
 }
@@ -72,10 +103,14 @@
 .scan-btn { 
   background: linear-gradient(135deg, #6f42c1, #59359a); /* צבע סגול ייחודי לסריקה */
 }
+=======
+.voice-btn { background: linear-gradient(135deg, #007bff, #0069d9); }
+.scan-btn { background: linear-gradient(135deg, #6f42c1, #59359a); }
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 
 .voice-btn:hover, .scan-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
 }
 
 .voice-btn.listening {
@@ -83,30 +118,36 @@
   animation: pulse-recording 1.5s infinite;
 }
 
+<<<<<<< HEAD
 /* --- אזור סורק ה-QR (חלונית Overlay) --- */
+=======
+/* --- חלונית סורק ה-QR --- */
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .qr-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
+  backdrop-filter: blur(5px);
 }
 
 .qr-window {
   background: white;
-  padding: 25px;
-  border-radius: 15px;
+  padding: 30px;
+  border-radius: 20px;
   width: 90%;
-  max-width: 500px;
+  max-width: 450px; /* זה יפתור את הבעיה שהסורק "ענק" */
   text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 #qr-reader {
   width: 100%;
   border: none !important;
+<<<<<<< HEAD
   margin-bottom: 15px;
 }
 
@@ -128,13 +169,13 @@
   z-index: 3000;
   min-width: 350px;
   padding: 15px 25px;
+=======
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
   border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  text-align: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
 }
 
+<<<<<<< HEAD
 .notification-toast.success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
 .notification-toast.error { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); }
 
@@ -164,20 +205,33 @@
 }
 
 /* --- רשימת פאות וכרטיסי משימה --- */
+=======
+/* --- רשימת הפאות (Grid) --- */
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .wigs-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* סידור אוטומטי של כרטיסים */
   gap: 25px;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .wig-task-card {
+<<<<<<< HEAD
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   overflow: hidden;
   border: 1px solid #eef2f7;
   transition: transform 0.3s ease;
+=======
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s;
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
 
 .wig-task-card:hover {
@@ -188,11 +242,13 @@
   background-color: #004085;
   color: white;
   padding: 15px 20px;
+  border-radius: 15px 15px 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+<<<<<<< HEAD
 .badge, .stage-badge {
   background-color: #ffc107;
   color: #212529;
@@ -204,21 +260,41 @@
 
 .card-details { 
   padding: 20px; 
+=======
+.stage-badge {
+  background-color: #ffc107;
+  color: #212529;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.card-details {
+  padding: 20px;
+  flex-grow: 1;
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
 
 .done-button {
   width: 100%;
-  padding: 14px;
+  padding: 15px;
   background-color: #28a745;
   color: white;
   border: none;
+<<<<<<< HEAD
   border-radius: 8px;
   font-size: 16px;
+=======
+  border-radius: 0 0 15px 15px;
+  font-size: 1.1rem;
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
 }
 
+<<<<<<< HEAD
 .done-button:hover { 
   background-color: #218838; 
 }
@@ -240,4 +316,30 @@
   .wigs-list { 
     grid-template-columns: 1fr; 
   }
+=======
+.done-button:hover { background-color: #218838; }
+
+/* --- אנימציות --- */
+@keyframes pulse-recording {
+  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); }
+  70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+.animate-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- התאמה למובייל --- */
+@media (max-width: 650px) {
+  .header-actions { flex-direction: column; align-items: stretch; }
+  .btn-group { flex-direction: column; }
+  .wigs-list { grid-template-columns: 1fr; }
+  .station-container { padding: 15px; }
+>>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
