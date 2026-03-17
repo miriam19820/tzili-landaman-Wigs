@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
 // ייבוא הקומפוננטות של פאות חדשות
@@ -9,8 +8,6 @@ import { LoginForm } from './components/Auth/LoginForm/LoginForm';
 // ייבוא קומפוננטות התיקונים
 import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
 import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
-
-// === כאן החזרתי את הייבוא שחסר לך ===
 import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister';
 
 // ייבוא קומפוננטות שירות ובקרת איכות
@@ -90,10 +87,7 @@ function App() {
             <Route path="/" element={<ProtectedRoute><NewOrderForm /></ProtectedRoute>} />
             <Route path="/production" element={<ProtectedRoute><ProductionStation /></ProtectedRoute>} />
             <Route path="/repairs/new" element={<ProtectedRoute><DiagnosisChecklist /></ProtectedRoute>} />
-            
-            {/* === כאן החזרתי את הנתיב שחסר לך === */}
             <Route path="/repairs/quick-customer" element={<ProtectedRoute><QuickCustomerRegister /></ProtectedRoute>} />
-            
             <Route path="/repairs/tasks" element={<ProtectedRoute><RepairWorkerList workerId={user?.id || user?._id || ''} /></ProtectedRoute>} />
             <Route path="/service/new" element={<ProtectedRoute><ServiceOrderForm /></ProtectedRoute>} />
             <Route path="/qa" element={<ProtectedRoute><QADashboard /></ProtectedRoute>} />

@@ -1,1 +1,1 @@
-export { StylingInstructions } from './StylingInstructions';
+export * from './StylingInstructions';
