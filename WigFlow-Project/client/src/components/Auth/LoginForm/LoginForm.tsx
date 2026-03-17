@@ -15,21 +15,26 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/users/login', {
+      const response = await axios.post('/users/login', {
         username,
         password
       });
 
       // 1. שמירת הטוקן ופרטי המשתמש בדפדפן (localStorage)
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
 
-      // 2. ניתוב חכם לפי תפקיד (Role)
-      const role = response.data.user.role;
-      if (role === 'Admin' || role === 'Secretary') {
-        window.location.href = '/'; // המזכירה הולכת למסך הראשי
-      } else if (role === 'Worker') {
-        window.location.href = '/production'; // עובדת הולכת לפס הייצור
+      // הגדרת הטוקן כברירת מחדל לכל הקריאות באותה ריצה
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // 2. ניתוב חכם לפי תפקיד (Role) אמיתי כפי שמוגדר במסד הנתונים
+      if (user.role === 'Admin') {
+        window.location.href = '/'; // מנהלת הולכת למסך הראשי
+      } else if (user.role === 'Worker') {
+        window.location.href = '/repairs/tasks'; // עובדת הולכת קודם למסך המשימות שלה
+      } else if (user.role === 'QC') {
+        window.location.href = '/qa'; // בקרת איכות הולכת למסך QA
       } else {
         window.location.href = '/';
       }

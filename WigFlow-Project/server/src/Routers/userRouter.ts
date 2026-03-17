@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import { User } from '../Models_Service/User/userModel';
 import { loginUser } from '../Models_Service/User/userService';
+import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware';
 
 const userRouter = Router();
 
-// --- זה הנתיב שהיה חסר! בלעדיו אי אפשר להתחבר ---
+// --- נתיב התחברות: פתוח לכולם (ללא Middleware) ---
 userRouter.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -20,7 +21,9 @@ userRouter.post('/login', async (req, res) => {
   }
 });
 
-userRouter.get('/', async (req, res) => {
+// --- שליפת רשימת משתמשים (כל משתמש מחובר) ---
+// עובדות צריכות את זה כדי לראות למי להעביר את הפאה בתחנה הבאה
+userRouter.get('/', verifyToken, async (req, res) => {
   try {
     const users = await User.find({});
     res.json(users); 
@@ -29,7 +32,8 @@ userRouter.get('/', async (req, res) => {
   }
 });
 
-userRouter.post('/', async (req, res) => {
+// --- יצירת משתמשת/עובדת חדשה במערכת (מנהלת בלבד!) ---
+userRouter.post('/', verifyAdmin, async (req, res) => {
   try {
     const newUser = await User.create(req.body);
     res.status(201).json(newUser);

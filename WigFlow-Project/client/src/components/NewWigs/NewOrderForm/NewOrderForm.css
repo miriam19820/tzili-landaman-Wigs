@@ -92,13 +92,8 @@
 .message-banner.success { background: #d4edda; color: #155724; }
 .message-banner.error { background: #f8d7da; color: #721c24; }
 
-<<<<<<< HEAD
-<<<<<<< Updated upstream
 .sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; }
-=======
-=======
->>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8
-.sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; }
+
 /* --- עיצוב המדבקה על המסך --- */
 .sticker-overlay {
   position: fixed;
@@ -136,8 +131,8 @@
     border: none;
   }
   .no-print { display: none; } /* מסתיר את כפתורי ההדפסה בזמן ההדפסה עצמה */
-<<<<<<< HEAD
 }
+
 /* --- תיקון האנימציה שגרמה לאלמנט לברוח הצידה --- */
 @keyframes simpleFadeIn {
   from { 
@@ -155,31 +150,52 @@
   animation: simpleFadeIn 0.5s ease-out forwards;
 }
 
-/* שאר העיצובים הקיימים שלך... */
-.new-order-container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 30px;
-  background: #fdfdfd;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* --- עיצובי הקטגוריות החדשות בטופס (נוסף הרגע) --- */
+.section-subtitle {
+  color: #004085;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+  margin-top: 35px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
 }
 
-.search-section {
-  background: #ebf5fb;
-  padding: 20px;
+.barcode-container {
+  background-color: #f8f9fa;
+  border: 1px dashed #adb5bd;
   border-radius: 8px;
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.barcode-container h3 {
+  margin: 0 0 15px 0;
+  color: #343a40;
+}
+
+.barcode-container img {
+  max-width: 100%;
+  height: 80px;
+  mix-blend-mode: multiply; /* מסיר את הרקע הלבן של הברקוד */
+}
+
+.barcode-container p {
+  margin: 10px 0 0 0;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.signature-container {
+  margin-top: 35px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
   text-align: center;
 }
 
-.search-box {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-top: 15px;
+.signature-container h4 {
+  margin: 0 0 15px 0;
+  color: #212529;
 }
->>>>>>> Stashed changes
-=======
-}
->>>>>>> 4ea34acf23fb8563bbdfdd7b56ac7b71663befb8

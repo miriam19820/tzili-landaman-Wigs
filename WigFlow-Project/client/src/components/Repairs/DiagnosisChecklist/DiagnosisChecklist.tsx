@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StaffAllocator } from '../StaffAllocator/StaffAllocator';
 import './DiagnosisChecklist.css';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const REPAIR_CATEGORIES = [
   { id: 'machine', name: 'מכונה', subTypes: ['העברת רשת', 'תיקון רשת', 'התקנת לייס', 'השטחת סקין', 'דילול/מילוי'] },
@@ -22,7 +23,6 @@ export const DiagnosisChecklist: React.FC = () => {
   
   const [categoryWorkers, setCategoryWorkers] = useState<Record<string, string>>({});
 
-  // מנגנון קליטת לקוחה חדשה שחזרה מרישום מהיר
   useEffect(() => {
     if (location.state?.idNumber) {
       const returnedId = location.state.idNumber;
@@ -35,12 +35,10 @@ export const DiagnosisChecklist: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/customers/search/${id}`);
-      const data = await response.json();
-      
-      if (data.exists) {
-        setCustomerId(data.customer._id);
-        setCustomerName(`${data.customer.firstName} ${data.customer.lastName}`);
+      const response = await axios.get(`http://localhost:3000/api/customers/search/${id}`);
+      if (response.data.exists) {
+        setCustomerId(response.data.customer._id);
+        setCustomerName(`${response.data.customer.firstName} ${response.data.customer.lastName}`);
       }
     } catch (error) {
       console.error("Search error", error);
@@ -53,15 +51,12 @@ export const DiagnosisChecklist: React.FC = () => {
     if (!idNumber) return;
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:3000/api/customers/search/${idNumber}`);
-      const data = await response.json();
-      
-      if (data.exists) {
-        setCustomerId(data.customer._id);
-        setCustomerName(`${data.customer.firstName} ${data.customer.lastName}`);
+      const response = await axios.get(`http://localhost:3000/api/customers/search/${idNumber}`);
+      if (response.data.exists) {
+        setCustomerId(response.data.customer._id);
+        setCustomerName(`${response.data.customer.firstName} ${response.data.customer.lastName}`);
       } else {
         if (window.confirm("לקוחה לא נמצאה. האם תרצי לעבור לדף רישום לקוחה חדשה?")) {
-          // שינוי קריטי: הפניה לדף הרישום המהיר הייעודי לתיקונים שבנינו
           navigate('/repairs/quick-register', { state: { idNumber } });
         }
       }
@@ -116,13 +111,9 @@ export const DiagnosisChecklist: React.FC = () => {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/repairs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(repairData)
-      });
+      const response = await axios.post('http://localhost:3000/api/repairs', repairData);
 
-      if (response.ok) {
+      if (response.status === 201 || response.status === 200) {
         alert("כרטיס תיקון נפתח בהצלחה! ✅");
         setSelectedTasks([]);
         setCategoryWorkers({});
@@ -130,12 +121,9 @@ export const DiagnosisChecklist: React.FC = () => {
         setCustomerId('');
         setCustomerName('');
         setIdNumber('');
-      } else {
-        const errorData = await response.json();
-        alert(`שגיאה: ${errorData.message}`);
       }
-    } catch (error) {
-      alert("שגיאת תקשורת בפתיחת התיקון");
+    } catch (error: any) {
+      alert(`שגיאה: ${error.response?.data?.message || 'שגיאת תקשורת בפתיחת התיקון'}`);
     }
   };
 

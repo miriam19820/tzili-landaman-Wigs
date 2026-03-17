@@ -10,8 +10,7 @@ interface UserData {
     role: 'Admin' | 'Worker' | 'QC';
     specialty: string;
 }
-
-const SECRET_KEY = 'SECRET_KEY_123';
+const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
 
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });

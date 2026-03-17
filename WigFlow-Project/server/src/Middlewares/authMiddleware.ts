@@ -5,7 +5,7 @@ interface AuthRequest extends Request {
     user?: any;
 }
 
-const SECRET_KEY = 'SECRET_KEY_123';
+const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
 
 
 export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {

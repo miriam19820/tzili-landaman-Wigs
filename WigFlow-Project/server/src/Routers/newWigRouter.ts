@@ -5,14 +5,14 @@ import {
   getWigsByWorker,
   getNewWigById 
 } from '../Models_Service/NewWigs/newWigService';
+import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware';
 
 const newWigRouter = Router();
 
 /**
- * @route   
- * @desc    
+ * פתיחת הזמנת פאה חדשה (רק מנהלת/מזכירה)
  */
-newWigRouter.post('/new', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.post('/new', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const newWig = await createNewWig(req.body);
     res.status(201).json({
@@ -26,11 +26,9 @@ newWigRouter.post('/new', async (req: Request, res: Response, next: NextFunction
 });
 
 /**
- * @route 
- * @desc   
- * @body    
+ * העברת פאה לשלב הבא (רק עובדת או מנהלת)
  */
-newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.patch('/:id/next-step', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const wigId = req.params.id;
     const { nextWorkerId } = req.body; 
@@ -48,10 +46,9 @@ newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: N
 });
 
 /**
- * @route  
- * @desc    
+ * משיכת רשימת הפאות לעמדת העבודה (רק עובדת או מנהלת)
  */
-newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.get('/work-station/:workerId', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const workerId = req.params.workerId;
     const wigs = await getWigsByWorker(workerId);
@@ -67,10 +64,9 @@ newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, 
 });
 
 /**
- * @route   
- * @desc    
+ * בדיקת סטטוס של פאה (כל משתמש מחובר)
  */
-newWigRouter.get('/status/:id', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.get('/status/:id', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const wigId = req.params.id;
     const wig = await getNewWigById(wigId); 

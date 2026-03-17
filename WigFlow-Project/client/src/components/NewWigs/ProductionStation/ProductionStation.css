@@ -1,14 +1,8 @@
 /* --- קונטיינר ראשי --- */
 .station-container {
-<<<<<<< HEAD
-  max-width: 1200px; /* מותאם להצגת שני כפתורי פעולה בשורה */
+  max-width: 1200px;
   margin: 20px auto;
   padding: 20px;
-=======
-  max-width: 1200px; /* רוחב אופטימלי למסכי מחשב */
-  margin: 30px auto;
-  padding: 25px;
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
   direction: rtl;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background-color: #fcfcfc;
@@ -26,14 +20,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-<<<<<<< HEAD
-  flex-wrap: wrap; /* תמיכה במסכים קטנים */
+  flex-wrap: wrap;
   gap: 15px;
   margin-bottom: 15px;
-=======
-  flex-wrap: wrap; /* תמיכה במובייל */
-  gap: 20px;
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
 
 .header-actions h2 {
@@ -42,10 +31,7 @@
   font-size: 1.8rem;
 }
 
-<<<<<<< HEAD
-=======
 /* קבוצת כפתורים (קול + סריקה) */
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .btn-group {
   display: flex;
   gap: 15px;
@@ -64,22 +50,13 @@
 }
 
 .worker-selector select {
-<<<<<<< HEAD
-  padding: 6px;
-  border-radius: 4px;
-  border: 1px solid #ced4da;
-}
-
-/* --- כפתורים (קול וסריקה) --- */
-=======
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid #ced4da;
   font-size: 1rem;
 }
 
 /* --- כפתורים מעוצבים --- */
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .voice-btn, .scan-btn {
   color: white;
   border: none;
@@ -95,18 +72,13 @@
   font-weight: 600;
 }
 
-<<<<<<< HEAD
 .voice-btn { 
   background: linear-gradient(135deg, #007bff, #0069d9); 
 }
 
 .scan-btn { 
-  background: linear-gradient(135deg, #6f42c1, #59359a); /* צבע סגול ייחודי לסריקה */
+  background: linear-gradient(135deg, #6f42c1, #59359a); 
 }
-=======
-.voice-btn { background: linear-gradient(135deg, #007bff, #0069d9); }
-.scan-btn { background: linear-gradient(135deg, #6f42c1, #59359a); }
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 
 .voice-btn:hover, .scan-btn:hover {
   transform: translateY(-3px);
@@ -118,11 +90,7 @@
   animation: pulse-recording 1.5s infinite;
 }
 
-<<<<<<< HEAD
 /* --- אזור סורק ה-QR (חלונית Overlay) --- */
-=======
-/* --- חלונית סורק ה-QR --- */
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .qr-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -139,7 +107,7 @@
   padding: 30px;
   border-radius: 20px;
   width: 90%;
-  max-width: 450px; /* זה יפתור את הבעיה שהסורק "ענק" */
+  max-width: 450px;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
@@ -147,8 +115,9 @@
 #qr-reader {
   width: 100%;
   border: none !important;
-<<<<<<< HEAD
   margin-bottom: 15px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 #qr-reader button {
@@ -169,15 +138,12 @@
   z-index: 3000;
   min-width: 350px;
   padding: 15px 25px;
-=======
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
   border-radius: 12px;
   overflow: hidden;
 }
 
-<<<<<<< HEAD
-.notification-toast.success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
-.notification-toast.error { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); }
+.notification-toast.success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white;}
+.notification-toast.error { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); color: white;}
 
 /* --- אנימציות --- */
 @keyframes fadeInSimple {
@@ -191,7 +157,7 @@
 }
 
 .animate-in {
-  animation: fadeInSimple 0.5s ease-out forwards;
+  animation: fadeInSimple 0.4s ease-out forwards;
 }
 
 .notification-toast.animate-in {
@@ -205,33 +171,22 @@
 }
 
 /* --- רשימת פאות וכרטיסי משימה --- */
-=======
-/* --- רשימת הפאות (Grid) --- */
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 .wigs-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* סידור אוטומטי של כרטיסים */
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 25px;
   margin-top: 30px;
 }
 
 .wig-task-card {
-<<<<<<< HEAD
   background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  overflow: hidden;
-  border: 1px solid #eef2f7;
-  transition: transform 0.3s ease;
-=======
-  background: white;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.06);
   border: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s;
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
+  transition: transform 0.2s ease;
+  overflow: hidden;
 }
 
 .wig-task-card:hover {
@@ -242,25 +197,11 @@
   background-color: #004085;
   color: white;
   padding: 15px 20px;
-  border-radius: 15px 15px 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-<<<<<<< HEAD
-.badge, .stage-badge {
-  background-color: #ffc107;
-  color: #212529;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.card-details { 
-  padding: 20px; 
-=======
 .stage-badge {
   background-color: #ffc107;
   color: #212529;
@@ -270,10 +211,9 @@
   font-weight: bold;
 }
 
-.card-details {
-  padding: 20px;
+.card-details { 
+  padding: 20px; 
   flex-grow: 1;
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
 }
 
 .done-button {
@@ -282,28 +222,22 @@
   background-color: #28a745;
   color: white;
   border: none;
-<<<<<<< HEAD
   border-radius: 8px;
-  font-size: 16px;
-=======
-  border-radius: 0 0 15px 15px;
   font-size: 1.1rem;
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-<<<<<<< HEAD
 .done-button:hover { 
   background-color: #218838; 
 }
 
 /* --- התאמה למובייל --- */
-@media (max-width: 600px) {
+@media (max-width: 650px) {
   .header-actions { 
     flex-direction: column; 
-    align-items: flex-start; 
+    align-items: stretch; 
   }
   .btn-group { 
     width: 100%; 
@@ -316,30 +250,7 @@
   .wigs-list { 
     grid-template-columns: 1fr; 
   }
-=======
-.done-button:hover { background-color: #218838; }
-
-/* --- אנימציות --- */
-@keyframes pulse-recording {
-  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); }
-  70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-}
-
-.animate-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- התאמה למובייל --- */
-@media (max-width: 650px) {
-  .header-actions { flex-direction: column; align-items: stretch; }
-  .btn-group { flex-direction: column; }
-  .wigs-list { grid-template-columns: 1fr; }
-  .station-container { padding: 15px; }
->>>>>>> 7c742fcf95e6fbef8d82842b4bfbe7174cef8f40
+  .station-container { 
+    padding: 15px; 
+  }
 }

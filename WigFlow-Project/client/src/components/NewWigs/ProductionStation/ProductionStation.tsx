@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
+import axios from 'axios';
 import './ProductionStation.css';
 import { WigTechnicalCard } from '../WigTechnicalCard/WigTechnicalCard';
 
-// הגדרת השלבים ומיפוי התמחויות
 const STAGES_FLOW = ['התאמת שיער', 'תפירת פאה', 'צבע', 'עבודת יד', 'חפיפה', 'בקרה'];
 const SPECIALTY_MAP: Record<string, string> = {
   'התאמת שיער': 'התאמת שיער',
@@ -14,7 +14,6 @@ const SPECIALTY_MAP: Record<string, string> = {
   'בקרה': 'בקרת איכות'
 };
 
-// הגדרת זיהוי קולי
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
@@ -40,11 +39,8 @@ export const ProductionStation: React.FC = () => {
   useEffect(() => {
     const fetchWorkers = async () => {
       try {
-        const res = await fetch('http://localhost:3000/api/users');
-        if (res.ok) {
-          const users = await res.json();
-          setAllWorkers(users.filter((u: any) => u.role === 'Worker'));
-        }
+        const res = await axios.get('/users');
+        setAllWorkers(res.data.filter((u: any) => u.role === 'Worker'));
       } catch (error) {
         showNotification('error', 'שגיאה בתקשורת בטעינת עובדות');
       }
@@ -67,7 +63,7 @@ export const ProductionStation: React.FC = () => {
         { fps: 10, qrbox: { width: 250, height: 250 } },
         false
       );
-      scannerRef.current.render(onScanSuccess, (err) => { /* התעלמות משגיאות */ });
+      scannerRef.current.render(onScanSuccess, (err) => { /* התעלמות משגיאות שוטפות של המצלמה */ });
     }
 
     return () => {
@@ -79,11 +75,8 @@ export const ProductionStation: React.FC = () => {
 
   const fetchStationData = async () => {
     try {
-      const wigsRes = await fetch(`http://localhost:3000/api/wigs/work-station/${currentWorkerId}`);
-      if (wigsRes.ok) {
-        const wigsData = await wigsRes.json();
-        setMyWigs(wigsData.data || []);
-      }
+      const wigsRes = await axios.get(`/wigs/work-station/${currentWorkerId}`);
+      setMyWigs(wigsRes.data.data || []);
     } catch (error) {
       showNotification('error', 'שגיאה בטעינת המשימות');
     }
@@ -94,17 +87,20 @@ export const ProductionStation: React.FC = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
+  // --- כאן נמצא התיקון שמאפשר קריאה של ברקוד ההזמנה! ---
   const onScanSuccess = (decodedText: string) => {
-    const wigId = decodedText.split('/').pop();
+    // מנקה את הטקסט שנסרק (כדי לוודא שאין רווחים מיותרים)
+    const scannedCode = decodedText.split('/').pop()?.trim();
     
-    if (wigId) {
-      const foundWig = myWigs.find(w => w._id === wigId);
+    if (scannedCode) {
+      // עכשיו הוא יודע לחפש גם לפי orderCode (למשל WIG-811349) וגם לפי מזהה ישן
+      const foundWig = myWigs.find(w => w._id === scannedCode || w.orderCode === scannedCode);
       if (foundWig) {
         showNotification('success', `נמצאה פאה: ${foundWig.orderCode}. מעדכן סטטוס...`);
         handleCompleteTask(foundWig);
-        setIsScannerOpen(false);
+        setIsScannerOpen(false); // סוגר את המצלמה אחרי סריקה מוצלחת
       } else {
-        showNotification('error', 'הפאה שנסרקה לא נמצאה ברשימה שלך. וודאי שבחרת את העובדת הנכונה.');
+        showNotification('error', `הברקוד ${scannedCode} לא תואם לאף פאה שממתינה לך כרגע.`);
       }
     }
   };
@@ -124,30 +120,24 @@ export const ProductionStation: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/wigs/${wigId}/next-step`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nextWorkerId: selectedNextWorker[wigId] }) 
+      const response = await axios.patch(`/wigs/${wigId}/next-step`, { 
+        nextWorkerId: selectedNextWorker[wigId] 
       });
 
-      if (response.ok) {
-        const updatedData = await response.json();
-        const customerName = updatedData.customer?.firstName || currentWig.customer?.firstName || "הלקוחה";
-        
-        showNotification('success', 
-          `הפאה עברה בהצלחה לשלב הבא! ✨ שלחנו כרגע עדכון ל${customerName} ב-WhatsApp ובמייל. 📱📧`
-        );
+      const updatedData = response.data;
+      const customerName = updatedData.customer?.firstName || currentWig.customer?.firstName || "הלקוחה";
+      
+      showNotification('success', 
+        `הפאה עברה בהצלחה לשלב הבא! ✨ שלחנו כרגע עדכון ל${customerName} ב-WhatsApp ובמייל. 📱📧`
+      );
 
-        setMyWigs(prev => prev.filter(w => w._id !== wigId));
-        const newSelectedWorkers = { ...selectedNextWorker };
-        delete newSelectedWorkers[wigId];
-        setSelectedNextWorker(newSelectedWorkers);
-      } else {
-        const errorData = await response.json();
-        showNotification('error', `שגיאה: ${errorData.message}`);
-      }
-    } catch (error) {
-      showNotification('error', 'שגיאת רשת בעדכון הסטטוס');
+      setMyWigs(prev => prev.filter(w => w._id !== wigId));
+      const newSelectedWorkers = { ...selectedNextWorker };
+      delete newSelectedWorkers[wigId];
+      setSelectedNextWorker(newSelectedWorkers);
+      
+    } catch (error: any) {
+      showNotification('error', `שגיאה: ${error.response?.data?.message || 'שגיאת רשת בעדכון הסטטוס'}`);
     }
   };
 
@@ -193,7 +183,7 @@ export const ProductionStation: React.FC = () => {
               {isListening ? '🎤 מקשיב...' : '🎙️ פקודה קולית'}
             </button>
             <button onClick={() => setIsScannerOpen(!isScannerOpen)} className="scan-btn">
-              📷 סריקת QR
+              📷 סריקת ברקוד
             </button>
           </div>
         </div>
@@ -218,7 +208,8 @@ export const ProductionStation: React.FC = () => {
       {isScannerOpen && (
         <div className="qr-overlay animate-in">
           <div className="qr-window">
-            <h3>סריקת פאה לייצור</h3>
+            <h3>סריקת מדבקת פאה</h3>
+            <p>הציגי את הברקוד (WIG-XXXX) מול המצלמה</p>
             <div id="qr-reader" style={{ width: '100%' }}></div>
             <button onClick={() => setIsScannerOpen(false)} className="close-btn" style={{ marginTop: '15px' }}>ביטול סריקה</button>
           </div>
@@ -271,7 +262,7 @@ export const ProductionStation: React.FC = () => {
                     onClick={() => setSelectedWigForCard(wig)} 
                     style={{ background: '#17a2b8', color: 'white', border: 'none', padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                   >
-                    📋 צפי במפרט
+                    📋 מפרט טכני
                   </button>
                 </div>
               </div>
