@@ -47,7 +47,6 @@ export const sendCustomerUpdate = async (customer: any, stage: string) => {
     const cleanPhone = customer.phoneNumber.replace(/-/g, '');
     const whatsappLink = `wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     console.log(`📱 קישור וואטסאפ מוכן לשימוש: ${whatsappLink}`);
-    // הערה: כאן אפשר להוסיף בעתיד שליחה אוטומטית עם whatsapp-web.js
   }
 
   return true;

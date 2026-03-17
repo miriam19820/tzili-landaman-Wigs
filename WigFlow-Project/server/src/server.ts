@@ -1,4 +1,5 @@
 import app from './app';
+import 'dotenv/config';
 import { connectDB } from './Utils/connectDB';
 
 // ייבוא המודלים (חשוב מאוד לרישום הסכמות ב-Mongoose)

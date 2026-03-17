@@ -14,7 +14,7 @@ async function getRepairById(id: string) {
 }
 
 async function updateTaskStatus(repairId: string, taskIndex: number, status: string) {
-  // שימוש במפתח דינמי מחייב גרשיים הפוכים (Backticks) כדי ש-TypeScript יזהה את המשתנה
+  // עדכון סטטוס משימה ספציפית בתוך המערך בעזרת מפתח דינמי
   const updatedRepair = await Repair.findByIdAndUpdate(
     repairId,
     { $set: { [`tasks.${taskIndex}.status`]: status } },
@@ -73,10 +73,11 @@ async function FullWorkloadReportCloseJobs() {
 }
 
 async function getAvailableWorkersByCategory(category: string) {
-  const workers = await User.find({
+  const workers = await User.find({ 
     role: 'Worker',
     specialty: category
   });
+  
   const workersWithLoad = await Promise.all(workers.map(async (worker: any) => {
     const openTasks = await getWorkerLoadOpen(worker._id.toString());
     return {
@@ -85,6 +86,7 @@ async function getAvailableWorkersByCategory(category: string) {
       load: openTasks
     };
   }));
+  
   return workersWithLoad;
 }
 
@@ -104,8 +106,10 @@ async function updateWigStatusToDone(wigCode: string) {
 async function addNoteByWigAndCategory(wigCode: string, category: string, note: string) {
   const repair = await Repair.findOne({ wigCode: wigCode });
   if (!repair) throw new Error("לא נמצאה פאה עם קוד כזה");
+  
   const task = repair.tasks.find((t: any) => t.category === category);
   if (!task) throw new Error(`לא נמצא תיקון מסוג ${category} לפאה זו`);
+  
   task.notes = note;
   return await repair.save();
 }
@@ -113,6 +117,7 @@ async function addNoteByWigAndCategory(wigCode: string, category: string, note: 
 async function checkRepairCompletion(wigCode: string) {
   const repair = await Repair.findOne({ wigCode: wigCode });
   if (!repair) throw new Error("לא נמצאה פאה עם קוד כזה");
+  
   const allTasksDone = repair.tasks.every((task: any) => task.status === "בוצע");
   return allTasksDone;
 }
@@ -206,10 +211,10 @@ async function createRepairOrder(repairData: any) {
   const allTasks = [...repairData.tasks, ...finalSteps];
 
   const newRepair = new Repair({
-    wigCode: repairData.wigCode,
-    customer: repairData.customerId,
-    isUrgent: isUrgent,
-    tasks: allTasks
+    wigCode: repairData.wigCode,       
+    customer: repairData.customerId,  
+    isUrgent: isUrgent,               
+    tasks: allTasks                   
   });
 
   return await newRepair.save();
@@ -246,36 +251,33 @@ async function getDashboardView() {
   });
 }
 
-async function getTasksForWorker(workerId: string) {
-  const activeRepairs = await Repair.find({
-    'tasks.assignedTo': workerId,
-    'tasks.status': 'ממתין'
-  }).populate('customer', 'firstName lastName');
+/**
+ * שליפת משימות עבור עובדת ספציפית
+ */
+async function getTasksByWorker(workerId: string) {
+  const repairs = await Repair.find({ 'tasks.assignedTo': workerId })
+    .populate('customer', 'firstName lastName');
 
-  const workerTasks: any[] = [];
-
-  activeRepairs.forEach(repair => {
-    repair.tasks.forEach((task: any, index: number) => {
+  const result: any[] = [];
+  repairs.forEach(repair => {
+    const customer = repair.customer as any;
+    const customerName = customer ? `${customer.firstName} ${customer.lastName}` : 'לא ידוע';
+    
+    repair.tasks.forEach((task, index) => {
       if (task.assignedTo?.toString() === workerId && task.status === 'ממתין') {
-        const customer = repair.customer as any;
-        workerTasks.push({
+        result.push({
           repairId: repair._id,
           wigCode: repair.wigCode,
-          customerName: customer ? `${customer.firstName} ${customer.lastName}` : "לקוחה",
+          customerName,
           isUrgent: repair.isUrgent,
           taskIndex: index,
-          category: task.category,
-          subCategory: task.subCategory,
-          notes: task.notes,
-          status: task.status
+          task
         });
       }
     });
   });
 
-  workerTasks.sort((a, b) => Number(b.isUrgent) - Number(a.isUrgent));
-
-  return workerTasks;
+  return result.sort((a, b) => (Number(b.isUrgent)) - (Number(a.isUrgent)));
 }
 
 export {
@@ -292,5 +294,5 @@ export {
   updateTaskAndMoveToNext,
   createRepairOrder,
   getDashboardView,
-  getTasksForWorker
+  getTasksByWorker
 };

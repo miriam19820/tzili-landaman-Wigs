@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import 'dotenv/config'; // ייבוא של איילה: מאפשר לקרוא נתונים מקובץ ה-.env
+import 'dotenv/config'; 
 
 interface AuthRequest extends Request {
     user?: any;
 }
 
 /**
- * המפתח הסודי נמשך מקובץ ה-.env (באחריות איילה - מפתחת 1)
- * הוספנו 'SECRET_KEY_123' כגיבוי בלבד כדי למנוע קריסה
+ * המפתח הסודי לאימות טוקנים.
+ * שילבנו את השמות שמרים ואיילה השתמשו בהם כדי למנוע תקלות.
+ * ודאי שבקובץ ה-.env שלך קיים אחד מהם.
  */
-const SECRET_KEY = process.env.WIG_SYSTEM_AUTH_KEY || 'SECRET_KEY_123'; 
+const SECRET_KEY = process.env.WIG_SYSTEM_AUTH_KEY || process.env.JWT_SECRET || 'SECRET_KEY_123'; 
 
 /**
  * אימות טוקן בסיסי לכל בקשה
@@ -58,11 +59,12 @@ export const verifyWorker = (req: AuthRequest, res: Response, next: NextFunction
 };
 
 /**
- * ולידציה של הרשאת בקרת איכות (QC)
+ * ולידציה של הרשאת בקרת איכות (QC / Inspector)
  */
 export const verifyQC = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
-        if (req.user && (req.user.role === 'QC' || req.user.role === 'Admin')) {
+        // הוספנו תמיכה גם ב-QC וגם ב-Inspector לפי השינויים ב-App.tsx
+        if (req.user && (req.user.role === 'QC' || req.user.role === 'Inspector' || req.user.role === 'Admin')) {
             next();
         } else {
             res.status(403).json({ message: 'גישה חסומה: נדרשת הרשאת בקרת איכות' });

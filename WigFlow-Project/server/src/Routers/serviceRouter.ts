@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
+import { verifyToken, verifyAdmin, verifyWorker, verifyQC } from '../Middlewares/authMiddleware';
 
 const serviceRouter = Router();
 
-serviceRouter.post('/', async (req, res) => {
+// הזמנת שירות חדש (רק מנהלת/מזכירה)
+serviceRouter.post('/', verifyAdmin, async (req, res) => {
   try {
     const newService = await serviceService.createService(req.body);
     res.status(201).json(newService);
@@ -12,7 +14,8 @@ serviceRouter.post('/', async (req, res) => {
   }
 });
 
-serviceRouter.get('/:id', async (req, res) => {
+// שליפת נתוני פאה בשירות (כל משתמש מחובר)
+serviceRouter.get('/:id', verifyToken, async (req, res) => {
   try {
     const service = await serviceService.getServiceById(req.params.id);
     if (!service) return res.status(404).json({ message: 'פאה לא נמצאה' });
@@ -22,7 +25,8 @@ serviceRouter.get('/:id', async (req, res) => {
   }
 });
 
-serviceRouter.patch('/:id/start-drying', async (req, res) => {
+// --- פעולות של עובדות ייצור ---
+serviceRouter.patch('/:id/start-drying', verifyWorker, async (req, res) => {
   try {
     const updatedService = await serviceService.moveToDrying(req.params.id);
     res.status(200).json(updatedService);
@@ -31,7 +35,7 @@ serviceRouter.patch('/:id/start-drying', async (req, res) => {
   }
 });
 
-serviceRouter.patch('/:id/finish-drying', async (req, res) => {
+serviceRouter.patch('/:id/finish-drying', verifyWorker, async (req, res) => {
   try {
     const updatedService = await serviceService.finishDrying(req.params.id);
     res.status(200).json(updatedService);
@@ -40,8 +44,7 @@ serviceRouter.patch('/:id/finish-drying', async (req, res) => {
   }
 });
 
-
-serviceRouter.patch('/:id/finish-styling', async (req, res) => {
+serviceRouter.patch('/:id/finish-styling', verifyWorker, async (req, res) => {
   try {
     const updatedService = await serviceService.finishStyling(req.params.id);
     res.status(200).json(updatedService);
@@ -51,7 +54,8 @@ serviceRouter.patch('/:id/finish-styling', async (req, res) => {
 });
 
 
-serviceRouter.patch('/:id/approve', async (req, res) => {
+// --- פעולות בקרת איכות (QA) - רק מחלקת QC או מנהלת ---
+serviceRouter.patch('/:id/approve', verifyQC, async (req, res) => {
   try {
     const approvedService = await serviceService.approveService(req.params.id);
     res.status(200).json({ message: 'הפאה אושרה ומוכנה למסירה!', service: approvedService });
@@ -60,7 +64,7 @@ serviceRouter.patch('/:id/approve', async (req, res) => {
   }
 });
 
-serviceRouter.patch('/:id/reject', async (req, res) => {
+serviceRouter.patch('/:id/reject', verifyQC, async (req, res) => {
   try {
     const { qaNote, returnTo, repairTaskId } = req.body; 
     const rejectedService = await serviceService.rejectService(

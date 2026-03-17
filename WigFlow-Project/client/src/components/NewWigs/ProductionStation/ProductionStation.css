@@ -1,8 +1,8 @@
 /* --- קונטיינר ראשי --- */
 .station-container {
-  max-width: 1200px; /* רוחב אופטימלי למסכי מחשב */
-  margin: 30px auto;
-  padding: 25px;
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 20px;
   direction: rtl;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background-color: #fcfcfc;
@@ -20,8 +20,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap; /* תמיכה במובייל */
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
 .header-actions h2 {
@@ -51,7 +52,7 @@
 .worker-selector select {
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid #ced4da;
   font-size: 1rem;
 }
 
@@ -71,8 +72,13 @@
   font-weight: 600;
 }
 
-.voice-btn { background: linear-gradient(135deg, #007bff, #0069d9); }
-.scan-btn { background: linear-gradient(135deg, #6f42c1, #59359a); }
+.voice-btn { 
+  background: linear-gradient(135deg, #007bff, #0069d9); 
+}
+
+.scan-btn { 
+  background: linear-gradient(135deg, #6f42c1, #59359a); 
+}
 
 .voice-btn:hover, .scan-btn:hover {
   transform: translateY(-3px);
@@ -84,7 +90,7 @@
   animation: pulse-recording 1.5s infinite;
 }
 
-/* --- חלונית סורק ה-QR --- */
+/* --- אזור סורק ה-QR (חלונית Overlay) --- */
 .qr-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -101,7 +107,7 @@
   padding: 30px;
   border-radius: 20px;
   width: 90%;
-  max-width: 450px; /* זה יפתור את הבעיה שהסורק "ענק" */
+  max-width: 450px;
   text-align: center;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
@@ -109,26 +115,78 @@
 #qr-reader {
   width: 100%;
   border: none !important;
+  margin-bottom: 15px;
   border-radius: 12px;
   overflow: hidden;
 }
 
-/* --- רשימת הפאות (Grid) --- */
+#qr-reader button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+/* --- הודעות קופצות (Toasts) --- */
+.notification-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  z-index: 3000;
+  min-width: 350px;
+  padding: 15px 25px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.notification-toast.success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white;}
+.notification-toast.error { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); color: white;}
+
+/* --- אנימציות --- */
+@keyframes fadeInSimple {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDownFadeCenter {
+  0% { top: -50px; opacity: 0; transform: translateX(-50%) scale(0.9); }
+  100% { top: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+.animate-in {
+  animation: fadeInSimple 0.4s ease-out forwards;
+}
+
+.notification-toast.animate-in {
+  animation: slideDownFadeCenter 0.5s ease-out forwards;
+}
+
+@keyframes pulse-recording {
+  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); }
+  70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+}
+
+/* --- רשימת פאות וכרטיסי משימה --- */
 .wigs-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* סידור אוטומטי של כרטיסים */
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 25px;
   margin-top: 30px;
 }
 
 .wig-task-card {
-  background: white;
+  background-color: #ffffff;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.06);
   border: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
+  overflow: hidden;
 }
 
 .wig-task-card:hover {
@@ -139,7 +197,6 @@
   background-color: #004085;
   color: white;
   padding: 15px 20px;
-  border-radius: 15px 15px 0 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -154,8 +211,8 @@
   font-weight: bold;
 }
 
-.card-details {
-  padding: 20px;
+.card-details { 
+  padding: 20px; 
   flex-grow: 1;
 }
 
@@ -165,35 +222,35 @@
   background-color: #28a745;
   color: white;
   border: none;
-  border-radius: 0 0 15px 15px;
+  border-radius: 8px;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.done-button:hover { background-color: #218838; }
-
-/* --- אנימציות --- */
-@keyframes pulse-recording {
-  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); }
-  70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-}
-
-.animate-in {
-  animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.done-button:hover { 
+  background-color: #218838; 
 }
 
 /* --- התאמה למובייל --- */
 @media (max-width: 650px) {
-  .header-actions { flex-direction: column; align-items: stretch; }
-  .btn-group { flex-direction: column; }
-  .wigs-list { grid-template-columns: 1fr; }
-  .station-container { padding: 15px; }
+  .header-actions { 
+    flex-direction: column; 
+    align-items: stretch; 
+  }
+  .btn-group { 
+    width: 100%; 
+    flex-direction: column; 
+  }
+  .voice-btn, .scan-btn { 
+    width: 100%; 
+    justify-content: center; 
+  }
+  .wigs-list { 
+    grid-template-columns: 1fr; 
+  }
+  .station-container { 
+    padding: 15px; 
+  }
 }

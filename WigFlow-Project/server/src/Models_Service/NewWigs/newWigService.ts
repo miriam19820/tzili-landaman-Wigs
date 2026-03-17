@@ -5,6 +5,8 @@ import { Customer } from '../Customer/customerModel';
 import { Service } from '../SalonServices/serviceModel'; 
 import { sendCustomerUpdate } from '../../Services/notificationService';
 import mongoose from 'mongoose'; 
+import logger from '../../Utils/logger'; 
+
 const STAGES_FLOW = [
   'התאמת שיער',
   'תפירת פאה',
@@ -14,11 +16,35 @@ const STAGES_FLOW = [
   'בקרה'
 ];
 
-// הגירסה שלך - עם הוולידציה החשובה
+/**
+ * יצירת הזמנת פאה חדשה
+ */
 export const createNewWig = async (wigData: any) => {
-  if (!wigData.measurements) {
-    throw new AppError('חובה להזין מידות לקוחה בשלב פתיחת ההזמנה', 400);
+  // 1. וולידציה: בדיקה שכל המידות קיימות (נדרש לפי המודל)
+  if (!wigData.measurements || 
+      !wigData.measurements.circumference || 
+      !wigData.measurements.earToEar || 
+      !wigData.measurements.frontToBack) {
+    throw new AppError('חובה להזין את כל מידות הלקוחה (היקף, אוזן לאוזן, ומצח לעורף)', 400);
   }
+
+  // 2. ייצור קוד הזמנה אוטומטי במידה ולא סופק (הלוגיקה שחיפשת!)
+  if (!wigData.orderCode) {
+    wigData.orderCode = `WIG-${Math.floor(1000 + Math.random() * 9999)}`;
+  }
+
+  // 3. שיבוץ עובדת התחלתית (שלב התאמת שיער)
+  if (!wigData.assignedWorker) {
+    const initialSpecialty = getSpecialtyForStage('התאמת שיער');
+    const firstWorker = await User.findOne({ role: 'Worker', specialty: initialSpecialty });
+    
+    if (!firstWorker) {
+      throw new AppError(`לא ניתן לפתוח הזמנה: לא נמצאה עובדת זמינה להתמחות ${initialSpecialty}`, 404);
+    }
+    wigData.assignedWorker = firstWorker._id;
+  }
+
+  logger.info(`Creating new wig order: ${wigData.orderCode} for customer: ${wigData.customer}`);
   return await NewWig.create(wigData);
 };
 
@@ -26,25 +52,22 @@ export const getNewWigById = async (id: string) => {
   return await NewWig.findById(id).populate('customer').populate('assignedWorker');
 };
 
-// הגירסה שלך - ליבת ניהול השלבים
+/**
+ * העברת פאה לשלב הבא בייצור
+ */
 export const moveToNextStage = async (wigId: string, specificWorkerId?: string) => {
-  console.log('moveToNextStage called with:', { wigId, specificWorkerId });
-  
   const wig = await NewWig.findById(wigId);
   if (!wig) {
     throw new AppError('הפאה לא נמצאה במערכת', 404);
   }
 
   const currentStageIndex = STAGES_FLOW.indexOf(wig.currentStage);
-
   if (currentStageIndex === -1) {
     throw new AppError('סטטוס פאה אינו תקין', 400);
   }
 
-  // טיפול במעבר מסיום חפיפה ל-QA
+  // טיפול במעבר לשלב בקרה - יצירת שירות QA במערכת הסלון
   if (wig.currentStage === 'חפיפה') {
-    console.log('Finished Wash stage, moving to QA and creating service');
-    
     await Service.create({
       customer: wig.customer,
       serviceType: 'Production QA',
@@ -64,37 +87,29 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
     ).populate('customer');
   }
 
-  if (currentStageIndex >= STAGES_FLOW.length - 2) {
-      throw new AppError('הפאה כבר בשלבי סיום (בקרה) ולא ניתן להעביר אותה הלאה מפס הייצור', 400);
+  if (currentStageIndex >= STAGES_FLOW.length - 1) {
+      throw new AppError('הפאה כבר בשלב סופי', 400);
   }
 
   const nextStage = STAGES_FLOW[currentStageIndex + 1];
-  
-  // ---> הלוגיקה המשופרת לבדיקת תכנון שיבוץ <---
   let nextWorkerIdToAssign;
 
-  // 1. אם העובדת הקודמת בחרה מישהי ספציפית דרך המסך שלה
   if (specificWorkerId) {
     nextWorkerIdToAssign = specificWorkerId;
-  } 
-  // 2. אם המזכירה קבעה עובדת מראש לשלב הזה בעת פתיחת ההזמנה
-  else if (wig.stageAssignments && wig.stageAssignments.get(nextStage)) {
-    nextWorkerIdToAssign = wig.stageAssignments.get(nextStage);
+  } else if (wig.stageAssignments && (wig.stageAssignments as any).get(nextStage)) {
+    nextWorkerIdToAssign = (wig.stageAssignments as any).get(nextStage);
   }
   
   let nextWorker;
   if (nextWorkerIdToAssign) {
     nextWorker = await User.findById(nextWorkerIdToAssign);
   } else {
-    // 3. מנגנון אוטומטי - אם לא שובץ אף אחד, בוחרים עובדת אקראית מאותה התמחות
-    nextWorker = await User.findOne({ 
-      role: 'Worker',
-      specialty: getSpecialtyForStage(nextStage)
-    });
+    const specialty = getSpecialtyForStage(nextStage);
+    nextWorker = await User.findOne({ role: 'Worker', specialty: specialty });
   }
   
   if (!nextWorker) {
-    throw new AppError(`לא נמצאה עובדת מתאימה לשלב הבא (${nextStage})`, 404);
+    throw new AppError(`לא נמצאה עובדת זמינה להתמחות ${getSpecialtyForStage(nextStage)} עבור שלב ${nextStage}`, 404);
   }
 
   const updatedWig = await NewWig.findByIdAndUpdate(
@@ -107,13 +122,17 @@ export const moveToNextStage = async (wigId: string, specificWorkerId?: string) 
   ).populate('customer').populate('assignedWorker');
 
   if (updatedWig && updatedWig.customer) {
-    await sendCustomerUpdate(updatedWig.customer, nextStage);
+    sendCustomerUpdate(updatedWig.customer, nextStage).catch(err => 
+        logger.error(`Failed to send notification: ${err.message}`)
+    );
   }
 
-  console.log('Wig updated successfully');
   return updatedWig;
 };
 
+/**
+ * מיפוי שלבים להתמחויות
+ */
 const getSpecialtyForStage = (stage: string): string => {
   const specialtyMap: Record<string, string> = {
     'התאמת שיער': 'התאמת שיער',
@@ -130,12 +149,8 @@ export const getWigsByWorker = async (workerId: string) => {
   return await NewWig.find({ assignedWorker: workerId }).populate('customer');
 };
 
-// ==============================================================
-// ---> התוספות של איילה עבור הדשבורד של המזכירה <---
-// ==============================================================
-
 /**
- * שליפת כל הפאות עם חיבור שם העובדת (Lookup)
+ * שליפת כל הפאות עם חיבור שם העובדת (עבור הדאשבורד)
  */
 export const getAllWigsWithWorkers = async () => {
   return await NewWig.aggregate([
@@ -162,6 +177,6 @@ export const updateWigUrgency = async (id: string, isUrgent: boolean) => {
   return await NewWig.findByIdAndUpdate(
     id, 
     { $set: { isUrgent: isUrgent } },
-    { new: true } // מחזיר את האובייקט המעודכן
+    { new: true }
   );
 };

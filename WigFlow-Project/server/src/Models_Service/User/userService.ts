@@ -10,8 +10,8 @@ interface UserData {
     role: 'Admin' | 'Worker' | 'QC';
     specialty: string;
 }
+const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
 
-// יצירת משתמש חדש (כולל הצפנה)
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });
     if (existingUser) {
@@ -29,37 +29,22 @@ export const createUser = async (userData: UserData) => {
     return await newUser.save();
 };
 
-// פונקציית ההתחברות המרכזית
-export const loginUser = async (username: string, passwordInput: string) => {
-    console.log("--- ניסיון התחברות חדש ---");
-    console.log("שם משתמש שהוזן:", username);
-
-    // 1. חיפוש המשתמש
+export const loginUser = async (username: string, password: string) => {
     const user = await User.findOne({ username });
     if (!user) {
-        console.log("❌ שגיאה: המשתמש לא נמצא בבסיס הנתונים!");
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
-    console.log("✅ המשתמש נמצא. בודק סיסמה...");
-
-    // 2. השוואת סיסמה (bcrypt)
-    const isMatch = await bcrypt.compare(passwordInput, user.password);
-    console.log("האם הסיסמה תואמת?", isMatch);
-
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-        console.log("❌ שגיאה: הסיסמה לא תואמת!");
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
-    // 3. יצירת Token (JWT)
     const token = jwt.sign(
         { id: user._id, role: user.role }, 
-        'SECRET_KEY_123', 
+        SECRET_KEY, 
         { expiresIn: '1d' }
     );
-
-    console.log("🚀 התחברות הצליחה! תפקיד:", user.role);
 
     return {
         token,
@@ -78,7 +63,8 @@ export const getAllUsers = async () => {
 
 export const getUserById = async (userId: string) => {
     const user = await User.findById(userId)
-        .select('-password');
+    .select('-password')
+    .populate('workload');
     
     if (!user) {
         throw new Error('העובדת לא נמצאה במערכת');
@@ -88,7 +74,8 @@ export const getUserById = async (userId: string) => {
 
 export const getUserByUsername = async (username: string) => {
     const user = await User.findOne({ username })
-        .select('-password');
+        .select('-password')
+        .populate('workload');
         
     if (!user) {
         throw new Error(`לא נמצאה עובדת עם שם המשתמש: ${username}`);

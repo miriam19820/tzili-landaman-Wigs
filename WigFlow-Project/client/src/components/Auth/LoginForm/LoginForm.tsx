@@ -15,22 +15,27 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      // עדכון הפורט ל-5000 כדי שיתאים לשרת המעודכן שלנו
-      const response = await axios.post('http://localhost:5000/api/users/login', {
+      // שימוש בנתיב יחסי - Axios משתמש ב-BaseURL שהגדרנו ב-App.tsx
+      const response = await axios.post('/users/login', {
         username,
         password
       });
 
       // 1. שמירת הטוקן ופרטי המשתמש בדפדפן (localStorage)
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const { token, user } = response.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+
+      // הגדרת הטוקן כברירת מחדל לכל הקריאות באותה ריצה
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
       // 2. ניתוב חכם לפי תפקיד (Role)
-      const role = response.data.user.role;
-      if (role === 'Admin' || role === 'Secretary') {
-        window.location.href = '/'; // המזכירה הולכת למסך הראשי
-      } else if (role === 'Worker') {
-        window.location.href = '/production'; // עובדת הולכת לפס הייצור
+      if (user.role === 'Admin') {
+        window.location.href = '/'; 
+      } else if (user.role === 'Worker') {
+        window.location.href = '/repairs/tasks'; 
+      } else if (user.role === 'QC' || user.role === 'Inspector') {
+        window.location.href = '/qa'; 
       } else {
         window.location.href = '/';
       }

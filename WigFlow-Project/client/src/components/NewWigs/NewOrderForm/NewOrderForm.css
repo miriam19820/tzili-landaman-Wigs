@@ -1,3 +1,4 @@
+/* --- קונטיינר ראשי --- */
 .new-order-container {
   max-width: 800px;
   margin: 20px auto;
@@ -16,6 +17,7 @@
   padding-bottom: 10px;
 }
 
+/* --- אזור חיפוש --- */
 .search-section {
   background: #ebf5fb;
   padding: 20px;
@@ -30,6 +32,7 @@
   margin-top: 15px;
 }
 
+/* --- מבנה הטופס --- */
 .form-section {
   margin-top: 25px;
   border: 1px solid #ddd;
@@ -50,9 +53,12 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.btn-search, .btn-next, .submit-btn {
+/* --- כפתורים --- */
+.btn-search, .submit-btn {
   background-color: #3498db;
   color: white;
   border: none;
@@ -60,17 +66,27 @@
   border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+  transition: background 0.3s;
+}
+
+.btn-search:hover, .submit-btn:hover {
+  background-color: #2980b9;
 }
 
 .btn-back {
   background-color: #95a5a6;
   color: white;
   border: none;
-  padding: 12px 25px;
+  padding: 8px 15px;
   border-radius: 6px;
   cursor: pointer;
 }
 
+.full-width.submit-btn {
+  width: 100%;
+}
+
+/* --- באנרים והודעות --- */
 .customer-banner {
   background: #2ecc71;
   color: white;
@@ -82,21 +98,48 @@
   align-items: center;
 }
 
-.message-banner {
-  padding: 15px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+.sig-status { 
+  color: #27ae60; 
+  font-weight: bold; 
+  margin-top: 10px; 
+}
+
+/* --- אזור הברקוד בטופס --- */
+.barcode-container {
+  background-color: #f8f9fa;
+  border: 1px dashed #adb5bd;
+  border-radius: 8px;
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.barcode-container img {
+  max-width: 100%;
+  height: 80px;
+  mix-blend-mode: multiply;
+}
+
+/* --- חתימה --- */
+.signature-container {
+  margin-top: 35px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
   text-align: center;
 }
 
-.message-banner.success { background: #d4edda; color: #155724; }
-.message-banner.error { background: #f8d7da; color: #721c24; }
+.section-subtitle {
+  color: #004085;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+  margin-top: 35px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
 
-
-.sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; }
-
-/* .sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; } */
-/* --- עיצוב המדבקה על המסך --- */
+/* --- עיצוב המדבקה להדפסה --- */
 .sticker-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -109,71 +152,50 @@
 
 .print-sticker {
   background: white;
-  width: 80mm; /* גודל מדבקה סטנדרטי */
+  width: 80mm;
   padding: 15px;
   border-radius: 5px;
   text-align: center;
   border: 1px solid #ddd;
 }
 
-.sticker-header { font-weight: bold; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 5px; }
-.qr-code img { margin: 10px 0; }
-.btn-print { background: #28a745; color: white; padding: 10px 20px; border: none; margin: 10px; cursor: pointer; border-radius: 5px; }
-.btn-close { background: #6c757d; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
-
-/* --- לוגיקת הדפסה: מסתיר הכל חוץ מהמדבקה --- */
-@media print {
-  body * { visibility: hidden; } /* מסתיר הכל */
-  #wig-sticker, #wig-sticker * { visibility: visible; } /* מציג רק את המדבקה */
-  #wig-sticker {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    border: none;
-  }
-  .no-print { display: none; } /* מסתיר את כפתורי ההדפסה בזמן ההדפסה עצמה */
-
-}
-/* --- תיקון האנימציה שגרמה לאלמנט לברוח הצידה --- */
-@keyframes simpleFadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(-10px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
+.sticker-header { 
+  font-weight: bold; 
+  border-bottom: 1px solid #000; 
+  margin-bottom: 10px; 
+  padding-bottom: 5px; 
 }
 
-/* הגדרה ספציפית בתוך קונטיינר ההזמנה כדי למנוע התנגשות עם הודעות קופצות */
-.new-order-container .animate-in {
-  animation: simpleFadeIn 0.5s ease-out forwards;
+.qr-code img { 
+  margin: 10px 0; 
+  width: 120px;
 }
 
-/* שאר העיצובים הקיימים שלך... */
-.new-order-container {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 30px;
-  background: #fdfdfd;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.search-section {
-  background: #ebf5fb;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.search-box {
+.no-print.sticker-actions {
+  margin-top: 15px;
   display: flex;
   gap: 10px;
   justify-content: center;
-  margin-top: 15px;
 }
 
+/* --- לוגיקת הדפסה --- */
+@media print {
+  body * { visibility: hidden; }
+  #wig-sticker, #wig-sticker * { visibility: visible; }
+  #wig-sticker {
+    position: absolute;
+    top: 0; left: 0; width: 100%;
+    border: none;
+  }
+  .no-print { display: none; }
+}
+
+/* --- אנימציות --- */
+@keyframes simpleFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: simpleFadeIn 0.5s ease-out forwards;
+}
