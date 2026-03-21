@@ -26,7 +26,7 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
 
 export const verifyAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
-        if (req.user && req.user.role === 'Admin') {
+        if (req.user && (req.user.role === 'Admin' || req.user.role === 'Secretary')) {
             next();
         } else {
             res.status(403).json({ message: 'גישה חסומה: נדרשת הרשאת מזכירה/מנהלת' });

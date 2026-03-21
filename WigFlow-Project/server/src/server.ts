@@ -7,6 +7,7 @@ import './Models_Service/Customer/customerModel';
 import './Models_Service/User/userModel';
 import './Models_Service/NewWigs/newWigModel';
 import './Models_Service/SalonServices/serviceModel';
+import './Models_Service/Repairs/repairModel';
 
 // פורט 5000 עדיף כדי לא להתנגש עם ה-React
 const PORT = 5000;

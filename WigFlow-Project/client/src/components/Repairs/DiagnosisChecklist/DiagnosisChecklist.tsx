@@ -57,7 +57,7 @@ export const DiagnosisChecklist: React.FC = () => {
         setCustomerName(`${response.data.customer.firstName} ${response.data.customer.lastName}`);
       } else {
         if (window.confirm("לקוחה לא נמצאה. האם תרצי לעבור לדף רישום לקוחה חדשה?")) {
-          navigate('/repairs/quick-register', { state: { idNumber } });
+          navigate('/repairs/quick-customer', { state: { idNumber } });
         }
       }
     } catch (error) {
