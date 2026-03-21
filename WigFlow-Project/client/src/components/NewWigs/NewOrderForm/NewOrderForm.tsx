@@ -52,10 +52,9 @@ export const NewOrderForm: React.FC = () => {
   ];
 
   useEffect(() => {
-    // 1. ייצור קוד הזמנה אוטומטי
     setAutoOrderCode(`WIG-${Math.floor(100000 + Math.random() * 900000)}`);
-    
-    // 2. טעינת עובדות לשיבוץ
+    const token = localStorage.getItem('token');
+    if (token) axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     axios.get('/users')
       .then((res: any) => setWorkers(res.data.filter((u: any) => u.role === 'Worker')))
       .catch(err => console.error('שגיאה בטעינת עובדות'));

@@ -35,7 +35,7 @@ export const DiagnosisChecklist: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/api/customers/search/${id}`);
+      const response = await axios.get(`/customers/search/${id}`);
       if (response.data.exists) {
         setCustomerId(response.data.customer._id);
         setCustomerName(`${response.data.customer.firstName} ${response.data.customer.lastName}`);
@@ -51,7 +51,7 @@ export const DiagnosisChecklist: React.FC = () => {
     if (!idNumber) return;
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/api/customers/search/${idNumber}`);
+      const response = await axios.get(`/customers/search/${idNumber}`);
       if (response.data.exists) {
         setCustomerId(response.data.customer._id);
         setCustomerName(`${response.data.customer.firstName} ${response.data.customer.lastName}`);
@@ -111,7 +111,7 @@ export const DiagnosisChecklist: React.FC = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/api/repairs', repairData);
+      const response = await axios.post('/repairs', repairData);
 
       if (response.status === 201 || response.status === 200) {
         alert("כרטיס תיקון נפתח בהצלחה! ✅");

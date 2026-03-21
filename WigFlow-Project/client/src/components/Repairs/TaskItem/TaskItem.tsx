@@ -25,7 +25,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete }) => {
   const handleCompleteClick = async () => {
     setIsUpdating(true);
     try {
-      const response = await axios.patch(`http://localhost:3000/api/repairs/${task.repairId}/task/${task.taskIndex}`, {
+      const response = await axios.patch(`/repairs/${task.repairId}/task/${task.taskIndex}`, {
         status: 'בוצע'
       });
 

@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './LoginForm.css';
 
+axios.defaults.baseURL = 'http://localhost:5000/api';
+
 export const LoginForm: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

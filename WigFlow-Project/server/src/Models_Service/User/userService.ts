@@ -10,7 +10,7 @@ interface UserData {
     role: 'Admin' | 'Worker' | 'QC';
     specialty: string;
 }
-const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
+const SECRET_KEY = process.env.JWT_SECRET || 'WIG_FLOW_SECRET_2026';
 
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });

@@ -1,21 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import 'dotenv/config'; 
 
 interface AuthRequest extends Request {
     user?: any;
 }
 
-/**
- * המפתח הסודי לאימות טוקנים.
- * שילבנו את השמות שמרים ואיילה השתמשו בהם כדי למנוע תקלות.
- * ודאי שבקובץ ה-.env שלך קיים אחד מהם.
- */
-const SECRET_KEY = process.env.WIG_SYSTEM_AUTH_KEY || process.env.JWT_SECRET || 'SECRET_KEY_123'; 
+// קבענו את המפתח ישירות כדי למנוע בעיות סביבה
+const SECRET_KEY = 'WIG_FLOW_SECRET_2026';
 
-/**
- * אימות טוקן בסיסי לכל בקשה
- */
 export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -32,9 +24,6 @@ export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction)
     }
 };
 
-/**
- * ולידציה של הרשאת מנהלת/מזכירה (Admin)
- */
 export const verifyAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
         if (req.user && req.user.role === 'Admin') {
@@ -45,9 +34,6 @@ export const verifyAdmin = (req: AuthRequest, res: Response, next: NextFunction)
     });
 };
 
-/**
- * ולידציה של הרשאת עובדת (Worker)
- */
 export const verifyWorker = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
         if (req.user && (req.user.role === 'Worker' || req.user.role === 'Admin')) {
@@ -58,12 +44,8 @@ export const verifyWorker = (req: AuthRequest, res: Response, next: NextFunction
     });
 };
 
-/**
- * ולידציה של הרשאת בקרת איכות (QC / Inspector)
- */
 export const verifyQC = (req: AuthRequest, res: Response, next: NextFunction) => {
     verifyToken(req, res, () => {
-        // הוספנו תמיכה גם ב-QC וגם ב-Inspector לפי השינויים ב-App.tsx
         if (req.user && (req.user.role === 'QC' || req.user.role === 'Inspector' || req.user.role === 'Admin')) {
             next();
         } else {

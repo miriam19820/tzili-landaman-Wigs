@@ -1,22 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import axios from 'axios';
-
-// 1. הגדרת כתובת הבסיס מתוך משתני הסביבה
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
-// 2. מוסיף את הטוקן באופן אוטומטי לכל קריאת שרת (Axios Interceptor)
-axios.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // ייבוא הקומפוננטות
 import { ProductionStation } from './components/NewWigs/ProductionStation/ProductionStation';

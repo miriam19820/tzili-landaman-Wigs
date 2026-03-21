@@ -33,7 +33,7 @@ export const RepairWorkerList: React.FC<RepairWorkerListProps> = ({ workerId }) 
   const fetchTasks = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`http://localhost:3000/api/repairs/worker-tasks/${workerId}`);
+      const res = await axios.get(`/repairs/worker-tasks/${workerId}`);
       if (res.data.success) {
         setTasks(res.data.data);
       }
@@ -47,7 +47,7 @@ export const RepairWorkerList: React.FC<RepairWorkerListProps> = ({ workerId }) 
 
   const handleStatusUpdate = async (repairId: string, taskIndex: number, newStatus: string) => {
     try {
-      const res = await axios.patch(`http://localhost:3000/api/repairs/${repairId}/task/${taskIndex}`, {
+      const res = await axios.patch(`/repairs/${repairId}/task/${taskIndex}`, {
         status: newStatus
       });
       
