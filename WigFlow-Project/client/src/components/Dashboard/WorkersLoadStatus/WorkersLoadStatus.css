@@ -19,39 +19,74 @@
 
 .workers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* הגדלתי טיפה שיהיה מקום לכפתורים */
+  gap: 20px;
 }
 
 .worker-card {
   background-color: #f8f5ff;
   border: 1px solid #e0d4f7;
-  border-radius: 10px;
-  padding: 15px;
+  border-radius: 12px;
+  padding: 20px;
   text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.worker-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(111, 66, 193, 0.1);
+}
+
+/* עיצוב לעובדת לא פעילה (אפור) */
+.worker-card.inactive {
+  background-color: #f0f0f0;
+  border-color: #d0d0d0;
+  opacity: 0.8;
+  filter: grayscale(0.5);
 }
 
 .worker-name {
   font-weight: bold;
   color: #6f42c1;
-  font-size: 16px;
-  margin-bottom: 5px;
+  font-size: 18px;
 }
 
 .worker-specialty {
   color: #6c757d;
-  font-size: 13px;
-  margin-bottom: 10px;
+  font-size: 14px;
+  margin-bottom: 5px;
 }
 
 .worker-count {
   background-color: #6f42c1;
   color: white;
   border-radius: 20px;
-  padding: 4px 14px;
-  font-size: 14px;
+  padding: 5px 15px;
+  font-size: 13px;
   font-weight: bold;
-  display: inline-block;
+  margin-bottom: 10px;
+}
+
+/* כפתור עריכה */
+.edit-btn {
+  background-color: transparent;
+  color: #6f42c1;
+  border: 1px solid #6f42c1;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.edit-btn:hover {
+  background-color: #6f42c1;
+  color: white;
 }
 
 .loading-text {
