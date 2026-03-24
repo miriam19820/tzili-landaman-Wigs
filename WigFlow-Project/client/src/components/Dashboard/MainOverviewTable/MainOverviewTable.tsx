@@ -14,6 +14,10 @@ interface Wig {
 export const MainOverviewTable: React.FC = () => {
   const [wigs, setWigs] = useState<Wig[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // משתנים חדשים לחיפוש וסינון
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('הכל');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -25,13 +29,52 @@ export const MainOverviewTable: React.FC = () => {
       .catch(() => setLoading(false));
   }, []);
 
+  // --- לוגיקת הסינון החכמה ---
+  const filteredWigs = wigs.filter(wig => {
+    // 1. בדיקת חיפוש (לפי שם לקוחה או קוד הזמנה)
+    const fullName = `${wig.customer?.firstName} ${wig.customer?.lastName}`.toLowerCase();
+    const matchesSearch = 
+      fullName.includes(searchTerm.toLowerCase()) || 
+      wig.orderCode?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // 2. בדיקת סטטוס
+    const matchesStatus = statusFilter === 'הכל' || wig.currentStage === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="overview-container">
       <h2 className="overview-title">📋 סקירה כללית - כל הפאות הפעילות</h2>
+
+      {/* שורת כלי חיפוש וסינון */}
+      <div className="filter-bar">
+        <input 
+          type="text" 
+          placeholder="חפשי לפי שם לקוחה או קוד..." 
+          className="search-input"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        
+        <select 
+          className="status-select"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="הכל">כל השלבים</option>
+          <option value="שיער">שיער</option>
+          <option value="תפירה">תפירה</option>
+          <option value="צבע">צבע</option>
+          <option value="QC">בקרת איכות (QC)</option>
+          <option value="מוכן">מוכן למסירה</option>
+        </select>
+      </div>
+
       {loading ? (
         <p className="loading-text">טוען נתונים...</p>
-      ) : wigs.length === 0 ? (
-        <p className="loading-text">אין פאות פעילות במערכת</p>
+      ) : filteredWigs.length === 0 ? (
+        <p className="loading-text">לא נמצאו פאות התואמות לחיפוש</p>
       ) : (
         <table className="overview-table">
           <thead>
@@ -45,7 +88,7 @@ export const MainOverviewTable: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {wigs.map(wig => (
+            {filteredWigs.map(wig => (
               <tr key={wig._id}>
                 <td>{wig.orderCode || '-'}</td>
                 <td>{wig.customer?.firstName} {wig.customer?.lastName}</td>

@@ -9,7 +9,8 @@ const userSchema = new Schema({
     enum: ['Admin', 'Worker', 'QC'], 
     required: true 
   },
-  specialty: { type: String, required: true }
+  specialty: { type: String, required: true },
+  isActive: { type: Boolean, default: true } 
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
