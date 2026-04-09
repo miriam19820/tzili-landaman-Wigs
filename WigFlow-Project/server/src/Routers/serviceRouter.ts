@@ -4,7 +4,6 @@ import { verifyToken, verifyAdmin, verifyWorker, verifyQC } from '../Middlewares
 
 const serviceRouter = Router();
 
-// הזמנת שירות חדש (רק מנהלת/מזכירה)
 serviceRouter.post('/', verifyAdmin, async (req, res) => {
   try {
     const newService = await serviceService.createService(req.body);
@@ -14,7 +13,15 @@ serviceRouter.post('/', verifyAdmin, async (req, res) => {
   }
 });
 
-// שליפת נתוני פאה בשירות (כל משתמש מחובר)
+serviceRouter.get('/qa-tasks', verifyToken, async (req, res) => {
+  try {
+    const tasks = await serviceService.getQATasks();
+    res.status(200).json({ success: true, data: tasks });
+  } catch (error: any) {
+    res.status(500).json({ message: 'שגיאה בשליפת הנתונים', error: error.message });
+  }
+});
+
 serviceRouter.get('/:id', verifyToken, async (req, res) => {
   try {
     const service = await serviceService.getServiceById(req.params.id);
@@ -25,7 +32,6 @@ serviceRouter.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// --- פעולות של עובדות ייצור ---
 serviceRouter.patch('/:id/start-drying', verifyWorker, async (req, res) => {
   try {
     const updatedService = await serviceService.moveToDrying(req.params.id);
@@ -53,8 +59,6 @@ serviceRouter.patch('/:id/finish-styling', verifyWorker, async (req, res) => {
   }
 });
 
-
-// --- פעולות בקרת איכות (QA) - רק מחלקת QC או מנהלת ---
 serviceRouter.patch('/:id/approve', verifyQC, async (req, res) => {
   try {
     const approvedService = await serviceService.approveService(req.params.id);
@@ -66,14 +70,15 @@ serviceRouter.patch('/:id/approve', verifyQC, async (req, res) => {
 
 serviceRouter.patch('/:id/reject', verifyQC, async (req, res) => {
   try {
-    const { qaNote, returnTo, repairTaskId } = req.body; 
+    // קוראים את סיבת הפסילה ואת התחנות החוזרות מהבקשה של ה-React
+    const { qaNote, returnStages } = req.body; 
+    
     const rejectedService = await serviceService.rejectService(
       req.params.id, 
       qaNote, 
-      returnTo, 
-      repairTaskId
+      returnStages // מעבירים את המערך הלאה לפונקציה
     );
-    res.status(200).json({ message: 'הפאה הוחזרה לתיקון', service: rejectedService });
+    res.status(200).json({ message: 'הפאה הוחזרה לתיקון בהצלחה', service: rejectedService });
   } catch (error: any) {
     res.status(400).json({ error: error.message });
   }

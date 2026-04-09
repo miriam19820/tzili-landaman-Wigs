@@ -37,7 +37,8 @@ export const NewOrderForm: React.FC = () => {
   const [savedWigData, setSavedWigData] = useState<any>(null); 
   const [autoOrderCode, setAutoOrderCode] = useState('');
   const [workers, setWorkers] = useState<any[]>([]);
-  const [plannedAssignments, setPlannedAssignments] = useState<Record<string, string>>({});
+  
+  const [plannedAssignments, setPlannedAssignments] = useState<Record<string, string[]>>({});
 
   const isRepairFlow = location.state?.fromFlow === 'repair';
   const { register, handleSubmit, watch, formState: { errors } } = useForm<NewOrderFormInputs>();
@@ -100,17 +101,27 @@ export const NewOrderForm: React.FC = () => {
     } catch (error) { alert("שגיאה ברישום הלקוחה"); } finally { setLoading(false); }
   };
 
+  const toggleWorkerForStage = (stageName: string, workerId: string) => {
+    setPlannedAssignments(prev => {
+      const currentWorkers = prev[stageName] || [];
+      if (currentWorkers.includes(workerId)) {
+        return { ...prev, [stageName]: currentWorkers.filter(id => id !== workerId) };
+      } else {
+        return { ...prev, [stageName]: [...currentWorkers, workerId] };
+      }
+    });
+  };
+
   const onSubmit = async (data: NewOrderFormInputs) => {
     if (!signatureData) { alert('חובה להחתים את הלקוחה!'); return; }
     
-    const firstWorker = plannedAssignments['התאמת שיער'];
-    if (!firstWorker) { alert("חובה לשבץ עובדת לשלב 'התאמת שיער'!"); return; }
+    const firstStageWorkers = plannedAssignments['התאמת שיער'] || [];
+    if (firstStageWorkers.length === 0) { alert("חובה לשבץ לפחות עובדת אחת לשלב 'התאמת שיער'!"); return; }
 
     setLoading(true);
     try {
       let finalCustomerId = customer?._id;
       
-      // אם הגענו לכאן ואין ID (מקרה קצה), ניצור לקוחה
       if (!finalCustomerId) {
         const newRes = await axios.post('/customers', {
           firstName: data.firstName, 
@@ -126,8 +137,8 @@ export const NewOrderForm: React.FC = () => {
         ...data,
         customer: finalCustomerId,
         orderCode: autoOrderCode,
-        assignedWorker: firstWorker,
-        stageAssignments: plannedAssignments,
+        assignedWorkers: firstStageWorkers, 
+        stageAssignments: plannedAssignments, 
         currentStage: 'התאמת שיער', 
         measurements: { 
           circumference: Number(data.circumference), 
@@ -140,6 +151,10 @@ export const NewOrderForm: React.FC = () => {
 
       const response = await axios.post('/wigs/new', payload);
       
+      // ברגע שהשרת ענה שהכל תקין - קופצת הודעת ההצלחה ללקוחה/מזכירה
+      alert('✅ העסקה בוצעה ונסגרה בהצלחה!\n\nהנתונים נשמרו במערכת. כעת מופקת מדבקת ברקוד לסריקה בתחנות הייצור.');
+      
+      // ורק עכשיו פותחים את תצוגת המדבקה
       setSavedWigData({
         ...payload,
         _id: response.data._id || response.data.data?._id,
@@ -147,7 +162,7 @@ export const NewOrderForm: React.FC = () => {
       });
 
     } catch (error) { 
-      alert("שגיאה בשמירת ההזמנה"); 
+      alert("שגיאה בשמירת ההזמנה. אנא נסי שוב."); 
     } finally { 
       setLoading(false); 
     }
@@ -245,24 +260,36 @@ export const NewOrderForm: React.FC = () => {
               <textarea className="form-input full-width" {...register('specialNotes')} placeholder="הערות מיוחדות..."></textarea>
             </div>
 
-            <h4 className="section-subtitle highlight">👤 שיבוץ צוות (תכנון ייצור)</h4>
+            <h4 className="section-subtitle highlight">👤 שיבוץ צוות (ניתן לבחור כמה עובדות לכל שלב)</h4>
             <div className="form-grid">
-              {REQUIRED_STAGES.map(stage => (
-                <div className="input-group" key={stage.name}>
-                  <label className="input-label">{stage.name} {stage.name === 'התאמת שיער' && '*'}</label>
-                  <select 
-                    className="form-input"
-                    value={plannedAssignments[stage.name] || ''}
-                    onChange={(e) => setPlannedAssignments({...plannedAssignments, [stage.name]: e.target.value})}
-                    required={stage.name === 'התאמת שיער'}
-                  >
-                    <option value="" disabled>-- בחרי עובדת --</option>
-                    {workers.filter(w => w.specialty === stage.specialty).map(w => (
-                      <option key={w._id} value={w._id}>{w.fullName || w.username}</option>
-                    ))}
-                  </select>
-                </div>
-              ))}
+              {REQUIRED_STAGES.map(stage => {
+                const stageWorkers = workers.filter(w => w.specialty === stage.specialty);
+                return (
+                  <div className="input-group" key={stage.name} style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px', backgroundColor: '#fafafa' }}>
+                    <label className="input-label" style={{ fontWeight: 'bold', marginBottom: '10px', display: 'block' }}>
+                      {stage.name} {stage.name === 'התאמת שיער' && '*'}
+                    </label>
+                    
+                    {stageWorkers.length === 0 ? (
+                      <span style={{ fontSize: '0.85rem', color: '#e74c3c' }}>אין עובדות זמינות להתמחות זו</span>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {stageWorkers.map(w => (
+                          <label key={w._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem' }}>
+                            <input
+                              type="checkbox"
+                              checked={(plannedAssignments[stage.name] || []).includes(w._id)}
+                              onChange={() => toggleWorkerForStage(stage.name, w._id)}
+                              style={{ transform: 'scale(1.2)' }}
+                            />
+                            {w.fullName || w.username}
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <h4 className="section-subtitle">💳 תשלום</h4>
@@ -277,8 +304,9 @@ export const NewOrderForm: React.FC = () => {
               {signatureData && <div className="sig-status">✓ החתימה נשמרה</div>}
             </div>
             
+            {/* שינוי טקסט הכפתור כדי שיהיה ברור שזו סגירת העסקה */}
             <button type="submit" className="submit-btn full-width" disabled={loading}>
-              {loading ? "פותח הזמנה..." : "פתח הזמנה חדשה ✂️"}
+              {loading ? "שומר עסקה..." : "סגור עסקה והפק מדבקה 🖨️"}
             </button>
           </fieldset>
         )}
@@ -296,10 +324,20 @@ export const NewOrderForm: React.FC = () => {
                 <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${savedWigData.orderCode}`} alt="QR Code" />
               </div>
             </div>
-            <div className="no-print sticker-actions">
-              <button className="btn-print" onClick={() => window.print()}>הדפס מדבקה 🖨️</button>
-              <button className="btn-close" onClick={() => window.location.reload()}>סיום</button>
+            
+            {/* כפתורי סיום חדשים שנותנים בחירה למשתמשת */}
+            <div className="no-print sticker-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
+              <button className="btn-print" onClick={() => window.print()} style={{ width: '100%' }}>הדפס מדבקה 🖨️</button>
+              
+              <button className="btn-close" style={{ flex: 1, backgroundColor: '#34495e' }} onClick={() => navigate('/dashboard')}>
+                מעבר לדאשבורד
+              </button>
+              
+              <button className="btn-close" style={{ flex: 1, backgroundColor: '#2ecc71' }} onClick={() => window.location.reload()}>
+                התחלת קבלה חדשה
+              </button>
             </div>
+
           </div>
         </div>
       )}

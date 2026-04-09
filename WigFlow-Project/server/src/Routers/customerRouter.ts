@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { Customer } from '../Models_Service/Customer/customerModel';
+// הוספנו ייבוא של קובץ השירות שיש בו את הלוגיקה החכמה שלנו
+import * as customerService from '../Models_Service/Customer/customerService'; 
 import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware';
 
 const customerRouter = Router();
@@ -22,10 +24,12 @@ customerRouter.get('/search/:idNumber', verifyToken, async (req, res) => {
 // יצירת לקוחה חדשה (כל משתמש מחובר, בשביל "רישום מהיר" מעמדת העובדת)
 customerRouter.post('/', verifyToken, async (req, res) => {
   try {
-    const newCustomer = await Customer.create(req.body);
+    // התיקון: עכשיו אנחנו שולחים את המידע ל-Service שיבדוק כפילויות לפני השמירה
+    const newCustomer = await customerService.createCustomer(req.body);
     res.status(201).json(newCustomer);
   } catch (error: any) {
-    res.status(400).json({ message: 'שגיאה ביצירת לקוחה', error: error.message });
+    // התיקון: אנחנו מחזירים את קוד השגיאה המדויק (למשל 400) שה-Service זרק
+    res.status(error.statusCode || 400).json({ message: 'שגיאה ביצירת לקוחה', error: error.message });
   }
 });
 

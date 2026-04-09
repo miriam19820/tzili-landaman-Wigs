@@ -37,7 +37,7 @@ const serviceSchema = new Schema({
 
   status: { 
     type: String, 
-    enum: ['Pending Wash', 'Pending Style', 'In Progress', 'Drying', 'QA', 'Ready'], 
+    enum: ['Pending Wash', 'Pending Style', 'In Progress', 'Drying', 'QA', 'Ready', 'Rejected'], 
     default: 'Pending Wash' 
   }
 }, { timestamps: true });

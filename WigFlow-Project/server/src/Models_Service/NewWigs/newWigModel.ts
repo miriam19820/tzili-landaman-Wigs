@@ -8,7 +8,7 @@ const newWigSchema = new Schema({
   receivedDate: { type: Date, default: Date.now }, 
   targetDate: { type: Date }, 
 
-isUrgent: { type: Boolean, default: false },
+  isUrgent: { type: Boolean, default: false },
 
   measurements: {
     circumference: { type: Number, required: true }, 
@@ -18,7 +18,7 @@ isUrgent: { type: Boolean, default: false },
 
   stageAssignments: {
     type: Map,
-    of: String 
+    of: [{ type: String }] // התיקון: שונה למערך כדי לתמוך בכמה עובדות לשלב בודד
   },
 
   netSize: { 
@@ -37,7 +37,6 @@ isUrgent: { type: Boolean, default: false },
   
   topLayering: { type: String }, 
 
-
   baseColor: { type: String }, 
   highlightsWefts: { type: String }, 
   highlightsSkin: { type: String }, 
@@ -47,7 +46,6 @@ isUrgent: { type: Boolean, default: false },
     enum: ['סקין', 'שבלול', 'לייסטופ', 'לייס פרונט', 'דיפ לייס'] 
   },
   topNotes: { type: String }, 
-
 
   frontNotes: { type: String }, 
   frontStyle: { type: String },
@@ -73,7 +71,9 @@ isUrgent: { type: Boolean, default: false },
       'בקרה'              
     ]
   },
-  assignedWorker: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+  
+  // התיקון המרכזי: שונה השם לברבים, והטיפוס הוא עכשיו מערך []
+  assignedWorkers: [{ type: Schema.Types.ObjectId, ref: 'User' }] 
 
 }, { 
   timestamps: true 

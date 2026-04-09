@@ -1,21 +1,26 @@
 import { User } from './userModel';
-import { Customer } from '../Customer/customerModel'; 
 import bcrypt from 'bcryptjs'; 
 import jwt from 'jsonwebtoken';  
 
 interface UserData {
     username: string;
-    password: string;
+    password?: string; // עשינו אופציונלי כדי שנוכל לעדכן עובדת בלי לגעת לה בסיסמה
     fullName: string;
-    role: 'Admin' | 'Worker' | 'QC';
+    role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector'; // הוספנו את התפקידים החדשים
     specialty: string;
 }
+
 const SECRET_KEY = process.env.JWT_SECRET || 'WIG_FLOW_SECRET_2026';
 
 export const createUser = async (userData: UserData) => {
     const existingUser = await User.findOne({ username: userData.username });
     if (existingUser) {
         throw new Error('שם המשתמש כבר קיים במערכת');
+    }
+
+    // חובה לוודא שיש סיסמה ביצירת משתמש חדש
+    if (!userData.password) {
+        throw new Error('חובה להזין סיסמה למשתמש חדש');
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -52,7 +57,8 @@ export const loginUser = async (username: string, password: string) => {
             id: user._id,
             username: user.username,
             fullName: user.fullName,
-            role: user.role
+            role: user.role,
+            specialty: user.specialty
         }
     };
 };
@@ -83,10 +89,16 @@ export const getUserByUsername = async (username: string) => {
     return user;
 };
 
+// הפונקציה המרכזית שמעדכנת את פרטי העובדת (שם / יציאה לחופשת לידה)
 export const updateUser = async (userId: string, updateData: Partial<UserData>) => {
-    if (updateData.password) {
+    
+    // אם המזכירה בחרה לעדכן גם סיסמה, נצפין אותה מחדש
+    if (updateData.password && updateData.password.trim() !== '') {
         const salt = await bcrypt.genSalt(10);
         updateData.password = await bcrypt.hash(updateData.password, salt);
+    } else {
+        // אם לא הוכנסה סיסמה בעריכה, נמחק את השדה הזה כדי לא לדרוס את הסיסמה הקיימת עם ערך ריק
+        delete updateData.password;
     }
 
     const updatedUser = await User.findByIdAndUpdate(

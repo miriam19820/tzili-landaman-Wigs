@@ -13,6 +13,25 @@ async function getRepairById(id: string) {
   return repair;
 }
 
+/**
+ * פונקציה חדשה: פסילת משימה והחזרתה לעובדת (תיקון הבאג)
+ * הפונקציה מעדכנת את הסטטוס לממתין ומוסיפה הערה מפורטת
+ */
+async function rejectTask(repairId: string, taskIndex: number, note: string) {
+  const repair = await Repair.findById(repairId);
+  if (!repair) throw new Error("תיקון לא נמצא");
+
+  // 1. החזרת המשימה הספציפית לסטטוס ממתין כדי שתופיע שוב אצל העובדת
+  repair.tasks[taskIndex].status = 'ממתין';
+
+  // 2. הוספת הערת הפסילה המפורטת (ה"איפה") לשדה ההערות הקיים
+  const previousNotes = repair.tasks[taskIndex].notes || "";
+  repair.tasks[taskIndex].notes = `❌ פסילת QA: ${note}${previousNotes ? ` | הערה קודמת: ${previousNotes}` : ""}`;
+
+  // 3. שמירה - ה-save יגרום לכך שהפאה תחזור להופיע ב-Dashboard תחת "בתיקון"
+  return await repair.save();
+}
+
 async function updateTaskStatus(repairId: string, taskIndex: number, status: string) {
   // עדכון סטטוס משימה ספציפית בתוך המערך בעזרת מפתח דינמי
   const updatedRepair = await Repair.findByIdAndUpdate(
@@ -251,9 +270,6 @@ async function getDashboardView() {
   });
 }
 
-/**
- * שליפת משימות עבור עובדת ספציפית
- */
 async function getTasksByWorker(workerId: string) {
   const repairs = await Repair.find({ 'tasks.assignedTo': workerId })
     .populate('customer', 'firstName lastName');
@@ -282,6 +298,7 @@ async function getTasksByWorker(workerId: string) {
 
 export {
   getRepairById,
+  rejectTask, // הייצוא החדש
   updateTaskStatus,
   getWorkerLoadOpen,
   getWorkerLoadClose,

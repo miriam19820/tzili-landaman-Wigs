@@ -9,8 +9,10 @@ import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWo
 import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister';
 import { ServiceOrderForm } from './components/ServicesAndQA/ServiceOrderForm/ServiceOrderForm';
 import { QADashboard } from './components/ServicesAndQA/QADashboard/QADashboard';
-import { MainOverviewTable } from './components/Dashboard/MainOverviewTable';
+import { MainOverviewTable } from './components/Dashboard/MainOverviewTable/MainOverviewTable';
 import { WorkersLoadStatus } from './components/Dashboard/WorkersLoadStatus/WorkersLoadStatus';
+// הוספת הייבוא של ניהול הצוות (שימי לב לנתיב, הוא צריך להיות מדויק)
+import { TeamManagement } from './components/Dashboard/TeamManagement/TeamManagement';
 
 const Navigation = () => {
   const location = useLocation();
@@ -29,7 +31,7 @@ const Navigation = () => {
     border: 'none', 
     borderRadius: '5px', 
     textDecoration: 'none',
-    backgroundColor: location.pathname === path ? '#6f42c1' : '#6c757d',
+    backgroundColor: location.pathname === path ? '#f39c12' : '#34495e', // עדכנתי קצת לצבעים יותר יפים
     fontWeight: 'bold',
     transition: 'background-color 0.3s'
   });
@@ -43,7 +45,7 @@ const Navigation = () => {
             <Link to="/" style={linkStyle('/')}>הזמנת פאה חדשה</Link>
             <Link to="/repairs/new" style={linkStyle('/repairs/new')}>קבלת פאה לתיקון</Link>
             <Link to="/service/new" style={linkStyle('/service/new')}>הזמנת שירות</Link>
-            <Link to="/dashboard" style={linkStyle('/dashboard')}>דאשבורד עומס</Link>
+            <Link to="/dashboard" style={linkStyle('/dashboard')}>דאשבורד וניהול</Link>
           </>
         )}
 
@@ -62,7 +64,7 @@ const Navigation = () => {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <span style={{ fontWeight: 'bold' }}>שלום, {user?.username} ({user?.role})</span>
-        <button onClick={handleLogout} style={{ padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>התנתק</button>
+        <button onClick={handleLogout} style={{ padding: '8px 15px', backgroundColor: '#e74c3c', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>התנתק</button>
       </div>
     </nav>
   );
@@ -82,7 +84,7 @@ function App() {
   return (
     <Router>
       <div className="App" dir="rtl" style={{ fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
-        {token && <h1 style={{ textAlign: 'center', color: '#6f42c1', marginTop: '20px' }}>מערכת WigFlow ✂️</h1>}
+        {token && <h1 style={{ textAlign: 'center', color: '#2c3e50', marginTop: '20px' }}>מערכת WigFlow ✂️</h1>}
         {token && <Navigation />}
         <div style={{ padding: '0 20px' }}>
           <Routes>
@@ -95,7 +97,17 @@ function App() {
             <Route path="/repairs/tasks" element={<ProtectedRoute><RepairWorkerList workerId={user?.id || user?._id || ''} /></ProtectedRoute>} />
             <Route path="/service/new" element={<ProtectedRoute><ServiceOrderForm /></ProtectedRoute>} />
             <Route path="/qa" element={<ProtectedRoute><QADashboard /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><div><MainOverviewTable /><WorkersLoadStatus /></div></ProtectedRoute>} />
+            
+            {/* כאן נמצא התיקון המרכזי: הכנסת TeamManagement לתוך מסך הדאשבורד */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <TeamManagement />
+                  <MainOverviewTable />
+                  <WorkersLoadStatus />
+                </div>
+              </ProtectedRoute>
+            } />
             
             <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
           </Routes>
