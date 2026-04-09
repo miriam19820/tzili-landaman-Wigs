@@ -1,29 +1,27 @@
-WigFlow - Production & Repair Management System 
-WigFlow היא מערכת ERP מקיפה לניהול פס ייצור ותיקונים של פאות, שנבנתה כדי לפתור את אתגרי הניהול והמעקב בסלון פאות מודרני.
+# Salon Management System (Client Project)
 
-טכנולוגיות מרכזיות
-Frontend: React, TypeScript, CSS3 (Responsive Design).
+A full-stack web application developed for a real wig salon business, designed to manage daily operations including customer appointments, services, and scheduling.
 
-Backend: Node.js, Express, MongoDB (Mongoose).
+##  Key Features
+- Customer management system
+- Appointment scheduling with conflict prevention
+- Service tracking and management
+- Real-time updates for business operations
 
-Security: JWT Authentication & Role-Based Access Control (RBAC).
+## 🧠 Business Logic
+- Prevents double-booking of appointments
+- Handles scheduling constraints and availability
+- Optimized workflow for daily salon operations
 
- תכונות בולטות (Highlights)
-ניהול פס ייצור חכם: מעקב אחרי פאות חדשות דרך 6 שלבי ייצור, מהתאמת שיער ועד בקרה סופית.
+## 🛠 Tech Stack
+- Frontend: React, TypeScript
+- Backend: Node.js, Express
+- Database: MongoDB
 
-סריקת QR Code: אינטגרציה מלאה לסריקת פאות בתחנת העבודה לצפייה מהירה במפרט טכני ועדכון סטטוס.
+## 💼 Business Impact
+The system is actively used by a real client, improving efficiency in managing appointments and customer data.
 
-Voice Commands: תמיכה בפקודות קוליות לעדכון סטטוסים ללא מגע יד (מותאם לסביבת עבודה פיזית).
-
-מערכת התראות: שליחת עדכונים אוטומטיים ללקוחות ב-WhatsApp ובמייל על התקדמות הפאה.
-
-🛠️ סטטוס הפרויקט (Roadmap)
-הפרויקט נמצא כרגע בתהליך פיתוח מתקדם (MVP):
-
-[x] הקמת תשתית ה-API וניהול המשתמשים.
-
-[x] מימוש לוגיקת ה-Workflows (ייצור ותיקונים).
-
-[x] פיתוח תחנת הייצור עם QR וזיהוי קולי.
-
-[ ] השלמת ה-Dashboard הניהולי והסטטיסטיקות.
+## ⚙️ Installation
+```bash
+npm install
+npm run dev
