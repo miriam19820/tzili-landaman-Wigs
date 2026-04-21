@@ -15,39 +15,41 @@ export const TeamManagement: React.FC = () => {
   const [specialty, setSpecialty] = useState('תפירה');
   const [message, setMessage] = useState({ text: '', type: '' });
   
-  // מזהה אם אנחנו במצב "עריכה" (מכיל ID) או "הוספה" (null)
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  // פונקציה לשליפת רשימת העובדות מהשרת
+  // פונקציה לשליפת העובדות
   const fetchWorkers = async () => {
     const token = localStorage.getItem('token');
     try {
       const res = await fetch('http://localhost:5000/api/users', {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      if (!res.ok) {
+        throw new Error('שגיאה בשליפת נתוני העובדים מהשרת');
+      }
+
       const data = await res.json();
       
-      // התיקון שלנו: מוודאים שקיבלנו מערך לפני שעושים filter
-      // אם השרת החזיר שגיאת ניתוק (401), זה יהפוך למערך ריק במקום להקריס את המסך
+      // וידוא שהמידע חוזר כמערך וסינון לעובדים בלבד
       const workersData = Array.isArray(data) ? data : (data.data || []);
       setWorkers(workersData.filter((u: any) => u.role === 'Worker'));
       
     } catch (err) {
       console.error("שגיאה בטעינת עובדות", err);
-      setWorkers([]); // איפוס למערך ריק במקרה של שגיאה
+      setWorkers([]); 
     }
   };
 
-  // טעינה ראשונית כשהקומפוננטה עולה
   useEffect(() => {
     fetchWorkers();
   }, []);
 
+  // פונקציה לשמירת/עדכון עובדת
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     
-    // אם יש editingId, אנחנו מעדכנים (PUT). אם אין, אנחנו יוצרים חדש (POST).
     const url = editingId 
       ? `http://localhost:5000/api/users/${editingId}` 
       : 'http://localhost:5000/api/users';
@@ -70,20 +72,24 @@ export const TeamManagement: React.FC = () => {
         })
       });
 
-      if (!response.ok) throw new Error('שגיאה בשמירת הנתונים');
+      // התיקון המקצועי: תפיסת שגיאות מפורטות מהשרת כדי שתדע בדיוק מה נכשל
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'שגיאה בשמירת הנתונים');
+      }
 
       setMessage({ 
-        text: editingId ? '✅ פרטי העובדת עודכנו!' : '✅ עובדת חדשה נוספה!', 
+        text: editingId ? '✅ פרטי העובדת עודכנו בהצלחה!' : '✅ עובדת חדשה נוספה בהצלחה!', 
         type: 'success' 
       });
       
-      // איפוס וחזרה למצב רגיל
+      // איפוס הטופס חזרה למצב התחלתי
       setFullName('');
       setUsername('');
       setPassword('');
       setSpecialty('תפירה');
       setEditingId(null);
-      fetchWorkers(); // רענון הטבלה
+      fetchWorkers(); 
 
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error: any) {
@@ -91,11 +97,12 @@ export const TeamManagement: React.FC = () => {
     }
   };
 
+  // פונקציה להכנת הטופס למצב עריכה
   const handleEditClick = (worker: Worker) => {
     setEditingId(worker._id);
     setFullName(worker.fullName);
     setSpecialty(worker.specialty);
-    window.scrollTo({ top: 0, behavior: 'smooth' }); // גלילה נעימה לטופס
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
   };
 
   return (

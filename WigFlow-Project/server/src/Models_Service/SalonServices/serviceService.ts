@@ -1,75 +1,67 @@
-import { Service } from './serviceModel';
-import { NewWig } from '../NewWigs/newWigModel'; // ייבוא של הפאות החדשות!
+import { Service } from './serviceModel.js';
+import { NewWig } from '../NewWigs/newWigModel.js'; 
+import { Repair } from '../Repairs/repairModel.js';
+import * as customerService from '../Customer/customerService.js'; 
 
 export const createService = async (serviceData: any) => {
+  if (typeof serviceData.customer === 'string' && serviceData.customer.length < 24) {
+    const foundCustomer = await customerService.findCustomerByName(serviceData.customer);
+    if (!foundCustomer) {
+      throw new Error(`הלקוחה "${serviceData.customer}" לא נמצאה במערכת. יש להוסיף אותה קודם.`);
+    }
+    serviceData.customer = foundCustomer._id;
+  }
+
+ 
   if (serviceData.serviceType === 'Style Only') {
     serviceData.status = 'Pending Style'; 
   } else {
     serviceData.status = 'Pending Wash';
   }
+
   return await Service.create(serviceData);
 };
 
-export const getServiceById = async (id: string) => {
-  return await Service.findById(id).populate('customer');
-};
 
-export const getQATasks = async () => {
-  return await Service.find({ status: 'QA' }).populate('customer');
-};
-
-export const moveToDrying = async (serviceId: string) => {
-  return await Service.findByIdAndUpdate(
-    serviceId,
-    { status: 'Drying', dryingStartTime: new Date() },
-    { new: true }
-  );
-};
-
-export const finishDrying = async (serviceId: string) => {
-  const service = await Service.findById(serviceId);
-  if (!service) throw new Error('Service not found');
-
-  if (service.serviceType === 'Wash & Style') {
-    service.status = 'Pending Style';
-  } else if (service.serviceType === 'Wash Only') {
-    service.status = 'QA';
-  }
-
-  await service.save();
-  return service;
-};
-
-export const finishStyling = async (serviceId: string) => {
-  return await Service.findByIdAndUpdate(
-    serviceId,
-    { status: 'QA' },
-    { new: true }
-  );
-};
-
-export const approveService = async (serviceId: string) => {
+export const approveService = async (serviceId: string, inspectorId: string, photoUrl: string) => {
   const service = await Service.findByIdAndUpdate(
     serviceId,
-    { status: 'Ready' },
+    { 
+      status: 'Ready',
+      afterImageUrl: photoUrl, 
+      inspectedBy: inspectorId,
+      inspectedAt: new Date(),
+      qaRejectionPhoto: null
+    },
     { new: true }
   );
 
-  // חכם: אם מדובר בפאה חדשה מפס הייצור, אנחנו מסמנים אותה סוף סוף כמוכנה!
-  if (service && service.origin === 'NewWig' && service.newWigReference) {
+  if (!service) throw new Error('Service not found');
+
+  if (service.origin === 'NewWig' && service.newWigReference) {
     await NewWig.findByIdAndUpdate(service.newWigReference, { 
       currentStage: 'מוכנה למסירה',
+      finalPhotoUrl: photoUrl, 
+      inspectorName: inspectorId,
+      inspectionDate: new Date(),
       assignedWorkers: []
+    });
+  } else if (service.origin === 'Repair' && service.repairReference) {
+    await Repair.findByIdAndUpdate(service.repairReference, {
+      overallStatus: 'מוכן',
+      afterImageUrl: photoUrl, 
+      inspectedBy: inspectorId,
+      inspectedAt: new Date()
     });
   }
 
   return service;
 };
 
-// --- התיקון המרכזי: קבלת מערך התחנות (returnStages) ופעולה לפיו ---
 export const rejectService = async (
   serviceId: string, 
   qaNote: string, 
+  photoUrl: string,
   returnStages?: string[]
 ) => {
   const service = await Service.findById(serviceId);
@@ -80,25 +72,41 @@ export const rejectService = async (
   }
   
   service.notes.qa = qaNote;
+  service.qaRejectionPhoto = photoUrl;
+  service.status = 'Rejected';
 
-  // אם הפאה הגיעה מפס הייצור החדש
   if (service.origin === 'NewWig' && service.newWigReference) {
-    service.status = 'Rejected'; // סוגרים את משימת ה-QA
-    
-    // לוקחים את התחנה הראשונה מתוך התחנות שהבודקת סימנה
     const firstStage = (returnStages && returnStages.length > 0) ? returnStages[0] : 'תפירת פאה';
     
-    // זורקים את הפאה חזרה לפס הייצור!
+    const wig = await NewWig.findById(service.newWigReference);
+    let originalWorkers: any[] = [];
+    
+    if (wig && wig.stageAssignments) {
+      originalWorkers = typeof wig.stageAssignments.get === 'function' 
+        ? wig.stageAssignments.get(firstStage) 
+        : (wig.stageAssignments as any)[firstStage];
+    }
+
     await NewWig.findByIdAndUpdate(service.newWigReference, {
        currentStage: firstStage,
-       assignedWorkers: [] // מנקים עובדות כדי שמנהלת תוכל לשבץ מחדש מי תתקן
+       assignedWorkers: originalWorkers || [],
+       qaNote: qaNote,
+       qaRejectionPhoto: photoUrl, 
+       pendingRepairStages: returnStages 
     });
-  } 
-  // אם מדובר בשירות של תיקון/חפיפה רגיל
-  else {
+  } else if (service.origin === 'Repair' && service.repairReference) {
+   
+      await Repair.findByIdAndUpdate(service.repairReference, {
+          overallStatus: 'בתיקון',
+          qaNote: qaNote,
+          qaRejectionPhoto: photoUrl
+      });
+      service.status = 'Pending Wash'; 
+  } else {
     service.status = 'Pending Wash'; 
   }
 
   await service.save();
   return service;
 };
+

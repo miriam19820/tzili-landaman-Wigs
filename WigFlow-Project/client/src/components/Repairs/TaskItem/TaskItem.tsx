@@ -7,115 +7,208 @@ export interface WorkerTask {
   wigCode: string;
   customerName: string;
   isUrgent: boolean;
-  taskIndex: number;
-  category: string;
-  subCategory: string;
-  notes: string;
-  status: string;
+  type: 'חדשה' | 'תיקון'; 
+  imageUrl?: string; 
+  internalNote?: string; 
+  deadline?: string;
+
+  category?: string;
+  subCategory?: string;
+  notes?: string;
+
+  // שדות בקרת איכות (QA) - התוספת החדשה
+  qaNote?: string;          
+  qaRejectionPhoto?: string;
+
+  subCategories?: string[];
+  groupedNotes?: string[];
+  taskIndexes?: number[];
+  taskIndex?: number; 
 }
 
 interface TaskItemProps {
   task: WorkerTask;
-  onComplete: (repairId: string, taskIndex: number) => Promise<void>;
+  onComplete: (repairId: string, taskIndex?: number) => Promise<void>;
+  onOpenSpecs?: () => void; 
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete }) => {
+export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpecs }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showImageFull, setShowImageFull] = useState(false);
+  const [showRejectionImageFull, setShowRejectionImageFull] = useState(false); // הגדלת תמונת פסילה
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const handleCompleteClick = async () => {
     setIsUpdating(true);
     try {
-      const response = await axios.patch(`/repairs/${task.repairId}/task/${task.taskIndex}`, {
-        status: 'בוצע'
-      });
+      if (task.type === 'חדשה') {
+          const response = await axios.patch(`/wigs/${task.repairId}/next-step`, {}, {
+              headers: getAuthHeader()
+          });
+          
+          const updatedWig = response.data;
+          const nextStage = updatedWig.currentStage || 'לא ידוע';
+          const nextWorkers = updatedWig.assignedWorkers && updatedWig.assignedWorkers.length > 0 
+              ? updatedWig.assignedWorkers.map((w: any) => w.username || w.fullName || 'עובדת').join(', ') 
+              : 'הנהלה (ממתין להקצאה או לבקרה)';
 
-      const result = response.data;
-      
-      // אם השרת החזיר שכל התיקונים הסתיימו
-      if (result.message && result.message.includes('הסתיימו')) {
-        alert("כל התיקונים לפאה זו הושלמו! היא הועברה לחפיפה ובקרה. ");
+          alert(`🎉 מעולה!\nהפאה עברה לשלב: ${nextStage}\nהועברה לטיפול של: ${nextWorkers}`);
+          await onComplete(task.repairId); 
+      } else {
+          let lastMessage = "המשימה עודכנה בהצלחה!";
+          if (task.taskIndexes && task.taskIndexes.length > 0) {
+              for (const index of task.taskIndexes) {
+                  const response = await axios.patch(`/repairs/${task.repairId}/task/${index}`, {
+                    status: 'בוצע'
+                  }, { headers: getAuthHeader() });
+                  if (response.data.message) lastMessage = response.data.message;
+              }
+          } else if (task.taskIndex !== undefined) {
+              const response = await axios.patch(`/repairs/${task.repairId}/task/${task.taskIndex}`, {
+                 status: 'בוצע'
+              }, { headers: getAuthHeader() });
+              if (response.data.message) lastMessage = response.data.message;
+          }
+          alert(`✅ ${lastMessage}`);
+          await onComplete(task.repairId, task.taskIndexes ? task.taskIndexes[0] : task.taskIndex);
       }
-      
-      await onComplete(task.repairId, task.taskIndex);
-      
     } catch (error: any) {
+      console.error("Complete task error:", error);
       alert(`שגיאה מול השרת: ${error.response?.data?.message || 'לא ניתן לעדכן את הסטטוס'}`);
-      console.error("Network error:", error);
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const cardStyle: React.CSSProperties = {
-    border: task.isUrgent ? '2px solid #dc3545' : '1px solid #e0e0e0',
-    backgroundColor: task.isUrgent ? '#fff8f8' : '#ffffff',
-    borderRadius: '8px',
-    padding: '16px',
-    marginBottom: '16px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    transition: 'all 0.3s ease'
+  const formatDeadline = (dateString?: string) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let color = '#64748b'; 
+    let text = date.toLocaleDateString('he-IL');
+    if (date < today) { color = '#ef4444'; text += ' (באיחור!)'; }
+    else if (date.getTime() === today.getTime()) { color = '#f59e0b'; text += ' (להיום)'; }
+    return <span style={{ color, fontWeight: 'bold' }}>{text}</span>;
   };
 
   return (
-    <div style={cardStyle} className="task-item-card animate-in">
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <h3 style={{ margin: 0, color: '#333' }}>
-            {task.category} - {task.subCategory}
-          </h3>
-          {task.isUrgent && (
-            <span style={{ 
-              backgroundColor: '#dc3545', 
-              color: 'white', 
-              padding: '2px 8px', 
-              borderRadius: '12px', 
-              fontSize: '12px', 
-              fontWeight: 'bold' 
-            }}>
-              דחוף! 🔴
-            </span>
-          )}
+    <>
+      {/* Overlay לתמונת מקור */}
+      {showImageFull && task.imageUrl && (
+        <div className="task-image-overlay" onClick={() => setShowImageFull(false)}>
+            <img src={task.imageUrl} alt="תמונת פאה מוגדלת" />
         </div>
-        
-        <p style={{ margin: '4px 0', fontSize: '14px', color: '#555' }}>
-          <strong>קוד פאה:</strong> {task.wigCode} | <strong>לקוחה:</strong> {task.customerName}
-        </p>
-        
-        {task.notes && (
-          <p style={{ 
-            margin: '8px 0 0 0', 
-            padding: '8px', 
-            backgroundColor: '#f8f9fa', 
-            borderRadius: '4px', 
-            fontSize: '14px', 
-            color: '#666', 
-            borderRight: '3px solid #6f42c1' 
-          }}>
-            <strong>הערות:</strong> {task.notes}
-          </p>
-        )}
-      </div>
+      )}
 
-      <button 
-        onClick={handleCompleteClick}
-        disabled={isUpdating}
-        style={{
-          backgroundColor: isUpdating ? '#ccc' : '#28a745',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          padding: '10px 20px',
-          fontSize: '16px',
-          cursor: isUpdating ? 'not-allowed' : 'pointer',
-          fontWeight: 'bold',
-          transition: 'background-color 0.2s'
-        }}
-      >
-        {isUpdating ? 'מעדכן...' : 'סיימתי ✔'}
-      </button>
-    </div>
+      {/* Overlay לתמונת פסילה של המבקרת */}
+      {showRejectionImageFull && task.qaRejectionPhoto && (
+        <div className="task-image-overlay qa-overlay" onClick={() => setShowRejectionImageFull(false)}>
+            <img src={task.qaRejectionPhoto} alt="תמונת פסילה מוגדלת" />
+            <div className="qa-overlay-caption">⚠️ צילום התקלה מהמבקרת</div>
+        </div>
+      )}
+
+      <div className={`task-card ${task.isUrgent ? 'urgent-card' : ''} ${task.qaRejectionPhoto ? 'rejection-border' : ''}`}>
+        
+        {task.imageUrl && (
+            <div className="task-image-container" onClick={() => setShowImageFull(true)}>
+                <img src={task.imageUrl} alt="מצב הפאה" className="task-thumbnail" />
+                <div className="zoom-hint">🔍 תמונת מקור</div>
+            </div>
+        )}
+
+        <div className="task-content">
+            <div className="task-header">
+                <div className="task-titles">
+                    {task.type === 'חדשה' ? (
+                        <span className="type-badge-new">✨ ייצור</span>
+                    ) : (
+                        <span className="type-badge-repair">🔧 תיקון</span>
+                    )}
+                    
+                    {task.type === 'חדשה' ? (
+                        <h3>{task.category} <span className="arrow">←</span> {task.subCategory}</h3>
+                    ) : (
+                        <h3>תיקונים לביצוע: <span style={{ color: '#0ea5e9' }}>{task.subCategories?.join(' | ')}</span></h3>
+                    )}
+                    
+                    {task.isUrgent && <span className="urgent-badge">דחוף! 🔴</span>}
+                    {task.qaRejectionPhoto && <span className="re-work-badge">סבב תיקון חוזר ⚠️</span>}
+                </div>
+                <div className="task-meta">
+                    <span className="wig-code-pill">{task.wigCode}</span>
+                    <span className="customer-name-pill">👤 {task.customerName}</span>
+                </div>
+            </div>
+
+            <div className="task-details-grid">
+                {/* --- בלוק בקרת איכות - מוצג רק אם המשימה נפסלה --- */}
+                {task.qaRejectionPhoto && (
+                    <div className="detail-box qa-rejection-box">
+                        <div className="qa-rejection-header">
+                            <strong>⚠️ המבקרת החזירה את הפאה לתיקון:</strong>
+                        </div>
+                        <div className="qa-rejection-content">
+                            <p className="qa-note-text">"{task.qaNote}"</p>
+                            <div className="qa-thumbnail-wrapper" onClick={() => setShowRejectionImageFull(true)}>
+                                <img src={task.qaRejectionPhoto} alt="צילום תקלה" className="qa-mini-thumbnail" />
+                                <div className="zoom-hint-mini">🔍 הגדילי צילום תקלה</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {task.deadline && (
+                    <div className="detail-box deadline-box">
+                        <strong>📅 תאריך יעד:</strong> {formatDeadline(task.deadline)}
+                    </div>
+                )}
+                
+                {task.internalNote && (
+                    <div className="detail-box general-note-box">
+                        <strong>📌 רקע מהקבלה:</strong>
+                        <p>{task.internalNote}</p>
+                    </div>
+                )}
+
+                {task.type === 'חדשה' && task.notes && (
+                    <div className="detail-box specific-note-box">
+                        <strong>✍️ הוראות ביצוע לשלב:</strong>
+                        <p>{task.notes}</p>
+                    </div>
+                )}
+
+                {task.type === 'תיקון' && task.groupedNotes && task.groupedNotes.length > 0 && (
+                    <div className="detail-box specific-note-box">
+                        <strong>✍️ הוראות ביצוע לתיקונים:</strong>
+                        {task.groupedNotes.map((note, idx) => (
+                            <p key={idx}>• {note}</p>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="task-actions">
+                {onOpenSpecs && (
+                    <button onClick={onOpenSpecs} className="specs-btn">
+                        📋 מפרט טכני
+                    </button>
+                )}
+                <button 
+                    onClick={handleCompleteClick}
+                    disabled={isUpdating}
+                    className="complete-btn"
+                >
+                    {isUpdating ? 'מעדכן...' : 'סיימתי את התיקון, העבר לבקרה ✔'}
+                </button>
+            </div>
+        </div>
+      </div>
+    </>
   );
 };

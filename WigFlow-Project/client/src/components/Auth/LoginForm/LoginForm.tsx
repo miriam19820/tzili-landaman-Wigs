@@ -17,21 +17,18 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      // שימוש בנתיב יחסי - Axios משתמש ב-BaseURL שהגדרנו ב-App.tsx
       const response = await axios.post('/users/login', {
         username,
         password
       });
 
-      // 1. שמירת הטוקן ופרטי המשתמש בדפדפן (localStorage)
+    
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
-      // הגדרת הטוקן כברירת מחדל לכל הקריאות באותה ריצה
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      // 2. ניתוב חכם לפי תפקיד (Role)
       if (user.role === 'Admin') {
         window.location.href = '/'; 
       } else if (user.role === 'Worker') {

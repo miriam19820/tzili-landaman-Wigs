@@ -1,7 +1,7 @@
-import { connectDB } from './Utils/connectDB';
-import { User } from './Models_Service/User/userModel';
-import { Customer } from './Models_Service/Customer/customerModel';
-import { NewWig } from './Models_Service/NewWigs/newWigModel'; // ייבוא מודל הפאות
+import { connectDB } from './Utils/connectDB.js';
+import { User } from './Models_Service/User/userModel.js';
+import { Customer } from './Models_Service/Customer/customerModel.js';
+import { NewWig } from './Models_Service/NewWigs/newWigModel.js'; 
 
 const debug = async () => {
   try {
@@ -9,7 +9,7 @@ const debug = async () => {
     
     console.log('\n=== IDs מעודכנים עבור פוסטמן ===');
     
-    // שליפת פאות - עבור הנתיבים של מפתחת 2 ו-4
+  
     const wigs = await NewWig.find({});
     console.log('\n--- פאות (להעתקה עבור ה-URL בפוסטמן) ---');
     if (wigs.length === 0) console.log('לא נמצאו פאות במערכת.');

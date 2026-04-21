@@ -1,0 +1,60 @@
+/* InternalNoteBox.css */
+
+.internal-note-container {
+    background-color: #fff3e0;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 1px solid #ffb74d;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.internal-note-title {
+    color: #e65100;
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.internal-note-textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    box-sizing: border-box; /* חשוב כדי שהפדינג לא יחרוג מהרוחב */
+}
+
+.internal-note-textarea:focus {
+    outline: none;
+    border-color: #ef6c00;
+    box-shadow: 0 0 0 2px rgba(239, 108, 0, 0.1);
+}
+
+.internal-note-button {
+    margin-top: 12px;
+    background-color: #ef6c00;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+
+.internal-note-button:hover:not(:disabled) {
+    background-color: #e65100;
+}
+
+.internal-note-button:disabled {
+    background-color: #ffccbc;
+    cursor: not-allowed;
+}

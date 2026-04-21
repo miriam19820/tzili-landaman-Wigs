@@ -1,6 +1,8 @@
 import express from 'express';
-import * as userService from '../Models_Service/User/userService';
-import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware';
+
+import * as userService from '../Models_Service/User/userService.js';
+
+import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware.js';
 
 const userRouter = express.Router();
 
@@ -14,7 +16,6 @@ userRouter.post('/login', async (req, res) => {
   }
 });
 
-// 1. קבלת כל המשתמשים
 userRouter.get('/', verifyToken, async (req, res) => {
     try {
         const users = await userService.getAllUsers();
@@ -24,7 +25,7 @@ userRouter.get('/', verifyToken, async (req, res) => {
     }
 });
 
-// 2. יצירת משתמש/עובדת חדשה
+
 userRouter.post('/', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const newUser = await userService.createUser(req.body);
@@ -43,13 +44,22 @@ userRouter.put('/:id', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
-// 4. מחיקת עובדת
+
 userRouter.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
     try {
         await userService.deleteUser(req.params.id);
         res.status(200).json({ message: 'העובדת נמחקה בהצלחה' });
     } catch (error: any) {
         res.status(400).json({ message: error.message });
+    }
+});
+
+userRouter.get('/:workerId/unified-tasks', verifyToken, async (req, res) => {
+    try {
+        const tasks = await userService.getWorkerUnifiedTasks(req.params.workerId);
+        res.status(200).json({ success: true, data: tasks });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
     }
 });
 

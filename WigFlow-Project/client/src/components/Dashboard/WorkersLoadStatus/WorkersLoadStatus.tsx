@@ -15,7 +15,7 @@ export const WorkersLoadStatus: React.FC = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     
-    // מושכים במקביל את העובדות, הפאות החדשות, והתיקונים
+    
     Promise.all([
       fetch('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()),
       fetch('http://localhost:5000/api/wigs', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()),
@@ -28,11 +28,11 @@ export const WorkersLoadStatus: React.FC = () => {
         
         const allActiveWigs = [...newWigs, ...repairs];
 
-        // חישוב עומס חכם בזמן אמת
+      
         const workersWithLoad = workersList.map((worker: any) => {
           let count = 0;
           allActiveWigs.forEach(wig => {
-            // בודק אם העובדת נמצאת במערך הייצור או בתיקון יחיד
+       
             if (wig.assignedWorkers && wig.assignedWorkers.some((w: any) => w._id === worker._id)) count++;
             if (wig.assignedTo && (wig.assignedTo._id === worker._id || wig.assignedTo === worker.username)) count++;
           });

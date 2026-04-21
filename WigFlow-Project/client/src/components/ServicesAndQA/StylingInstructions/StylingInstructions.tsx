@@ -1,6 +1,5 @@
 import React from 'react';
-import './StylingInstructions.css'; // <-- הוספנו את ה-CSS
-
+import './StylingInstructions.css'; 
 interface IStylingProps {
   category: string;
   notes?: string;

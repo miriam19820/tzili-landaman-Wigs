@@ -1,6 +1,8 @@
 import { Router } from 'express';
-import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
-import { verifyToken, verifyAdmin, verifyWorker, verifyQC } from '../Middlewares/authMiddleware';
+
+import * as serviceService from '../Models_Service/SalonServices/serviceService.js'; 
+
+import { verifyToken, verifyAdmin, verifyWorker, verifyQC } from '../Middlewares/authMiddleware.js';
 
 const serviceRouter = Router();
 
@@ -70,13 +72,13 @@ serviceRouter.patch('/:id/approve', verifyQC, async (req, res) => {
 
 serviceRouter.patch('/:id/reject', verifyQC, async (req, res) => {
   try {
-    // קוראים את סיבת הפסילה ואת התחנות החוזרות מהבקשה של ה-React
+  
     const { qaNote, returnStages } = req.body; 
     
     const rejectedService = await serviceService.rejectService(
       req.params.id, 
       qaNote, 
-      returnStages // מעבירים את המערך הלאה לפונקציה
+      returnStages 
     );
     res.status(200).json({ message: 'הפאה הוחזרה לתיקון בהצלחה', service: rejectedService });
   } catch (error: any) {

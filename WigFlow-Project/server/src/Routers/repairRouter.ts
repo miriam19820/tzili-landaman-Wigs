@@ -1,11 +1,10 @@
-import { Router } from 'express';
-import * as repairService from '../Models_Service/Repairs/repairService';
-import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware';
+import { Router, Request, Response, NextFunction } from 'express';
+import * as repairService from '../Models_Service/Repairs/repairService.js';
+import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware.js';
 
 const repairRouter = Router();
 
-// 1. פתיחת כרטיס תיקון חדש
-repairRouter.post('/', verifyAdmin, async (req, res, next) => {
+repairRouter.post('/', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const newRepair = await repairService.createRepairOrder(req.body);
     res.status(201).json({ success: true, data: newRepair });
@@ -14,8 +13,7 @@ repairRouter.post('/', verifyAdmin, async (req, res, next) => {
   }
 });
 
-// 2. דאשבורד מרוכז למזכירה
-repairRouter.get('/dashboard-view', verifyAdmin, async (req, res, next) => {
+repairRouter.get('/dashboard-view', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dashboard = await repairService.getDashboardView();
     res.json({ success: true, data: dashboard });
@@ -24,8 +22,7 @@ repairRouter.get('/dashboard-view', verifyAdmin, async (req, res, next) => {
   }
 });
 
-// 3. דוח עומסי עבודה
-repairRouter.get('/worker-load', verifyAdmin, async (req, res, next) => {
+repairRouter.get('/worker-load', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const report = await repairService.FullWorkloadReportOpenJobs();
     res.json({ success: true, data: report });
@@ -34,8 +31,7 @@ repairRouter.get('/worker-load', verifyAdmin, async (req, res, next) => {
   }
 });
 
-// 4. עובדות פנויות לפי קטגוריה
-repairRouter.get('/available-workers/:category', verifyToken, async (req, res, next) => {
+repairRouter.get('/available-workers/:category', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const workers = await repairService.getAvailableWorkersByCategory(req.params.category);
     res.json({ success: true, data: workers });
@@ -44,8 +40,7 @@ repairRouter.get('/available-workers/:category', verifyToken, async (req, res, n
   }
 });
 
-// 5. משימות אישיות לעובדת
-repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req, res, next) => {
+repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tasks = await repairService.getTasksByWorker(req.params.workerId);
     res.json({ success: true, data: tasks });
@@ -54,14 +49,11 @@ repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req, res, next)
   }
 });
 
-// --- נתיב חדש ומתוקן: פסילת משימה ב-QA (Reject) ---
-// חשוב להגדיר אותו לפני הנתיבים הגנריים עם הפרמטרים
-repairRouter.patch('/:id/reject-task/:index', verifyAdmin, async (req, res, next) => {
+repairRouter.patch('/:id/reject-task/:index', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, index } = req.params;
     const { note } = req.body;
     
-    // קריאה לפונקציית הפסילה שמוסיפה הערה ומחזירה לממתין
     const updatedRepair = await repairService.rejectTask(id, parseInt(index), note);
     
     res.json({ 
@@ -74,8 +66,7 @@ repairRouter.patch('/:id/reject-task/:index', verifyAdmin, async (req, res, next
   }
 });
 
-// 6. שליפת תיקון בודד
-repairRouter.get('/:id', verifyToken, async (req, res, next) => {
+repairRouter.get('/:id', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const repair = await repairService.getRepairById(req.params.id);
     res.json({ success: true, data: repair });
@@ -84,8 +75,7 @@ repairRouter.get('/:id', verifyToken, async (req, res, next) => {
   }
 });
 
-// 7. עדכון סטטוס משימה רגיל (סיום משימה)
-repairRouter.patch('/:id/task/:index', verifyWorker, async (req, res, next) => {
+repairRouter.patch('/:id/task/:index', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, index } = req.params;
     const { status } = req.body;
@@ -96,7 +86,6 @@ repairRouter.patch('/:id/task/:index', verifyWorker, async (req, res, next) => {
     const wigCode = repair.wigCode;
 
     if (status === 'בוצע') {
-      // מעבר אוטומטי לשלב הבא רק כשמסמנים "בוצע"
       const workflowResult = await repairService.updateTaskAndMoveToNext(wigCode, taskName);
       const updatedRepair = await repairService.getRepairById(id);
 
@@ -109,6 +98,27 @@ repairRouter.patch('/:id/task/:index', verifyWorker, async (req, res, next) => {
       const updatedRepair = await repairService.updateTaskStatus(id, taskIndex, status);
       res.json({ success: true, data: updatedRepair });
     }
+  } catch (error) {
+    next(error);
+  }
+});
+
+repairRouter.delete('/:id', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { adminCode } = req.body;
+
+   
+    if (!adminCode || adminCode !== process.env.ADMIN_DELETE_CODE) {
+      res.status(403).json({ message: 'קוד מנהל שגוי או חסר. הפעולה נדחתה.' });
+      return; 
+    }
+
+    const { id } = req.params;
+    
+    
+    await repairService.deleteRepair(id); 
+
+    res.status(200).json({ message: 'התיקון נמחק בהצלחה.' });
   } catch (error) {
     next(error);
   }

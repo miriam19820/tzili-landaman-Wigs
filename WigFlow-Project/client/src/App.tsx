@@ -1,17 +1,17 @@
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 
 // ייבוא הקומפוננטות
+import { WigHistorySearch } from './components/History/WigHistorySearch';
 import { ProductionStation } from './components/NewWigs/ProductionStation/ProductionStation';
 import { NewOrderForm } from './components/NewWigs/NewOrderForm/NewOrderForm';
 import { LoginForm } from './components/Auth/LoginForm/LoginForm';
 import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
 import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
-import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister';
+import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister/QuickCustomerRegister';
 import { ServiceOrderForm } from './components/ServicesAndQA/ServiceOrderForm/ServiceOrderForm';
 import { QADashboard } from './components/ServicesAndQA/QADashboard/QADashboard';
 import { MainOverviewTable } from './components/Dashboard/MainOverviewTable/MainOverviewTable';
 import { WorkersLoadStatus } from './components/Dashboard/WorkersLoadStatus/WorkersLoadStatus';
-// הוספת הייבוא של ניהול הצוות (שימי לב לנתיב, הוא צריך להיות מדויק)
 import { TeamManagement } from './components/Dashboard/TeamManagement/TeamManagement';
 
 const Navigation = () => {
@@ -31,7 +31,7 @@ const Navigation = () => {
     border: 'none', 
     borderRadius: '5px', 
     textDecoration: 'none',
-    backgroundColor: location.pathname === path ? '#f39c12' : '#34495e', // עדכנתי קצת לצבעים יותר יפים
+    backgroundColor: location.pathname === path ? '#f39c12' : '#34495e',
     fontWeight: 'bold',
     transition: 'background-color 0.3s'
   });
@@ -46,6 +46,9 @@ const Navigation = () => {
             <Link to="/repairs/new" style={linkStyle('/repairs/new')}>קבלת פאה לתיקון</Link>
             <Link to="/service/new" style={linkStyle('/service/new')}>הזמנת שירות</Link>
             <Link to="/dashboard" style={linkStyle('/dashboard')}>דאשבורד וניהול</Link>
+            
+            {/* הלינק החדש שהוספנו 👇 */}
+            <Link to="/history" style={linkStyle('/history')}>היסטוריית פאות 🔍</Link>
           </>
         )}
 
@@ -98,7 +101,9 @@ function App() {
             <Route path="/service/new" element={<ProtectedRoute><ServiceOrderForm /></ProtectedRoute>} />
             <Route path="/qa" element={<ProtectedRoute><QADashboard /></ProtectedRoute>} />
             
-            {/* כאן נמצא התיקון המרכזי: הכנסת TeamManagement לתוך מסך הדאשבורד */}
+            {/* העמוד החדש של היסטוריית הפאות */}
+            <Route path="/history" element={<ProtectedRoute><WigHistorySearch /></ProtectedRoute>} />
+            
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

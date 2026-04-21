@@ -1,27 +1,27 @@
 import express from 'express';
 import cors from 'cors';
 
-import userRouter from './Routers/userRouter';
-import customerRouter from './Routers/customerRouter'; 
-import newWigRouter from './Routers/newWigRouter';
-import repairRouter from './Routers/repairRouter';
-import serviceRouter from './Routers/serviceRouter';
+import userRouter from './Routers/userRouter.js';
+import customerRouter from './Routers/customerRouter.js'; 
+import newWigRouter from './Routers/newWigRouter.js';
+import repairRouter from './Routers/repairRouter.js';
+import serviceRouter from './Routers/serviceRouter.js';
 
 const app = express();
 
-// הגדרות שרת בסיסיות
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // מאפשר קריאת נתונים מטפסים מורכבים
 
-// חיבור כל הראוטרים (נתיבי ה-API)
+// --- התיקון עבור שגיאה 413: הגדלת מגבלת הגודל של הבקשות ---
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 app.use('/api/users', userRouter);
 app.use('/api/customers', customerRouter);
 app.use('/api/wigs', newWigRouter);
 app.use('/api/repairs', repairRouter);
 app.use('/api/services', serviceRouter);
 
-// תופס שגיאות גלובלי (Error Handler)
+// Middleware לטיפול בשגיאות
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', error);
   res.status(error.statusCode || 500).json({

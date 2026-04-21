@@ -5,8 +5,7 @@ interface AuthRequest extends Request {
     user?: any;
 }
 
-// קבענו את המפתח ישירות כדי למנוע בעיות סביבה
-const SECRET_KEY = 'WIG_FLOW_SECRET_2026';
+const SECRET_KEY = process.env.JWT_SECRET || 'WIG_FLOW_SECRET_2026';
 
 export const verifyToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');

@@ -1,6 +1,6 @@
 /* --- קונטיינר ראשי --- */
 .station-container {
-  max-width: 1200px;
+  max-width: 1000px; /* צמצמתי ל-1000px כדי שייראה טוב יותר לאורך */
   margin: 20px auto;
   padding: 20px;
   direction: rtl;
@@ -57,7 +57,7 @@
 }
 
 /* --- כפתורים מעוצבים --- */
-.voice-btn, .scan-btn {
+.voice-btn {
   color: white;
   border: none;
   padding: 12px 25px;
@@ -70,17 +70,10 @@
   align-items: center;
   gap: 10px;
   font-weight: 600;
-}
-
-.voice-btn { 
   background: linear-gradient(135deg, #007bff, #0069d9); 
 }
 
-.scan-btn { 
-  background: linear-gradient(135deg, #6f42c1, #59359a); 
-}
-
-.voice-btn:hover, .scan-btn:hover {
+.voice-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
 }
@@ -90,56 +83,18 @@
   animation: pulse-recording 1.5s infinite;
 }
 
-/* --- אזור סורק ה-QR (חלונית Overlay) --- */
-.qr-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-  backdrop-filter: blur(5px);
-}
-
-.qr-window {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 450px;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-}
-
-#qr-reader {
-  width: 100%;
-  border: none !important;
-  margin-bottom: 15px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-#qr-reader button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 5px;
-}
-
 /* --- הודעות קופצות (Toasts) --- */
 .notification-toast {
   position: fixed;
   top: 20px;
   left: 50%;
+  transform: translateX(-50%);
   z-index: 3000;
   min-width: 350px;
   padding: 15px 25px;
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
 }
 
 .notification-toast.success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white;}
@@ -170,67 +125,37 @@
   100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
 }
 
-/* --- רשימת פאות וכרטיסי משימה --- */
+/* --- 🌟 התיקון: רשימת פאות וכרטיסי משימה לאורך 🌟 --- */
 .wigs-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  display: flex;
+  flex-direction: column; /* גורם להן לעמוד אחת מתחת לשנייה */
   gap: 25px;
   margin-top: 30px;
+  width: 100%;
+  align-items: center; /* ממרכז את הכרטיסים */
 }
 
-.wig-task-card {
+/* התאמת הכרטיס (מתוך ה-TaskItem) שיופיע טוב לאורך */
+.task-card {
+  width: 100%;
+  max-width: 850px; /* רוחב נוח לקריאה */
   background-color: #ffffff;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0,0,0,0.06);
   border: 1px solid #f0f0f0;
-  display: flex;
-  flex-direction: column;
   transition: transform 0.2s ease;
-  overflow: hidden;
 }
 
-.wig-task-card:hover {
+.task-card:hover {
   transform: translateY(-5px);
 }
 
-.card-top {
-  background-color: #004085;
-  color: white;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.stage-badge {
-  background-color: #ffc107;
-  color: #212529;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: bold;
-}
-
-.card-details { 
-  padding: 20px; 
-  flex-grow: 1;
-}
-
-.done-button {
-  width: 100%;
-  padding: 15px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.done-button:hover { 
-  background-color: #218838; 
+.empty-view {
+  text-align: center;
+  padding: 50px;
+  background: white;
+  border-radius: 15px;
+  color: #6c757d;
 }
 
 /* --- התאמה למובייל --- */
@@ -243,12 +168,9 @@
     width: 100%; 
     flex-direction: column; 
   }
-  .voice-btn, .scan-btn { 
+  .voice-btn { 
     width: 100%; 
     justify-content: center; 
-  }
-  .wigs-list { 
-    grid-template-columns: 1fr; 
   }
   .station-container { 
     padding: 15px; 

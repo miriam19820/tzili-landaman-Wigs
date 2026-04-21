@@ -1,104 +1,124 @@
-/* קונטיינר ראשי למרכז הדף */
 .quick-reg-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 80vh;
-  padding: 20px;
-  direction: rtl;
+    padding: 40px 20px;
+    background-color: #f4f7f6;
+    min-height: 80vh;
 }
 
-/* כרטיס הרישום */
 .quick-reg-card {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-  border: 1px solid #e2d5ff;
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-.quick-reg-card h2 {
-  color: #6f42c1;
-  margin-bottom: 10px;
-  text-align: center;
+.quick-reg-title {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #2c3e50;
 }
 
-.quick-reg-card p {
-  color: #666;
-  text-align: center;
-  margin-bottom: 25px;
+.quick-reg-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 0.95rem;
 }
 
-/* עיצוב הטופס */
+.search-wrapper {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.form-input-reg {
+    padding: 12px 15px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    width: 100%;
+}
+
+.form-input-reg:focus {
+    border-color: #6f42c1;
+    outline: none;
+}
+
+/* פלייסחולדר אפור בהיר בדיוק כמו בפאה חדשה */
+.form-input-reg::placeholder {
+    color: #a9a9a9;
+}
+
+.btn-search-reg {
+    padding: 12px 25px;
+    background-color: #6f42c1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.btn-search-reg:disabled {
+    background-color: #ccc;
+}
+
+.btn-link-cancel {
+    display: block;
+    margin: 20px auto 0;
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.error-msg-reg {
+    text-align: center;
+    color: #d32f2f;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
 .quick-reg-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.form-row {
-  display: flex;
-  gap: 15px;
+.form-row-reg {
+    display: flex;
+    gap: 15px;
 }
 
-.form-row input {
-  flex: 1;
+.reg-actions-wrapper {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
 }
 
-.quick-reg-form input {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
+.btn-submit-reg {
+    flex: 2;
+    padding: 14px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: bold;
 }
 
-.quick-reg-form input:focus {
-  border-color: #6f42c1;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(111, 66, 193, 0.1);
-}
-
-/* כפתורי פעולה */
-.reg-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.reg-btn-submit {
-  padding: 14px;
-  background-color: #6f42c1;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.reg-btn-submit:hover {
-  background-color: #5a32a3;
-}
-
-.reg-btn-submit:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.reg-btn-cancel {
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
-}
-
-.reg-btn-cancel:hover {
-  color: #555;
+.btn-back-reg {
+    flex: 1;
+    padding: 14px;
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
 }

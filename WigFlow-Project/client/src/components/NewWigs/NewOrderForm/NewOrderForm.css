@@ -16,6 +16,15 @@
   border-bottom: 2px solid #3498db;
   padding-bottom: 10px;
 }
+/* צובע את הטקסט באפור כל עוד ה-select נמצא על הדיפולט הריק שלו */
+select.form-input:invalid {
+  color: #757575; 
+}
+
+/* מוודא שהאופציות עצמן בתוך הרשימה שנפתחת יישארו תמיד בשחור בולט */
+select.form-input option {
+  color: #000;
+}
 
 /* --- אזור חיפוש --- */
 .search-section {

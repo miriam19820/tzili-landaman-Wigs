@@ -1,18 +1,260 @@
-.task-item-card {
-  transition: all 0.3s ease;
+/* מבנה הכרטיסייה */
+.task-card {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+    direction: rtl;
+    overflow: hidden; /* מונע מדברים לפרוץ החוצה */
 }
 
-.task-item-card:hover {
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
-  transform: translateX(-5px);
+.task-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
 }
 
-/* אפקט כניסה הדרגתי לרשימה */
-.animate-in {
-  animation: fadeInRight 0.5s ease forwards;
+.urgent-card {
+    border: 2px solid #fca5a5;
+    background-color: #fef2f2;
 }
 
-@keyframes fadeInRight {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+/* אזור התמונה */
+.task-image-container {
+    flex-shrink: 0;
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    border: 2px solid #cbd5e1;
+}
+
+.task-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.task-image-container:hover .task-thumbnail {
+    transform: scale(1.05);
+}
+
+.zoom-hint {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    text-align: center;
+    font-size: 12px;
+    padding: 4px;
+}
+
+/* תוכן הכרטיסייה */
+.task-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0; /* קריטי כדי למנוע חריגת טקסט */
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 12px;
+    gap: 12px;
+    flex-wrap: wrap; /* מאפשר לשורת הכותרת לרדת שורה אם צפוף */
+}
+
+.task-titles {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.task-titles h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.arrow {
+    color: #94a3b8;
+    font-size: 18px;
+}
+
+.urgent-badge {
+    background-color: #ef4444;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.task-meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap; /* חשוב למסכים צרים */
+}
+
+.wig-code-pill, .customer-name-pill {
+    background-color: #f1f5f9;
+    color: #334155;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+}
+
+/* אזור הערות */
+.task-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.detail-box {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 1.5;
+    word-break: break-word; /* שובר מילים ארוכות כדי שלא יפרצו */
+}
+
+.detail-box p {
+    margin: 6px 0 0 0;
+    white-space: pre-line;
+}
+
+.deadline-box {
+    background-color: #f8fafc;
+    border-right: 4px solid #94a3b8;
+}
+
+.general-note-box {
+    background-color: #fffbeb;
+    border-right: 4px solid #f59e0b;
+    color: #78350f;
+}
+
+.specific-note-box {
+    background-color: #eff6ff;
+    border-right: 4px solid #3b82f6;
+    color: #1e3a8a;
+    font-size: 16px;
+}
+
+/* כפתורים ופעולות */
+.task-actions {
+    margin-top: auto;
+    padding-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap; /* מאפשר לכפתורים לרדת שורה */
+}
+
+.specs-btn {
+    background-color: #0ea5e9;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+}
+
+.specs-btn:hover { background-color: #0284c7; transform: translateY(-2px); }
+
+.complete-btn {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+}
+
+.complete-btn:hover { background-color: #059669; transform: translateY(-2px); }
+.complete-btn:disabled { background-color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* חלון צף לתמונה */
+.task-image-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;
+    z-index: 1000; cursor: pointer;
+}
+.task-image-overlay img { max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+
+/* ==============================================================
+   הקסם של המובייל! מתקן את כל הזוועה שהייתה בתמונה
+============================================================== */
+@media (max-width: 768px) {
+    .task-card {
+        flex-direction: column; /* מסדר את התמונה מעל הטקסט במקום בצד */
+        padding: 16px;
+        gap: 16px;
+    }
+    
+    .task-image-container {
+        width: 100%;
+        height: 200px; /* תמונה רחבה ויפה למעלה */
+    }
+    
+    .task-header {
+        flex-direction: column; /* מסדר את הכותרות והשמות אחד תחת השני */
+        align-items: flex-start;
+    }
+
+    .task-titles h3 {
+        font-size: 18px; /* קצת מקטין פונט כדי שיכנס יפה */
+    }
+    
+    .task-meta {
+        width: 100%;
+    }
+
+    /* החלק הכי חשוב: מסדר את הכפתורים אחד מעל השני ברוחב מלא! */
+    .task-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .specs-btn, .complete-btn {
+        width: 100%; /* כפתורים ברוחב מלא למובייל */
+        padding: 14px;
+        text-align: center;
+        font-size: 18px;
+    }
 }

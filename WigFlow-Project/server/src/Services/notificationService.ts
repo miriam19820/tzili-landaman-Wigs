@@ -1,52 +1,77 @@
 import nodemailer from 'nodemailer';
+import pkg from 'whatsapp-web.js';
+const { Client, LocalAuth } = pkg;
+import qrcode from 'qrcode-terminal';
 
-// הגדרת המנוע לשליחת מיילים - משתמש במשתני סביבה ב-env.
-const transporter = nodemailer.createTransport({
+export const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.EMAIL_USER, // המייל של הסלון
-    pass: process.env.EMAIL_PASS  // סיסמת אפליקציה של גוגל
+    user: process.env.EMAIL_USER, 
+    pass: process.env.EMAIL_PASS  
   }
 });
 
-/**
- * שליחת עדכון ללקוחה על התקדמות הפאה (במייל ובוואטסאפ)
- */
-export const sendCustomerUpdate = async (customer: any, stage: string) => {
-  const message = `היי ${customer.firstName}, הפאה שלך התקדמה לשלב: ${stage}. נמשיך לעדכן, צוות WigFlow.`;
-
-  console.log(`--- מפעיל שליחת עדכונים ללקוחה: ${customer.firstName} ---`);
-
-  // 1. שליחת מייל מעוצב (אם קיים מייל)
-  if (customer.email) {
-    const mailOptions = {
-      from: `"צילי לנדמן - WigFlow" <${process.env.EMAIL_USER}>`,
-      to: customer.email,
-      subject: `עדכון על הפאה שלך - ${stage}`,
-      html: `
-        <div dir="rtl" style="font-family: sans-serif; text-align: right; padding: 20px; border: 2px solid #6f42c1; border-radius: 15px;">
-          <h2 style="color: #6f42c1;">שלום ${customer.firstName}!</h2>
-          <p style="font-size: 1.1rem;">הפאה שלך עברה כרגע לשלב: <strong>${stage}</strong>.</p>
-          <p>אנחנו עובדים עליה במרץ ומבטיחים לעדכן בשלב הבא.</p>
-          <hr style="border: 0; border-top: 1px solid #eee;" />
-          <small>נשלח אוטומטית על ידי מערכת WigFlow של צילי לנדמן</small>
-        </div>
-      `
-    };
-
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ מייל נשלח בהצלחה ל: ${customer.email}`);
-    } catch (err) {
-      console.error("❌ שגיאה בשליחת מייל:", err);
+const whatsappClient = new Client({
+    authStrategy: new LocalAuth(), 
+    authTimeoutMs: 120000, 
+    puppeteer: {
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
-  }
+});
 
-  // 2. הכנת קישור לוואטסאפ (אם קיים מספר טלפון)
-  if (customer.phoneNumber) {
-    const cleanPhone = customer.phoneNumber.replace(/-/g, '');
-    const whatsappLink = `wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-    console.log(`📱 קישור וואטסאפ מוכן לשימוש: ${whatsappLink}`);
+
+whatsappClient.on('qr', (qr) => {
+    console.log('\n--- 📱 סריקת וואטסאפ נדרשת ---');
+    console.log('יש לסרוק את הברקוד הבא בעזרת הוואטסאפ של העסק:');
+    qrcode.generate(qr, { small: true });
+});
+
+whatsappClient.on('ready', () => {
+    console.log('✅ וואטסאפ מחובר ומוכן לשליחת הודעות אוטומטיות!');
+});
+
+whatsappClient.on('auth_failure', (msg) => {
+    console.error('❌ שגיאה באימות וואטסאפ:', msg);
+});
+
+whatsappClient.initialize().catch(err => {
+    console.error('⚠️ שגיאה בהפעלת וואטסאפ:', err);
+});
+
+
+export const sendSalonUpdate = async (wig: any, stage: string) => {
+
+  const customerName = wig.customer ? `${wig.customer.firstName} ${wig.customer.lastName}` : 'לקוחה לא ידועה';
+  const orderCode = wig.orderCode || 'ללא קוד';
+  
+
+  let workerNames = 'לא שובצה עובדת מוגדרת';
+  if (wig.assignedWorkers && wig.assignedWorkers.length > 0) {
+      workerNames = wig.assignedWorkers.map((w: any) => w.fullName || w.username || 'עובדת').join(', ');
+  }
+  
+
+  const message = `🔔 *עדכון מערכת WigFlow*\nהפאה של ${customerName} (קוד: ${orderCode})\nברגע זה ממש הועברה לשלב: *${stage}*\nוהתקבלה לטיפולה של: *${workerNames}*.`;
+
+  console.log(`--- מפעיל שליחת עדכון וואטסאפ למנהלת הסלון ---`);
+
+  // מספר הטלפון של הסלון/המנהלת. מומלץ להכניס את המספר לקובץ .env בתור MANAGER_PHONE
+  // במידה ואין בקובץ .env, אפשר לשים את המספר הקבוע כאן
+  const managerPhone = process.env.MANAGER_PHONE || '0500000000'; // <--- החליפי למספר של הסלון כאן!
+
+  try {
+    
+      let formattedPhone = managerPhone.replace(/-/g, '').replace(/^0/, '972');
+      const chatId = `${formattedPhone}@c.us`;
+
+      if (whatsappClient.info) {
+          await whatsappClient.sendMessage(chatId, message);
+          console.log(`✅ הודעת וואטסאפ נשלחה אוטומטית למנהלת (${managerPhone}) - שובצה ל${workerNames}`);
+      } else {
+          console.log(`⚠️ וואטסאפ לא מחובר! יש לסרוק את הברקוד בטרמינל כדי לשלוח למנהלת.`);
+      }
+  } catch (err) {
+      console.error("❌ שגיאה בשליחת וואטסאפ למנהלת:", err);
   }
 
   return true;

@@ -1,279 +1,206 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './ProductionStation.css';
 import { WigTechnicalCard } from '../WigTechnicalCard/WigTechnicalCard';
+import { TaskItem, WorkerTask } from '../../Repairs/TaskItem/TaskItem';
 
-const STAGES_FLOW = ['התאמת שיער', 'תפירת פאה', 'צבע', 'עבודת יד', 'חפיפה', 'בקרה'];
-const SPECIALTY_MAP: Record<string, string> = {
-  'התאמת שיער': 'התאמת שיער',
-  'תפירת פאה': 'תפירה',
-  'צבע': 'צבע',
-  'עבודת יד': 'עבודת יד',
-  'חפיפה': 'חפיפה',
-  'בקרה': 'בקרת איכות'
-};
+const api = axios.create({
+    baseURL: 'http://localhost:5000/api',
+});
+
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 
 const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 const recognition = SpeechRecognition ? new SpeechRecognition() : null;
 
-if (recognition) {
-  recognition.lang = 'he-IL';
-  recognition.continuous = false;
-  recognition.interimResults = false;
-}
-
 export const ProductionStation: React.FC = () => {
-  const [currentWorkerId, setCurrentWorkerId] = useState<string>('');
-  const [allWorkers, setAllWorkers] = useState<any[]>([]);
-  const [myWigs, setMyWigs] = useState<any[]>([]);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error', text: string } | null>(null);
-  const [selectedNextWorker, setSelectedNextWorker] = useState<Record<string, string>>({});
-  
-  const [isListening, setIsListening] = useState(false);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [selectedWigForCard, setSelectedWigForCard] = useState<any>(null);
-  
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    // --- State Management ---
+    const userString = localStorage.getItem('user');
+    const loggedInUser = userString ? JSON.parse(userString) : null;
+    const isWorker = loggedInUser?.role === 'Worker';
 
-  useEffect(() => {
-    const fetchWorkers = async () => {
-      try {
-        const res = await axios.get('/users');
-        setAllWorkers(res.data.filter((u: any) => u.role === 'Worker'));
-      } catch (error) {
-        showNotification('error', 'שגיאה בתקשורת בטעינת עובדות');
-      }
-    };
-    fetchWorkers();
-  }, []);
-
-  useEffect(() => {
-    if (!currentWorkerId) {
-      setMyWigs([]);
-      return;
-    }
-    fetchStationData();
-  }, [currentWorkerId]);
-
-  useEffect(() => {
-    if (isScannerOpen) {
-      scannerRef.current = new Html5QrcodeScanner(
-        "qr-reader", 
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        false
-      );
-      scannerRef.current.render(onScanSuccess, (err) => { /* התעלמות משגיאות שוטפות של המצלמה */ });
-    }
-
-    return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(error => console.error("Failed to clear scanner", error));
-      }
-    };
-  }, [isScannerOpen]);
-
-  const fetchStationData = async () => {
-    try {
-      const wigsRes = await axios.get(`/wigs/work-station/${currentWorkerId}`);
-      setMyWigs(wigsRes.data.data || []);
-    } catch (error) {
-      showNotification('error', 'שגיאה בטעינת המשימות');
-    }
-  };
-
-  const showNotification = (type: 'success' | 'error', text: string) => {
-    setNotification({ type, text });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  const onScanSuccess = (decodedText: string) => {
-    const scannedCode = decodedText.split('/').pop()?.trim();
+    const [currentWorkerId, setCurrentWorkerId] = useState<string>(
+        isWorker ? (loggedInUser._id || loggedInUser.id) : ''
+    );
     
-    if (scannedCode) {
-      const foundWig = myWigs.find(w => w._id === scannedCode || w.orderCode === scannedCode);
-      if (foundWig) {
-        showNotification('success', `נמצאה פאה: ${foundWig.orderCode}. מעדכן סטטוס...`);
-        handleCompleteTask(foundWig);
-        setIsScannerOpen(false); 
-      } else {
-        showNotification('error', `הברקוד ${scannedCode} לא תואם לאף פאה שממתינה לך כרגע.`);
-      }
-    }
-  };
+    const [allWorkers, setAllWorkers] = useState<any[]>([]);
+    const [myTasks, setMyTasks] = useState<WorkerTask[]>([]);
+    const [notification, setNotification] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [isListening, setIsListening] = useState(false);
+    const [selectedWigForCard, setSelectedWigForCard] = useState<any>(null);
 
-  const handleCompleteTask = async (wig: any) => {
-    const wigId = typeof wig === 'string' ? wig : wig._id;
-    const currentWig = typeof wig === 'string' ? myWigs.find(w => w._id === wig) : wig;
-
-    if (!currentWig) return;
-
-    const nextStageWorkers = getAvailableWorkersForNextStage(currentWig.currentStage);
-    const nextStage = STAGES_FLOW[STAGES_FLOW.indexOf(currentWig.currentStage) + 1];
-
-    if (nextStageWorkers.length > 1 && !selectedNextWorker[wigId] && nextStage !== 'בקרה') {
-      showNotification('error', 'יש לבחור עובדת לשלב הבא מתוך הרשימה.');
-      return;
-    }
-
-    try {
-      const response = await axios.patch(`/wigs/${wigId}/next-step`, { 
-        nextWorkerId: selectedNextWorker[wigId] 
-      });
-
-      const updatedData = response.data;
-      const customerName = updatedData.customer?.firstName || currentWig.customer?.firstName || "הלקוחה";
-      
-      showNotification('success', 
-        `הפאה עברה בהצלחה לשלב הבא! ✨ שלחנו כרגע עדכון ל${customerName} ב-WhatsApp ובמייל. 📱📧`
-      );
-
-      setMyWigs(prev => prev.filter(w => w._id !== wigId));
-      const newSelectedWorkers = { ...selectedNextWorker };
-      delete newSelectedWorkers[wigId];
-      setSelectedNextWorker(newSelectedWorkers);
-      
-    } catch (error: any) {
-      showNotification('error', `שגיאה: ${error.response?.data?.message || 'שגיאת רשת בעדכון הסטטוס'}`);
-    }
-  };
-
-  const getAvailableWorkersForNextStage = (currentStage: string) => {
-    const currentStageIndex = STAGES_FLOW.indexOf(currentStage);
-    const nextStage = STAGES_FLOW[currentStageIndex + 1];
-    if (!nextStage) return [];
-    return allWorkers.filter(w => w.specialty === SPECIALTY_MAP[nextStage]);
-  };
-
-  const toggleListening = () => {
-    if (!recognition) {
-      alert("הדפדפן שלך לא תומך בזיהוי קולי");
-      return;
-    }
-    if (isListening) recognition.stop();
-    else {
-      setIsListening(true);
-      recognition.start();
-    }
-  };
-
-  if (recognition) {
-    recognition.onresult = (event: any) => {
-      const command = event.results[0][0].transcript.toLowerCase();
-      setIsListening(false);
-      if (command.includes('סיימתי') || command.includes('העבר')) {
-        if (myWigs.length > 0) handleCompleteTask(myWigs[0]);
-        else showNotification('error', 'לא נמצאה פאה פעילה לביצוע פקודה');
-      }
+  
+    const showNotification = (type: 'success' | 'error', text: string) => {
+        setNotification({ type, text });
+        setTimeout(() => setNotification(null), 4000);
     };
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-  }
 
-  return (
-    <div className="station-container" dir="rtl">
-      <div className="station-header">
-        <div className="header-actions">
-          <h2>תחנת ייצור: {allWorkers.find(w => w._id === currentWorkerId)?.username || 'ניהול משימות'}</h2>
-          <div className="btn-group">
-            <button onClick={toggleListening} className={`voice-btn ${isListening ? 'listening' : ''}`}>
-              {isListening ? '🎤 מקשיב...' : '🎙️ פקודה קולית'}
-            </button>
-            <button onClick={() => setIsScannerOpen(!isScannerOpen)} className="scan-btn">
-              📷 סריקת ברקוד
-            </button>
-          </div>
-        </div>
-        
-        <div className="worker-selector">
-          <label>עובדת פעילה:</label>
-          <select value={currentWorkerId} onChange={(e) => setCurrentWorkerId(e.target.value)}>
-            <option value="">-- בחרי עובדת --</option>
-            {allWorkers.map(worker => (
-              <option key={worker._id} value={worker._id}>{worker.username} ({worker.specialty})</option>
-            ))}
-          </select>
-        </div>
-      </div>
 
-      {notification && (
-        <div className={`notification-toast ${notification.type} animate-in`}>
-          {notification.text}
-        </div>
-      )}
+    const fetchWorkers = useCallback(async () => {
+        try {
+            const res = await api.get('/users');
+            const workersArray = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+            setAllWorkers(workersArray.filter((u: any) => u.role === 'Worker'));
+        } catch (error) {
+            console.error('Error fetching workers:', error);
+            showNotification('error', 'שגיאה בטעינת רשימת העובדות');
+        }
+    }, []);
 
-      {isScannerOpen && (
-        <div className="qr-overlay animate-in">
-          <div className="qr-window">
-            <h3>סריקת מדבקת פאה</h3>
-            <p>הציגי את הברקוד (WIG-XXXX) מול המצלמה</p>
-            <div id="qr-reader" style={{ width: '100%' }}></div>
-            <button onClick={() => setIsScannerOpen(false)} className="close-btn" style={{ marginTop: '15px' }}>ביטול סריקה</button>
-          </div>
-        </div>
-      )}
 
-      {!currentWorkerId ? (
-        <div className="empty-view"><h3>אנא בחרי עובדת לתחילת העבודה 👋</h3></div>
-      ) : myWigs.length === 0 ? (
-        <div className="empty-view"><h3>אין פאות שממתינות בתחנה שלך.</h3></div>
-      ) : (
-        <div className="wigs-list">
-          {myWigs.map(wig => {
-            const nextStageWorkers = getAvailableWorkersForNextStage(wig.currentStage);
-            return (
-              <div key={wig._id} className="wig-task-card">
-                <div className="card-top">
-                  <div className="customer-info">
-                    <h4>{wig.customer?.firstName} {wig.customer?.lastName}</h4>
-                    <span className="order-tag">#{wig.orderCode}</span>
-                  </div>
-                  <div className="stage-badge">{wig.currentStage}</div>
-                </div>
-                <div className="card-details">
-                  <p><strong>סוג שיער:</strong> {wig.hairType}</p>
-                  
-                  {nextStageWorkers.length > 1 && (
-                    <div className="worker-assign">
-                      <label>העבירי ל:</label>
-                      <select 
-                        value={selectedNextWorker[wig._id] || ''} 
-                        onChange={(e) => setSelectedNextWorker({ ...selectedNextWorker, [wig._id]: e.target.value })}
-                      >
-                        <option value="">בחר עובדת לשלב הבא</option>
-                        {nextStageWorkers.map(w => <option key={w._id} value={w._id}>{w.username}</option>)}
-                      </select>
+    const fetchStationData = useCallback(async () => {
+        if (!currentWorkerId) return;
+        try {
+            const res = await api.get(`/users/${currentWorkerId}/unified-tasks`);
+            const tasksArray = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+            setMyTasks(tasksArray);
+        } catch (error: any) {
+            console.error('Error fetching tasks:', error);
+            showNotification('error', 'שגיאה בטעינת תור העבודה');
+        }
+    }, [currentWorkerId]);
+
+    const openTechnicalCard = async (wigId: string) => {
+        if (!wigId) {
+            showNotification('error', 'מזהה פאה לא תקין');
+            return;
+        }
+        try {
+            console.log("מנסה למשוך מפרט עבור ID:", wigId);
+    
+            const res = await api.get(`/wigs/${wigId}`);
+            const data = res.data?.data || res.data;
+            setSelectedWigForCard(data);
+        } catch (error: any) {
+            console.error('שגיאה בשליפת מפרט:', error);
+            const errorMsg = error.response?.status === 404 
+                ? 'המפרט הטכני לא נמצא בשרת (404). ודאי שה-ID תקין.' 
+                : 'שגיאה בטעינת המפרט';
+            showNotification('error', errorMsg);
+        }
+    };
+
+    const handleTaskCompleted = async () => {
+        showNotification('success', 'המשימה עודכנה בהצלחה!');
+        await fetchStationData();
+    };
+
+
+    useEffect(() => {
+        fetchWorkers();
+    }, [fetchWorkers]);
+
+    useEffect(() => {
+        fetchStationData();
+    }, [fetchStationData]);
+
+  
+    useEffect(() => {
+        if (!recognition) return;
+
+        recognition.lang = 'he-IL';
+        recognition.onresult = async (event: any) => {
+            const command = event.results[0][0].transcript.toLowerCase();
+            setIsListening(false);
+            
+            if ((command.includes('סיימתי') || command.includes('העבר')) && myTasks.length > 0) {
+                const task = myTasks[0];
+                try {
+                    if (task.type === 'חדשה') {
+                        await api.patch(`/wigs/${task.repairId}/next-step`, {});
+                    } else if (task.taskIndexes && task.taskIndexes.length > 0) {
+                        await api.patch(`/repairs/${task.repairId}/task/${task.taskIndexes[0]}`, { status: 'בוצע' });
+                    }
+                    showNotification('success', 'עודכן באמצעות פקודה קולית');
+                    fetchStationData();
+                } catch (err) {
+                    showNotification('error', 'נכשל בעדכון קולי');
+                }
+            }
+        };
+        recognition.onend = () => setIsListening(false);
+    }, [myTasks, fetchStationData]);
+
+    const toggleListening = () => {
+        if (!recognition) return alert("הדפדפן לא תומך בזיהוי קולי");
+        if (isListening) recognition.stop();
+        else {
+            setIsListening(true);
+            recognition.start();
+        }
+    };
+
+    return (
+        <div className="station-container" dir="rtl">
+            <header className="station-header">
+                <div className="header-actions">
+                    <h2>תחנת עבודה: {isWorker ? loggedInUser.username : (allWorkers.find(w => (w._id || w.id) === currentWorkerId)?.username || 'ניהול משימות')}</h2>
+                    <div className="btn-group">
+                        <button 
+                            onClick={toggleListening} 
+                            className={`voice-btn ${isListening ? 'listening' : ''}`}
+                        >
+                            {isListening ? '🎙️ מקשיב...' : '🎤 פקודה קולית'}
+                        </button>
                     </div>
-                  )}
                 </div>
-                <div className="card-footer" style={{ display: 'flex', gap: '10px', padding: '15px' }}>
-                  <button 
-                    className="done-button" 
-                    onClick={() => handleCompleteTask(wig)}
-                    style={{ flex: 1 }}
-                  >
-                    סיימתי והעברתי הלאה ✔️
-                  </button>
-                  <button 
-                    className="view-details-btn" 
-                    onClick={() => setSelectedWigForCard(wig)} 
-                    style={{ background: '#17a2b8', color: 'white', border: 'none', padding: '14px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                  >
-                    📋 מפרט טכני
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
-      {selectedWigForCard && (
-        <WigTechnicalCard 
-          wig={selectedWigForCard} 
-          onClose={() => setSelectedWigForCard(null)} 
-        />
-      )}
-    </div>
-  );
+                {!isWorker && (
+                    <div className="worker-selector">
+                        <label>עובדת פעילה:</label>
+                        <select 
+                            value={currentWorkerId} 
+                            onChange={(e) => setCurrentWorkerId(e.target.value)}
+                        >
+                            <option value="">-- בחרי עובדת --</option>
+                            {allWorkers.map(worker => (
+                                <option key={worker._id || worker.id} value={worker._id || worker.id}>
+                                    {worker.username} ({worker.specialty})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+            </header>
+
+            {notification && (
+                <div className={`notification-toast ${notification.type} animate-in`}>
+                    {notification.text}
+                </div>
+            )}
+
+            <main className="tasks-display-area">
+                {!currentWorkerId ? (
+                    <div className="empty-view"><h3>אנא בחרי עובדת לתחילת העבודה 👋</h3></div>
+                ) : myTasks.length === 0 ? (
+                    <div className="empty-view"><h3>אין פאות שממתינות בתחנה שלך.</h3></div>
+                ) : (
+                    <div className="wigs-list">
+                        {myTasks.map((task, index) => (
+                            <TaskItem 
+                                key={`${task.type}-${task.repairId}-${index}`}
+                                task={task} 
+                                onComplete={handleTaskCompleted} 
+                                onOpenSpecs={task.type === 'חדשה' ? () => openTechnicalCard(task.repairId) : undefined}
+                            />
+                        ))}
+                    </div>
+                )}
+            </main>
+
+            {selectedWigForCard && (
+                <WigTechnicalCard 
+                    wig={selectedWigForCard} 
+                    onClose={() => setSelectedWigForCard(null)} 
+                />
+            )}
+        </div>
+    );
 };

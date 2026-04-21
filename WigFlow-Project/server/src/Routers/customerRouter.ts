@@ -1,16 +1,41 @@
 import { Router } from 'express';
-import { Customer } from '../Models_Service/Customer/customerModel';
-// הוספנו ייבוא של קובץ השירות שיש בו את הלוגיקה החכמה שלנו
-import * as customerService from '../Models_Service/Customer/customerService'; 
-import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware';
+import { Customer } from '../Models_Service/Customer/customerModel.js';
+import * as customerService from '../Models_Service/Customer/customerService.js'; 
+import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware.js';
 
 const customerRouter = Router();
 
-// חיפוש לקוחה לפי תעודת זהות (כל משתמש מחובר, כי גם עובדות צריכות לחפש בתיקונים)
-customerRouter.get('/search/:idNumber', verifyToken, async (req, res) => {
+
+customerRouter.get('/search/:query', verifyToken, async (req, res) => {
   try {
-    const { idNumber } = req.params;
-    const customer = await Customer.findOne({ idNumber });
+    const { query } = req.params;
+    
+    const isId = /^\d+$/.test(query);
+
+    let customer;
+
+    if (isId) {
+      customer = await Customer.findOne({ idNumber: query });
+    } else {
+      const nameParts = query.trim().split(/\s+/);
+      
+      if (nameParts.length > 1) {
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' '); 
+        customer = await Customer.findOne({ 
+          firstName: new RegExp('^' + firstName + '$', 'i'),
+          lastName: new RegExp('^' + lastName + '$', 'i') 
+        });
+      } else {
+        customer = await Customer.findOne({ 
+          $or: [
+            { firstName: new RegExp('^' + query + '$', 'i') },
+            { lastName: new RegExp('^' + query + '$', 'i') }
+          ]
+        });
+      }
+    }
+
     if (customer) {
       res.json({ exists: true, customer });
     } else {
@@ -21,25 +46,49 @@ customerRouter.get('/search/:idNumber', verifyToken, async (req, res) => {
   }
 });
 
-// יצירת לקוחה חדשה (כל משתמש מחובר, בשביל "רישום מהיר" מעמדת העובדת)
 customerRouter.post('/', verifyToken, async (req, res) => {
   try {
-    // התיקון: עכשיו אנחנו שולחים את המידע ל-Service שיבדוק כפילויות לפני השמירה
     const newCustomer = await customerService.createCustomer(req.body);
     res.status(201).json(newCustomer);
   } catch (error: any) {
-    // התיקון: אנחנו מחזירים את קוד השגיאה המדויק (למשל 400) שה-Service זרק
     res.status(error.statusCode || 400).json({ message: 'שגיאה ביצירת לקוחה', error: error.message });
   }
 });
 
-// שליפת כל הלקוחות למסך הניהול (רק מנהלת!)
+
 customerRouter.get('/', verifyAdmin, async (req, res) => {
   try {
     const customers = await Customer.find({});
     res.json(customers);
   } catch (error) {
     res.status(500).json({ message: 'שגיאה בשליפת לקוחות' });
+  }
+});
+
+
+customerRouter.post('/:id/notes', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content, context } = req.body;
+
+    const author = (req as any).user?.username || 'עובדת מערכת';
+
+    const updatedCustomer = await customerService.addInternalNote(id, {
+      content,
+      author,
+      context 
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'ההערה נוספה בהצלחה ליומן הלקוחה',
+      notes: updatedCustomer.internalNotes 
+    });
+  } catch (error: any) {
+    res.status(error.statusCode || 400).json({ 
+      message: 'שגיאה בהוספת הערה ליומן', 
+      error: error.message 
+    });
   }
 });
 

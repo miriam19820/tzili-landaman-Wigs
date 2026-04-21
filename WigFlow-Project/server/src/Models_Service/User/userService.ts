@@ -1,24 +1,28 @@
-import { User } from './userModel';
+import { User } from './userModel.js';
 import bcrypt from 'bcryptjs'; 
 import jwt from 'jsonwebtoken';  
+import { NewWig } from '../NewWigs/newWigModel.js';
+import { getTasksByWorker } from '../Repairs/repairService.js';
 
 interface UserData {
     username: string;
-    password?: string; // עשינו אופציונלי כדי שנוכל לעדכן עובדת בלי לגעת לה בסיסמה
+    password?: string; 
     fullName: string;
-    role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector'; // הוספנו את התפקידים החדשים
+    role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector';
     specialty: string;
 }
 
 const SECRET_KEY = process.env.JWT_SECRET || 'WIG_FLOW_SECRET_2026';
 
 export const createUser = async (userData: UserData) => {
-    const existingUser = await User.findOne({ username: userData.username });
+    
+    const cleanUsername = userData.username.trim();
+    
+    const existingUser = await User.findOne({ username: cleanUsername });
     if (existingUser) {
         throw new Error('שם המשתמש כבר קיים במערכת');
     }
 
-    // חובה לוודא שיש סיסמה ביצירת משתמש חדש
     if (!userData.password) {
         throw new Error('חובה להזין סיסמה למשתמש חדש');
     }
@@ -28,6 +32,7 @@ export const createUser = async (userData: UserData) => {
 
     const newUser = new User({
         ...userData,
+        username: cleanUsername,
         password: hashedPassword 
     });
 
@@ -35,15 +40,33 @@ export const createUser = async (userData: UserData) => {
 };
 
 export const loginUser = async (username: string, password: string) => {
-    const user = await User.findOne({ username });
+   
+    const cleanInputName = username.trim();
+    console.log(`\n--- ניסיון התחברות ---`);
+    console.log(`שם משתמש שהוקלד: "${cleanInputName}" (אורך: ${cleanInputName.length})`);
+    
+   
+    const user = await User.findOne({ username: cleanInputName });
+    
     if (!user) {
+        console.log(`❌ שגיאה: לא נמצא משתמש בשם "${cleanInputName}" בבסיס הנתונים.`);
+        
+       
+        const allUsers = await User.find({}, 'username');
+        console.log(`שמות שקיימים ב-DB:`, allUsers.map(u => `"${u.username}"`));
+        
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
+    console.log(`✅ משתמש נמצא: "${user.username}" (אורך ב-DB: ${user.username.length})`);
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+        console.log(`❌ שגיאה: הסיסמה לא תואמת.`);
         throw new Error('שם משתמש או סיסמה שגויים');
     }
+
+    console.log(`✅ התחברות הצליחה!`);
 
     const token = jwt.sign(
         { id: user._id, role: user.role }, 
@@ -79,7 +102,7 @@ export const getUserById = async (userId: string) => {
 };
 
 export const getUserByUsername = async (username: string) => {
-    const user = await User.findOne({ username })
+    const user = await User.findOne({ username: username.trim() })
         .select('-password')
         .populate('workload');
         
@@ -89,15 +112,15 @@ export const getUserByUsername = async (username: string) => {
     return user;
 };
 
-// הפונקציה המרכזית שמעדכנת את פרטי העובדת (שם / יציאה לחופשת לידה)
 export const updateUser = async (userId: string, updateData: Partial<UserData>) => {
-    
-    // אם המזכירה בחרה לעדכן גם סיסמה, נצפין אותה מחדש
+    if (updateData.username) {
+        updateData.username = updateData.username.trim();
+    }
+
     if (updateData.password && updateData.password.trim() !== '') {
         const salt = await bcrypt.genSalt(10);
         updateData.password = await bcrypt.hash(updateData.password, salt);
     } else {
-        // אם לא הוכנסה סיסמה בעריכה, נמחק את השדה הזה כדי לא לדרוס את הסיסמה הקיימת עם ערך ריק
         delete updateData.password;
     }
 
@@ -120,4 +143,62 @@ export const deleteUser = async (userId: string) => {
         throw new Error('לא ניתן למחוק, העובדת לא נמצאה');
     }
     return { message: 'העובדת נמחקה בהצלחה מהמערכת' };
+};
+
+export const getWorkerUnifiedTasks = async (workerId: string) => {
+   
+    const newWigs = await NewWig.find({ assignedWorkers: { $in: [workerId] } }).populate('customer');
+    const wigTasks = newWigs.map((wig: any) => ({
+        repairId: wig._id.toString(), 
+        type: 'חדשה', 
+        wigCode: wig.orderCode,
+        customerName: wig.customer ? `${wig.customer.firstName} ${wig.customer.lastName}` : 'לא ידוע',
+        category: 'ייצור פאה חדשה',
+        subCategory: wig.currentStage,
+        isUrgent: wig.isUrgent,
+        notes: wig.specialNotes || 'אין הערות מיוחדות',
+        status: 'ממתין',
+        taskIndexes: [],
+        imageUrl: wig.imageUrl || ''
+    }));
+    const repairTasksRaw = await getTasksByWorker(workerId);
+    const groupedRepairs = new Map<string, any>();
+
+    repairTasksRaw.forEach((t: any) => {
+        const repairIdStr = t.repairId.toString();
+    
+        if (!groupedRepairs.has(repairIdStr)) {
+            groupedRepairs.set(repairIdStr, {
+                repairId: repairIdStr,
+                type: 'תיקון',
+                wigCode: t.wigCode,
+                customerName: t.customerName,
+                isUrgent: t.isUrgent,
+                internalNote: t.internalNote || '',
+                imageUrl: t.imageUrl || '',
+                status: 'ממתין',
+                category: `תיקונים (${t.task.category})`,
+                subCategories: [], 
+                groupedNotes: [],  
+                taskIndexes: []   
+            });
+        }
+        
+        const group = groupedRepairs.get(repairIdStr);
+        group.subCategories.push(t.task.subCategory);
+        
+        if (t.task.notes) {
+            group.groupedNotes.push(`${t.task.subCategory}: ${t.task.notes}`);
+        }
+        if (t.task.deadline) {
+            group.deadline = t.task.deadline; 
+        }
+     
+        group.taskIndexes.push(t.taskIndex);
+    });
+
+    const repairTasks = Array.from(groupedRepairs.values());
+
+
+    return [...wigTasks, ...repairTasks].sort((a, b) => (Number(b.isUrgent)) - (Number(a.isUrgent)));
 };

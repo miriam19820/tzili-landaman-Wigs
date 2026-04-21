@@ -1,16 +1,18 @@
-import { connectDB } from './Utils/connectDB';
-import { Customer } from './Models_Service/Customer/customerModel';
-import { User } from './Models_Service/User/userModel';
-import { Repair } from './Models_Service/Repairs/repairModel';
-import { NewWig } from './Models_Service/NewWigs/newWigModel';
-import { Service } from './Models_Service/SalonServices/serviceModel';
+import { connectDB } from './Utils/connectDB.js';
+import { Customer } from './Models_Service/Customer/customerModel.js';
+import { User } from './Models_Service/User/userModel.js';
+import { Repair } from './Models_Service/Repairs/repairModel.js';
+import { NewWig } from './Models_Service/NewWigs/newWigModel.js';
+import { Service } from './Models_Service/SalonServices/serviceModel.js';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const seedData = async () => {
   try {
     await connectDB();
     
-    // ניקוי כל בסיס הנתונים כדי להתחיל דף נקי
+   
     await Customer.deleteMany({});
     await User.deleteMany({});
     await Repair.deleteMany({});
@@ -33,8 +35,6 @@ const seedData = async () => {
       address: 'ישעיהו הנביא 1, בית שמש'
     });
 
-    // 2. יצירת צוות ייצור - שמות ההתמחויות חייבים להתאים ל-newWigService.ts!
-    // עובדת לשלב 1: התאמת שיער (קריטי לפתיחת הזמנה!)
     await User.create({ 
         username: 'שרה', 
         fullName: 'שרה (התאמת שיער)', 
@@ -96,6 +96,10 @@ const seedData = async () => {
         role: 'Admin', 
         specialty: 'ניהול' 
     });
+    if (process.env.NODE_ENV === 'production') {
+    console.log("סכנה: אי אפשר להריץ Seed על השרת האמיתי!");
+    process.exit(1);
+}
 
     console.log('\n✅ הנתונים עודכנו בהצלחה!');
     console.log('🚀 כעת ניתן לפתוח הזמנות חדשות ולהעביר אותן בכל שלבי הייצור.');
