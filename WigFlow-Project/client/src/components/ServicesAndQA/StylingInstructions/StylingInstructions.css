@@ -1,0 +1,33 @@
+.styling-container {
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fefefe;
+  margin-top: 10px;
+  border: 1px solid #ccc; /* גבול רגיל */
+  direction: rtl;
+}
+
+/* כשהמשימה דחופה, הגבול משתנה לאדום */
+.styling-container.urgent {
+  border: 2px solid red;
+  background-color: #fff8f8; /* רקע מעט אדמדם כדי להדגיש דחיפות */
+}
+
+.styling-title {
+  color: #333;
+  margin-top: 0;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+.styling-text {
+  margin: 8px 0;
+  color: #444;
+}
+
+.urgent-text {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
+}
