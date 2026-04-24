@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { SignaturePad } from '../../Shared/SignaturePad';
 import './NewOrderForm.css';
 
@@ -12,45 +13,37 @@ interface NewOrderFormInputs {
   email: string;
   address: string;
   city: string; 
-  orderCode: string;
-  receivedBy: string;
   circumference: number;
-  earToEar: number;
   frontToBack: number;
-  napeLength: string; 
-
+  napeLength: number; 
   netSize: 'XS' | 'S' | 'M' | 'L' | 'XL';
   hairType: 'חלק' | 'שיער תנועתי' | 'שיער גלי' | 'מתולתל';
   baseColor: string;
-  highlightsWefts: string;
-  highlightsSkin: string;
   topConstruction: 'סקין' | 'שבלול' | 'לייסטופ' | 'לייס פרונט' | 'דיפ לייס';
-  topNotes: string;
   frontStyle: 'ע"י רגילה שטוחה' | 'בייבי הייר קל' | 'בייבי הייר כבד' | 'פוני צד' | 'פוני בובה' | 'בייבי הייר לאסוף' | 'גל נמוך';
-  frontNotes: string;
   price: number;
   advancePayment: number;
-  balancePayment: number;
   specialNotes: string;
 }
 
 export const NewOrderForm: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [customer, setCustomer] = useState<any>(null);
-  const [workers, setWorkers] = useState<any[]>([]);
   const [signatureData, setSignatureData] = useState<string>('');
   const [loading, setLoading] = useState(false);
-
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<NewOrderFormInputs>();
   
+  // יצירת קוד הזמנה אוטומטי
+  const [autoOrderCode, setAutoOrderCode] = useState('');
+
+  const isRepairFlow = location.state?.fromFlow === 'repair';
+  const { register, handleSubmit, watch } = useForm<NewOrderFormInputs>();
   const idSearchValue = watch("idNumberSearch");
-  const watchedFirstName = watch("firstName");
-  const watchedLastName = watch("lastName");
 
   useEffect(() => {
-    axios.get('http://localhost:3000/api/users')
-      .then((res: any) => setWorkers(res.data.filter((u: any) => u.role === 'Worker')))
-      .catch(err => console.error('שגיאה בטעינת עובדות'));
+    // מייצר קוד הזמנה אקראי וייחודי ברגע שהקומפוננטה עולה (למשל WIG-847392)
+    setAutoOrderCode(`WIG-${Math.floor(100000 + Math.random() * 900000)}`);
   }, []);
 
   const handleIdSearch = async () => {
@@ -60,179 +53,209 @@ export const NewOrderForm: React.FC = () => {
     }
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:3000/api/customers/search/${idSearchValue}`);
+      const res = await axios.get(`/customers/search/${idSearchValue}`);
       if (res.data.exists) {
         setCustomer(res.data.customer);
-        setStep(3);
+        if (isRepairFlow) {
+            navigate('/repairs/new', { state: { idNumber: idSearchValue } });
+        } else {
+            setStep(3); 
+        }
       } else {
         setCustomer({ idNumber: idSearchValue });
-        setStep(2);
+        setStep(2); 
       }
-    } catch (err) { alert("שגיאה בחיפוש"); } finally { setLoading(false); }
+    } catch (err) { alert("שגיאה בחיפוש מול השרת"); } finally { setLoading(false); }
+  };
+
+  const handleQuickCustomerRegistration = async (data: NewOrderFormInputs) => {
+    setLoading(true);
+    try {
+      const response = await axios.post('/customers', {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        idNumber: customer.idNumber,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
+        address: data.address,
+        city: data.city
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        setCustomer(response.data);
+        if (isRepairFlow) {
+            alert("הלקוחה נרשמה בהצלחה! חוזרים לאבחון התיקון...");
+            navigate('/repairs/new', { state: { idNumber: customer.idNumber } });
+        } else {
+            alert("הלקוחה נרשמה בהצלחה! ממשיכים למפרט הפאה...");
+            setStep(3);
+        }
+      }
+    } catch (error) { alert("שגיאה ברישום הלקוחה"); } finally { setLoading(false); }
   };
 
   const onSubmit = async (data: NewOrderFormInputs) => {
-    if (!signatureData) { alert('חובה להחתים את הלקוחה!'); return; }
+    if (!signatureData) {
+      alert("נא להחתים את הלקוחה לפני פתיחת ההזמנה");
+      return;
+    }
 
     setLoading(true);
     try {
-      let finalCustomerId = customer?._id;
-      if (step === 3 && !customer?._id) {
-        const newRes = await axios.post('http://localhost:3000/api/customers', {
-          firstName: data.firstName, lastName: data.lastName, idNumber: customer.idNumber,
-          phoneNumber: data.phoneNumber, email: data.email, address: data.address, city: data.city
-        });
-        finalCustomerId = newRes.data._id;
-      }
-
-      const firstStageWorker = workers.find(w => w.specialty === 'התאמת שיער') || workers[0];
-
       const payload = {
-        ...data,
-        customer: finalCustomerId,
-        assignedWorker: firstStageWorker._id, 
-        currentStage: 'התאמת שיער', 
-        measurements: { 
-          circumference: Number(data.circumference), earToEar: Number(data.earToEar), frontToBack: Number(data.frontToBack) 
+        customer: customer._id,
+        orderCode: autoOrderCode, // שולחים את הקוד האוטומטי שנוצר
+        measurements: {
+          circumference: data.circumference,
+          frontToBack: data.frontToBack,
+          napeLength: data.napeLength
         },
-        balancePayment: Number(data.price) - (Number(data.advancePayment) || 0),
+        netSize: data.netSize,
+        hairType: data.hairType,
+        baseColor: data.baseColor,
+        topConstruction: data.topConstruction,
+        frontStyle: data.frontStyle,
+        price: data.price,
+        advancePayment: data.advancePayment,
+        specialNotes: data.specialNotes,
         customerSignature: signatureData 
       };
 
-      await axios.post('http://localhost:3000/api/wigs/new', payload);
-      alert("העסקה נסגרה! הפאה הועברה אוטומטית לייצור.");
-      window.location.reload();
-    } catch (error) { alert("שגיאה בשמירה"); } finally { setLoading(false); }
+      const response = await axios.post('/wigs/new', payload);
+      
+      if (response.data.success) {
+        alert(`הזמנת פאה חדשה (${autoOrderCode}) נפתחה בהצלחה! 🎉`);
+        window.location.reload(); 
+      }
+    } catch (error: any) {
+      alert("שגיאה בפתיחת ההזמנה: " + (error.response?.data?.message || "שגיאת שרת"));
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="new-order-container" dir="rtl">
-      <h1 className="form-title">WigFlow - הזמנה חדשה</h1>
+      <h1 className="form-title">WigFlow - {isRepairFlow ? 'רישום לקוחה לתיקון' : 'הזמנת פאה חדשה'}</h1>
 
       {step === 1 && (
         <div className="search-section animate-in">
           <h3>שלב 1: זיהוי לקוחה</h3>
           <div className="search-box">
             <input {...register('idNumberSearch')} placeholder="מספר תעודת זהות..." className="form-input" />
-            <button type="button" onClick={handleIdSearch} className="btn-search">חפשי לקוחה</button>
+            <button type="button" onClick={handleIdSearch} className="btn-search" disabled={loading}>
+              {loading ? 'מחפש...' : 'חפשי לקוחה'}
+            </button>
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(step === 2 ? handleQuickCustomerRegistration : onSubmit)}>
+        
         {step === 2 && (
           <fieldset className="form-section animate-in">
-            <legend>רישום לקוחה חדשה</legend>
+            <legend>שלב 2: רישום לקוחה חדשה</legend>
             <div className="form-grid">
               <input className="form-input" {...register('firstName', { required: true })} placeholder="שם פרטי *" />
               <input className="form-input" {...register('lastName', { required: true })} placeholder="שם משפחה *" />
               <input className="form-input" {...register('phoneNumber', { required: true })} placeholder="טלפון *" />
-              <input className="form-input" {...register('email')} placeholder="אימייל" />
+              <input className="form-input" {...register('email')} placeholder="אימייל" type="email" />
               <input className="form-input" {...register('city')} placeholder="עיר" />
               <input className="form-input full-width" {...register('address')} placeholder="כתובת מגורים" />
             </div>
-            <button type="button" className="btn-next" onClick={() => setStep(3)}>המשך למפרט ←</button>
+            <button type="submit" className="submit-btn" disabled={loading} style={{ marginTop: '15px' }}>
+              {loading ? "רושם..." : (isRepairFlow ? "סיום רישום וחזרה לתיקון ←" : "שמור לקוחה והמשך למפרט ←")}
+            </button>
           </fieldset>
         )}
 
         {step === 3 && (
-          <div className="animate-in">
-            <div className="customer-banner">
-              מזמינה: <strong>{customer.firstName || watchedFirstName} {customer.lastName || watchedLastName}</strong> | ת"ז: {customer.idNumber}
-            </div>
-
-            <fieldset className="form-section">
-              <legend>מידות ופרטי הזמנה</legend>
-              <div className="form-grid">
-                <div className="input-group">
-                  <label className="input-label">קוד הזמנה</label>
-                  <input className="form-input" {...register('orderCode', { required: true })} placeholder="קוד הזמנה *" />
-                </div>
-                <div className="input-group">
-                  <label className="input-label">היקף ראש</label>
-                  <input className="form-input" type="number" step="0.1" {...register('circumference')} placeholder="היקף" />
-                </div>
-                <div className="input-group">
-                  <label className="input-label">מאוזן לאוזן</label>
-                  <input className="form-input" type="number" step="0.1" {...register('earToEar')} placeholder="אוזן לאוזן" />
-                </div>
-                <div className="input-group">
-                  <label className="input-label">פדחת לעורף</label>
-                  <input className="form-input" type="number" step="0.1" {...register('frontToBack')} placeholder="פדחת לעורף" />
-                </div>
-              
-                <div className="input-group">
-                  <label className="input-label">אורך עורף</label>
-                  <input className="form-input" {...register('napeLength')} placeholder="אורך עורף" />
-                </div>
-              </div>
-            </fieldset>
-
-            <fieldset className="form-section">
-              <legend>מפרט טכני</legend>
-              <div className="form-grid">
+          <fieldset className="form-section animate-in" style={{ padding: '30px' }}>
+            <legend>שלב 3: מפרט הפאה (מידות ועיצוב)</legend>
             
-                <div className="input-group">
-                  <label className="input-label">מידת רשת</label>
-                  <select className="form-input" {...register('netSize', { required: true })} defaultValue="">
-                    <option value="" disabled>בחר מידה</option>
-                    <option value="XS">XS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option>
-                  </select>
-                </div>
-
-                <div className="input-group">
-                  <label className="input-label">סוג שיער</label>
-                  <select className="form-input" {...register('hairType', { required: true })} defaultValue="">
-                    <option value="" disabled>בחר סוג</option>
-                    <option value="חלק">חלק</option><option value="שיער תנועתי">שיער תנועתי</option><option value="שיער גלי">שיער גלי</option><option value="מתולתל">מתולתל</option>
-                  </select>
-                </div>
-
-                <div className="input-group">
-                  <label className="input-label">צבע בסיס</label>
-                  <input className="form-input" {...register('baseColor')} placeholder="צבע בסיס" />
-                </div>
-                
-                <div className="input-group">
-                   <label className="input-label">סוג סקין (Top)</label>
-                   <select className="form-input" {...register('topConstruction', { required: true })} defaultValue="">
-                    <option value="" disabled>בחר סוג</option>
-                    <option value="סקין">סקין</option><option value="שבלול">שבלול</option><option value="לייסטופ">לייסטופ</option><option value="לייס פרונט">לייס פרונט</option><option value="דיפ לייס">דיפ לייס</option>
-                  </select>
-                </div>
+            {customer && (
+              <div className="customer-banner">
+                <span>לקוחה מזוהה: <strong>{customer.firstName} {customer.lastName}</strong></span>
+                <button type="button" className="btn-back" onClick={() => setStep(1)}>החלף לקוחה</button>
               </div>
-            </fieldset>
+            )}
 
-            <fieldset className="form-section">
-              <legend>עיצוב וגימור</legend>
-              <div className="form-grid">
-                <div className="input-group">
-                  <label className="input-label">עיצוב פרונט</label>
-                  <select className="form-input" {...register('frontStyle', { required: true })} defaultValue="">
-                    <option value="" disabled>בחר עיצוב</option>
-                    <option value='ע"י רגילה שטוחה'>ע"י רגילה שטוחה</option><option value="בייבי הייר קל">בייבי הייר קל</option><option value="בייבי הייר כבד">בייבי הייר כבד</option><option value="פוני צד">פוני צד</option><option value="פוני בובה">פוני בובה</option><option value="בייבי הייר לאסוף">בייבי הייר לאסוף</option><option value="גל נמוך">גל נמוך</option>
-                  </select>
-                </div>
-
-              </div>
-              <textarea className="form-input full-width" style={{marginTop:'10px'}} {...register('specialNotes')} placeholder="הערות מיוחדות"></textarea>
-            </fieldset>
-
-            <fieldset className="form-section highlight-section">
-              <legend>תשלום</legend>
-              <div className="form-grid">
-                <input className="form-input" type="number" {...register('price', { required: true })} placeholder="מחיר סופי *" />
-                <input className="form-input" type="number" {...register('advancePayment')} placeholder="מקדמה" />
-              </div>
-              <SignaturePad onSave={(sig) => setSignatureData(sig)} />
-            </fieldset>
-
-            <div className="button-group">
-              <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? "שומר..." : "סגור עסקה ושגר לייצור"}
-              </button>
+            {/* קוד הזמנה וברקוד (אוטומטי) */}
+            <div className="barcode-container">
+              <h3>קוד הזמנה: {autoOrderCode}</h3>
+              <img src={`https://barcode.tec-it.com/barcode.ashx?data=${autoOrderCode}&code=Code128&dpi=96`} alt="Barcode" />
+              <p>הברקוד נוצר אוטומטית ויודפס על מדבקת הפאה</p>
             </div>
-          </div>
+
+            {/* קטגוריה 1: מידות ראש */}
+            <h4 className="section-subtitle">📏 מידות ראש</h4>
+            <div className="form-grid">
+              <input type="number" step="0.1" className="form-input" {...register('circumference', { required: true })} placeholder="היקף ראש (ס״מ) *" />
+              <input type="number" step="0.1" className="form-input" {...register('napeLength', { required: true })} placeholder="אורך עורף (ס״מ) *" />
+              <input type="number" step="0.1" className="form-input" {...register('frontToBack', { required: true })} placeholder="פדחת לעורף (ס״מ) *" />
+            </div>
+
+            {/* קטגוריה 2: מפרט טכני */}
+            <h4 className="section-subtitle">⚙️ מפרט טכני</h4>
+            <div className="form-grid">
+              <select className="form-input" {...register('hairType', { required: true })}>
+                <option value="">סוג שיער *</option>
+                <option value="חלק">חלק</option>
+                <option value="שיער תנועתי">שיער תנועתי</option>
+                <option value="שיער גלי">שיער גלי</option>
+                <option value="מתולתל">מתולתל</option>
+              </select>
+              <select className="form-input" {...register('topConstruction')}>
+                <option value="">סוג סקין</option>
+                <option value="סקין">סקין</option>
+                <option value="שבלול">שבלול</option>
+                <option value="לייסטופ">לייסטופ</option>
+                <option value="לייס פרונט">לייס פרונט</option>
+                <option value="דיפ לייס">דיפ לייס</option>
+              </select>
+              <input className="form-input" {...register('baseColor')} placeholder="צבע בסיס (לדוגמה: 4/6)" />
+              <select className="form-input" {...register('netSize', { required: true })}>
+                <option value="">מידת רשת *</option>
+                <option value="XS">XS</option>
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+              </select>
+            </div>
+
+            {/* קטגוריה 3: עיצוב וגימור */}
+            <h4 className="section-subtitle">עיצוב וגימור</h4>
+            <div className="form-grid">
+              <select className="form-input" {...register('frontStyle')}>
+                <option value="">עיצוב פרונט</option>
+                <option value='ע"י רגילה שטוחה'>ע"י רגילה שטוחה</option>
+                <option value="בייבי הייר קל">בייבי הייר קל</option>
+                <option value="בייבי הייר כבד">בייבי הייר כבד</option>
+                <option value="פוני צד">פוני צד</option>
+                <option value="פוני בובה">פוני בובה</option>
+                <option value="בייבי הייר לאסוף">בייבי הייר לאסוף</option>
+                <option value="גל נמוך">גל נמוך</option>
+              </select>
+              <textarea className="form-input" {...register('specialNotes')} placeholder="הערות מיוחדות לייצור (אופציונלי)..."></textarea>
+            </div>
+
+            {/* קטגוריה 4: תשלום ומקדמה */}
+            <h4 className="section-subtitle">💳 תשלום ומקדמה</h4>
+            <div className="form-grid">
+              <input type="number" className="form-input" {...register('price')} placeholder="מחיר סופי סוכם (₪)" />
+              <input type="number" className="form-input" {...register('advancePayment')} placeholder="מקדמה שולמה (₪)" />
+            </div>
+
+            {/* קטגוריה 5: חתימה */}
+            <div className="signature-container">
+              <h4>חתימת לקוחה לאישור המפרט והתקנון:</h4>
+              <SignaturePad onSave={(sig) => setSignatureData(sig)} />
+              {signatureData && <div className="sig-status">✓ החתימה נשמרה בהצלחה ותצורף להזמנה</div>}
+            </div>
+            
+            <button type="submit" className="submit-btn full-width" style={{ marginTop: '30px', fontSize: '1.2rem', padding: '15px' }} disabled={loading}>
+              {loading ? "פותח הזמנה..." : "פתח הזמנה חדשה ✂️"}
+            </button>
+          </fieldset>
         )}
       </form>
     </div>

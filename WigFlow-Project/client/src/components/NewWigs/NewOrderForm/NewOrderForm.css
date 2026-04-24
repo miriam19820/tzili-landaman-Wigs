@@ -93,3 +93,109 @@
 .message-banner.error { background: #f8d7da; color: #721c24; }
 
 .sig-status { color: #27ae60; font-weight: bold; margin-top: 5px; }
+
+/* --- עיצוב המדבקה על המסך --- */
+.sticker-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.print-sticker {
+  background: white;
+  width: 80mm; /* גודל מדבקה סטנדרטי */
+  padding: 15px;
+  border-radius: 5px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.sticker-header { font-weight: bold; border-bottom: 1px solid #000; margin-bottom: 10px; padding-bottom: 5px; }
+.qr-code img { margin: 10px 0; }
+.btn-print { background: #28a745; color: white; padding: 10px 20px; border: none; margin: 10px; cursor: pointer; border-radius: 5px; }
+.btn-close { background: #6c757d; color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
+
+/* --- לוגיקת הדפסה: מסתיר הכל חוץ מהמדבקה --- */
+@media print {
+  body * { visibility: hidden; } /* מסתיר הכל */
+  #wig-sticker, #wig-sticker * { visibility: visible; } /* מציג רק את המדבקה */
+  #wig-sticker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    border: none;
+  }
+  .no-print { display: none; } /* מסתיר את כפתורי ההדפסה בזמן ההדפסה עצמה */
+}
+
+/* --- תיקון האנימציה שגרמה לאלמנט לברוח הצידה --- */
+@keyframes simpleFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* הגדרה ספציפית בתוך קונטיינר ההזמנה כדי למנוע התנגשות עם הודעות קופצות */
+.new-order-container .animate-in {
+  animation: simpleFadeIn 0.5s ease-out forwards;
+}
+
+/* --- עיצובי הקטגוריות החדשות בטופס (נוסף הרגע) --- */
+.section-subtitle {
+  color: #004085;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+  margin-top: 35px;
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.barcode-container {
+  background-color: #f8f9fa;
+  border: 1px dashed #adb5bd;
+  border-radius: 8px;
+  text-align: center;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.barcode-container h3 {
+  margin: 0 0 15px 0;
+  color: #343a40;
+}
+
+.barcode-container img {
+  max-width: 100%;
+  height: 80px;
+  mix-blend-mode: multiply; /* מסיר את הרקע הלבן של הברקוד */
+}
+
+.barcode-container p {
+  margin: 10px 0 0 0;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.signature-container {
+  margin-top: 35px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  text-align: center;
+}
+
+.signature-container h4 {
+  margin: 0 0 15px 0;
+  color: #212529;
+}

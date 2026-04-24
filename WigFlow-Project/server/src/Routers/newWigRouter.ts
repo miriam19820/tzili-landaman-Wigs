@@ -5,14 +5,14 @@ import {
   getWigsByWorker,
   getNewWigById 
 } from '../Models_Service/NewWigs/newWigService';
+import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware';
 
 const newWigRouter = Router();
 
 /**
- * @route   POST /api/wigs/new
- * @desc    יצירת הזמנת פאה חדשה וניתוב לעובדת הראשונה
+ * פתיחת הזמנת פאה חדשה (רק מנהלת/מזכירה)
  */
-newWigRouter.post('/new', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.post('/new', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const newWig = await createNewWig(req.body);
     res.status(201).json({
@@ -26,17 +26,13 @@ newWigRouter.post('/new', async (req: Request, res: Response, next: NextFunction
 });
 
 /**
- * @route   PATCH /api/wigs/:id/next-step
- * @desc    העברת הפאה לשלב הבא בפס הייצור (כולל אופציה לבחירת עובדת ספציפית)
- * @body    { nextWorkerId?: string }
+ * העברת פאה לשלב הבא (רק עובדת או מנהלת)
  */
-newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.patch('/:id/next-step', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const wigId = req.params.id;
-    // משיכת ה-ID של העובדת הבאה מהקליינט (אם המשתמשת בחרה מישהי ספציפית)
     const { nextWorkerId } = req.body; 
     
-    // מעבירים את שני הנתונים לפונקציה בלוגיקה
     const updatedWig = await moveToNextStage(wigId, nextWorkerId);
     
     res.status(200).json({
@@ -50,10 +46,9 @@ newWigRouter.patch('/:id/next-step', async (req: Request, res: Response, next: N
 });
 
 /**
- * @route  
- * @desc    
+ * משיכת רשימת הפאות לעמדת העבודה (רק עובדת או מנהלת)
  */
-newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.get('/work-station/:workerId', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const workerId = req.params.workerId;
     const wigs = await getWigsByWorker(workerId);
@@ -69,10 +64,9 @@ newWigRouter.get('/work-station/:workerId', async (req: Request, res: Response, 
 });
 
 /**
- * @route   
- * @desc    
+ * בדיקת סטטוס של פאה (כל משתמש מחובר)
  */
-newWigRouter.get('/status/:id', async (req: Request, res: Response, next: NextFunction) => {
+newWigRouter.get('/status/:id', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const wigId = req.params.id;
     const wig = await getNewWigById(wigId); 

@@ -8,10 +8,17 @@ const newWigSchema = new Schema({
   receivedDate: { type: Date, default: Date.now }, 
   targetDate: { type: Date }, 
 
+isUrgent: { type: Boolean, default: false },
+
   measurements: {
     circumference: { type: Number, required: true }, 
     earToEar: { type: Number, required: true },      
     frontToBack: { type: Number, required: true }    
+  },
+
+  stageAssignments: {
+    type: Map,
+    of: String 
   },
 
   netSize: { 
@@ -43,6 +50,7 @@ const newWigSchema = new Schema({
 
 
   frontNotes: { type: String }, 
+  frontStyle: { type: String },
 
   imageUrl: { type: String },
 

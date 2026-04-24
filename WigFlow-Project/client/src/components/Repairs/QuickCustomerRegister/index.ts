@@ -1,0 +1,3 @@
+
+export { QuickCustomerRegister } from './QuickCustomerRegister';
+

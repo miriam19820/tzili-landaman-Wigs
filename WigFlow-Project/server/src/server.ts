@@ -1,4 +1,5 @@
 import app from './app';
+import 'dotenv/config';
 import { connectDB } from './Utils/connectDB';
 import './Models_Service/Customer/customerModel';
 import './Models_Service/User/userModel';
@@ -23,5 +24,6 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
 
 startServer();

@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { Customer } from '../Models_Service/Customer/customerModel';
+import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware';
 
 const customerRouter = Router();
 
-customerRouter.get('/search/:idNumber', async (req, res) => {
+// חיפוש לקוחה לפי תעודת זהות (כל משתמש מחובר, כי גם עובדות צריכות לחפש בתיקונים)
+customerRouter.get('/search/:idNumber', verifyToken, async (req, res) => {
   try {
     const { idNumber } = req.params;
     const customer = await Customer.findOne({ idNumber });
@@ -17,7 +19,8 @@ customerRouter.get('/search/:idNumber', async (req, res) => {
   }
 });
 
-customerRouter.post('/', async (req, res) => {
+// יצירת לקוחה חדשה (כל משתמש מחובר, בשביל "רישום מהיר" מעמדת העובדת)
+customerRouter.post('/', verifyToken, async (req, res) => {
   try {
     const newCustomer = await Customer.create(req.body);
     res.status(201).json(newCustomer);
@@ -26,8 +29,8 @@ customerRouter.post('/', async (req, res) => {
   }
 });
 
-
-customerRouter.get('/', async (req, res) => {
+// שליפת כל הלקוחות למסך הניהול (רק מנהלת!)
+customerRouter.get('/', verifyAdmin, async (req, res) => {
   try {
     const customers = await Customer.find({});
     res.json(customers);

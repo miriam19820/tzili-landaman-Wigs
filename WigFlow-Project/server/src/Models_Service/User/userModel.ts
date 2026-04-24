@@ -10,6 +10,16 @@ const userSchema = new Schema({
     required: true 
   },
   specialty: { type: String, required: true }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+userSchema.virtual('workload', {
+  ref: 'NewWig',        
+  localField: '_id',     
+  foreignField: 'assignedWorker', 
+  count: true        
 });
 
 export const User = model('User', userSchema);

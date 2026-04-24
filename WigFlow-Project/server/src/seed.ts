@@ -1,109 +1,107 @@
 import { connectDB } from './Utils/connectDB';
 import { Customer } from './Models_Service/Customer/customerModel';
 import { User } from './Models_Service/User/userModel';
-import { Service } from './Models_Service/SalonServices/serviceModel';
-import { NewWig } from './Models_Service/NewWigs/newWigModel';
 import { Repair } from './Models_Service/Repairs/repairModel';
+import { NewWig } from './Models_Service/NewWigs/newWigModel';
+import { Service } from './Models_Service/SalonServices/serviceModel';
+import bcrypt from 'bcryptjs';
 
 const seedData = async () => {
   try {
     await connectDB();
-
-    // 1. ניקוי הנתונים הישנים מכל הטבלאות
+    
+    // ניקוי כל בסיס הנתונים כדי להתחיל דף נקי
     await Customer.deleteMany({});
     await User.deleteMany({});
-    await Service.deleteMany({});
+    await Repair.deleteMany({});
     await NewWig.deleteMany({});
-    await Repair.deleteMany({}); // ניקוי תיקונים ישנים
+    await Service.deleteMany({});
 
-    // 2. יצירת לקוחה לדוגמה
-    const customer = await Customer.create({
-      firstName: 'שרה',
-      lastName: 'כהן',
-      idNumber: '012345678',
-      phoneNumber: '050-1234567',
-      email: 'sara@example.com',
-      address: 'רחוב יפו 100, ירושלים'
-    });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+    
+    console.log('🔑 פרטי כניסה לבדיקה:');
+    console.log('👤 משתמש: admin | סיסמה: password123');
 
-    // 3. יצירת צוות עובדות עם שדות חובה (fullName ו-password)
-    const commonPassword = 'password123';
-
-    const worker1 = await User.create({ 
-      username: 'הני', 
-      fullName: 'הני כהן', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'התאמת שיער' 
-    });
-    
-    const worker2 = await User.create({ 
-      username: 'טעמא', 
-      fullName: 'טעמא לוי', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'תפירה' 
-    });
-    
-    const worker3 = await User.create({ 
-      username: 'הודיה', 
-      fullName: 'הודיה אברהם', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'צבע' 
-    });
-    
-    const worker4 = await User.create({ 
-      username: 'מירי', 
-      fullName: 'מירי שטרן', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'עבודת יד' 
-    });
-    
-    const worker5 = await User.create({ 
-      username: 'מרים', 
-      fullName: 'מרים וייס', 
-      password: commonPassword, 
-      role: 'Worker', 
-      specialty: 'חפיפה' 
-    });
-    
-    const worker6 = await User.create({ 
-      username: 'תהילה', 
-      fullName: 'תהילה מנהלת', 
-      password: commonPassword, 
-      role: 'QC', // תפקיד בקרת איכות
-      specialty: 'בקרת איכות' 
+    // 1. יצירת לקוחה לדוגמה
+    await Customer.create({
+      firstName: 'מרים',
+      lastName: 'גליק',
+      idNumber: '329520449', 
+      phoneNumber: '0583241344',
+      email: 'miriamm41344@gmail.com',
+      address: 'ישעיהו הנביא 1, בית שמש'
     });
 
-    // 4. יצירת הזמנת פאה חדשה לדוגמה
-    await NewWig.create({
-      customer: customer._id,
-      orderCode: 'ORD-9876',
-      receivedBy: 'המזכירה',
-      wigMakerName: 'הני',
-      measurements: { circumference: 54, earToEar: 30, frontToBack: 35 },
-      netSize: 'XS', 
-      hairType: 'שיער גלי',
-      napeLength: 'ארוך',
-      baseColor: 'חום כהה',
-      highlightsWefts: 'בלונד עדין',
-      highlightsSkin: 'ללא',
-      topConstruction: 'לייס פרונט',
-      topNotes: 'להקפיד על שביל טבעי',
-      frontStyle: 'בייבי הייר קל',
-      frontNotes: 'לא צפוף מדי',
-      price: 9500,
-      advancePayment: 3000,
-      currentStage: 'התאמת שיער',
-      assignedWorker: worker1._id
+    // 2. יצירת צוות ייצור - שמות ההתמחויות חייבים להתאים ל-newWigService.ts!
+    // עובדת לשלב 1: התאמת שיער (קריטי לפתיחת הזמנה!)
+    await User.create({ 
+        username: 'שרה', 
+        fullName: 'שרה (התאמת שיער)', 
+        password: hashedPassword, 
+        role: 'Worker', 
+        specialty: 'התאמת שיער' 
     });
 
-    console.log('✅ הנתונים עודכנו בהצלחה כולל שדות חובה וניקוי תיקונים!');
+    // עובדת לשלב 2: תפירת פאה (בשרת מוגדר כ'תפירה')
+    await User.create({ 
+        username: 'ליפשי', 
+        fullName: 'ליפשי (תפירה)', 
+        password: hashedPassword, 
+        role: 'Worker', 
+        specialty: 'תפירה' 
+    });
+
+    // עובדת לשלב 3: צבע
+    await User.create({ 
+        username: 'הודיה', 
+        fullName: 'הודיה (צבע)', 
+        password: hashedPassword, 
+        role: 'Worker', 
+        specialty: 'צבע' 
+    });
+
+    // עובדת לשלב 4: עבודת יד
+    await User.create({ 
+        username: 'מירי', 
+        fullName: 'מירי (עבודת יד)', 
+        password: hashedPassword, 
+        role: 'Worker', 
+        specialty: 'עבודת יד' 
+    });
+
+    // עובדת לשלב 5: חפיפה
+    await User.create({ 
+        username: 'תמי', 
+        fullName: 'תמי (חפיפה)', 
+        password: hashedPassword, 
+        role: 'Worker', 
+        specialty: 'חפיפה' 
+    });
+    
+    // עובדת לשלב 6: בקרה (בשרת מוגדר כ'בקרת איכות')
+    await User.create({ 
+        username: 'רחלי', 
+        fullName: 'רחלי (בקרה)', 
+        password: hashedPassword, 
+        role: 'Worker', 
+        specialty: 'בקרת איכות' 
+    });
+
+    // 3. יצירת מנהל מערכת
+    await User.create({ 
+        username: 'admin', 
+        fullName: 'מנהל המערכת', 
+        password: hashedPassword, 
+        role: 'Admin', 
+        specialty: 'ניהול' 
+    });
+
+    console.log('\n✅ הנתונים עודכנו בהצלחה!');
+    console.log('🚀 כעת ניתן לפתוח הזמנות חדשות ולהעביר אותן בכל שלבי הייצור.');
     process.exit(0);
   } catch (error) {
-    console.error('❌ שגיאה במהלך הרצת ה-Seed:', error);
+    console.error('❌ שגיאה בהרצת ה-Seed:', error);
     process.exit(1);
   }
 };
