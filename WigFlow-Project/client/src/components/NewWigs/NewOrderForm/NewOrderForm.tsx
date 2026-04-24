@@ -6,6 +6,7 @@ import { SignaturePad } from '../../Shared/SignaturePad';
 import { InternalNoteBox } from '../../InternalNoteBox/InternalNoteBox'; 
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import ziliLogo from '../../../assets/images/zili-logo.png';
 import './NewOrderForm.css';
 
 // הגדרת בסיס הכתובת לשרת
@@ -61,11 +62,7 @@ export const NewOrderForm: React.FC = () => {
   
   const { register, handleSubmit, watch, setValue } = useForm<NewOrderFormInputs>();
   
-  const searchValue = watch("customerSearch");
-  const selectedHairType = watch('hairType');
-  const selectedTopConstruction = watch('topConstruction');
-  const selectedNetSize = watch('netSize');
-  const selectedFinalStyle = watch('finalStyle');
+  const searchValue = watch('customerSearch');
 
   const REQUIRED_STAGES = [
     { name: 'התאמת שיער', specialty: 'התאמת שיער' },
@@ -325,56 +322,158 @@ export const NewOrderForm: React.FC = () => {
   return (
     <div className="new-order-container" dir="rtl">
       
-      {/* תבנית נסתרת מושלמת ליצירת ה-PDF - מותאמת לגודל A4 */}
+      {/* תבנית נסתרת מושלמת ליצירת ה-PDF - עיצוב יוקרתי */}
       {savedWigData && (
         <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -100, opacity: 0, pointerEvents: 'none' }}>
-          <div id="pdf-receipt-content" style={{ width: '210mm', minHeight: '297mm', padding: '40px', background: 'white', color: 'black', direction: 'rtl', fontFamily: 'Arial, sans-serif' }}>
+          <div id="pdf-receipt-content" style={{ 
+            width: '794px', 
+            minHeight: '1123px', 
+            padding: '40px', 
+            background: 'white', 
+            color: '#4a4a4a', 
+            direction: 'rtl', 
+            fontFamily: "'Heebo', 'Assistant', 'Arial', sans-serif",
+            boxSizing: 'border-box'
+          }}>
             
-            <div style={{ textAlign: 'center', borderBottom: '3px solid #2c3e50', paddingBottom: '20px', marginBottom: '20px' }}>
-              <h1 style={{ margin: 0, color: '#2c3e50', fontSize: '2.5rem' }}>WigFlow - Tzili Landaman</h1>
-              <h2 style={{ margin: '10px 0', color: '#7f8c8d' }}>תיעוד עסקת הזמנת פאה</h2>
-              <p style={{ margin: 0, fontSize: '1.2rem' }}>תאריך העסקה: {new Date().toLocaleDateString('he-IL')}</p>
-              <p style={{ margin: '5px 0 0 0', fontSize: '1.2rem', fontWeight: 'bold' }}>קוד הזמנה: {savedWigData.orderCode}</p>
+            {/* Header with Logo */}
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '40px', 
+              paddingBottom: '30px',
+              borderBottom: '1px solid #e8d7d8'
+            }}>
+              <img 
+                src={ziliLogo} 
+                alt="Zili Logo" 
+                style={{ 
+                  maxWidth: '180px', 
+                  height: 'auto', 
+                  marginBottom: '20px'
+                }} 
+              />
+              <h1 style={{ 
+                margin: '0 0 15px 0', 
+                color: '#5c3d3d', 
+                fontSize: '28px',
+                fontWeight: 600,
+                letterSpacing: '0.5px'
+              }}>תיעוד עסקת הזמנת פאה</h1>
+              <p style={{ 
+                margin: 0, 
+                color: '#999', 
+                fontSize: '13px',
+                fontWeight: 500,
+                letterSpacing: '0.3px'
+              }}>תאריך העסקה: {new Date().toLocaleDateString('he-IL')}</p>
             </div>
 
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '30px' }}>
-              <div style={{ flex: 1, border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-                <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginTop: 0 }}>👤 פרטי לקוחה</h3>
-                <p><strong>שם:</strong> {savedWigData.customerName}</p>
-                <p><strong>טלפון:</strong> {savedWigData.phoneNumber}</p>
+            {/* Customer Info Grid */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr 1fr', 
+              gap: '25px', 
+              marginBottom: '35px'
+            }}>
+              <div style={{ 
+                padding: '20px', 
+                background: '#fafafa',
+                borderRadius: '6px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}>
+                <h3 style={{ 
+                  margin: '0 0 15px 0', 
+                  color: '#5c3d3d', 
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.4px'
+                }}>פרטי הלקוחה</h3>
+                <p style={{ margin: '8px 0', fontSize: '13px' }}><span style={{ color: '#999' }}>שם:</span> <strong>{savedWigData.customerName}</strong></p>
+                <p style={{ margin: '8px 0', fontSize: '13px' }}><span style={{ color: '#999' }}>קוד הזמנה:</span> <strong>{savedWigData.orderCode}</strong></p>
+                <p style={{ margin: '8px 0', fontSize: '13px' }}><span style={{ color: '#999' }}>טלפון:</span> <strong>{savedWigData.phoneNumber}</strong></p>
               </div>
-              <div style={{ flex: 1, border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-                <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginTop: 0 }}>✂️ מפרט פאה עיקרי</h3>
-                <p><strong>סוג שיער:</strong> {savedWigData.hairType || 'לא נבחר'}</p>
-                <p><strong>סוג סקין:</strong> {savedWigData.topConstruction || 'לא נבחר'}</p>
-                <p><strong>עיצוב פרונט:</strong> {Array.isArray(savedWigData.frontStyle) ? savedWigData.frontStyle.join(', ') : savedWigData.frontStyle || 'לא נבחר'}</p>
+              
+              <div style={{ 
+                padding: '20px', 
+                background: '#fafafa',
+                borderRadius: '6px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+              }}>
+                <h3 style={{ 
+                  margin: '0 0 15px 0', 
+                  color: '#5c3d3d', 
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.4px'
+                }}>מפרט פאה</h3>
+                <p style={{ margin: '8px 0', fontSize: '13px' }}><span style={{ color: '#999' }}>סוג שיער:</span> <strong>{savedWigData.hairType || '—'}</strong></p>
+                <p style={{ margin: '8px 0', fontSize: '13px' }}><span style={{ color: '#999' }}>סוג בניה:</span> <strong>{savedWigData.topConstruction || '—'}</strong></p>
+                <p style={{ margin: '8px 0', fontSize: '13px' }}><span style={{ color: '#999' }}>עיצוב:</span> <strong>{savedWigData.finalStyle || '—'}</strong></p>
               </div>
             </div>
 
-            <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-              <h3 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginTop: 0 }}>👥 צוות ייצור ותאריכי יעד</h3>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'right' }}>
+            {/* Measurements Section */}
+            {savedWigData.measurements && (Object.values(savedWigData.measurements as any).some(v => v !== null)) && (
+              <div style={{ 
+                marginBottom: '35px',
+                padding: '20px',
+                background: '#f5e6e8',
+                borderRadius: '6px'
+              }}>
+                <h3 style={{ 
+                  margin: '0 0 15px 0', 
+                  color: '#5c3d3d', 
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  textTransform: 'uppercase'
+                }}>מידות ראש</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', fontSize: '12px' }}>
+                  {savedWigData.measurements.circumference && <p style={{ margin: 0 }}><span style={{ color: '#999' }}>היקף ראש:</span> <strong>{savedWigData.measurements.circumference} ס״מ</strong></p>}
+                  {savedWigData.measurements.napeLength && <p style={{ margin: 0 }}><span style={{ color: '#999' }}>אורך עורף:</span> <strong>{savedWigData.measurements.napeLength} ס״מ</strong></p>}
+                  {savedWigData.measurements.earToEar && <p style={{ margin: 0 }}><span style={{ color: '#999' }}>אוזן לאוזן:</span> <strong>{savedWigData.measurements.earToEar} ס״מ</strong></p>}
+                  {savedWigData.measurements.frontToBack && <p style={{ margin: 0 }}><span style={{ color: '#999' }}>פדחת לעורף:</span> <strong>{savedWigData.measurements.frontToBack} ס״מ</strong></p>}
+                </div>
+              </div>
+            )}
+
+            {/* Production Team Table */}
+            <div style={{ marginBottom: '35px' }}>
+              <h3 style={{ 
+                margin: '0 0 15px 0', 
+                color: '#5c3d3d', 
+                fontSize: '14px',
+                fontWeight: 600,
+                textTransform: 'uppercase'
+              }}>צוות ייצור</h3>
+              <table style={{ 
+                width: '100%', 
+                borderCollapse: 'collapse', 
+                textAlign: 'right',
+                fontSize: '12px'
+              }}>
                 <thead>
-                  <tr style={{ background: '#f8f9fa' }}>
-                    <th style={{ padding: '8px', borderBottom: '2px solid #ddd' }}>שלב</th>
-                    <th style={{ padding: '8px', borderBottom: '2px solid #ddd' }}>עובדת משובצת</th>
-                    <th style={{ padding: '8px', borderBottom: '2px solid #ddd' }}>תאריך יעד לסיום</th>
+                  <tr style={{ background: '#f5e6e8' }}>
+                    <th style={{ padding: '12px', color: '#5c3d3d', fontWeight: 600, borderBottom: '1px solid #d8c6c7' }}>שלב ייצור</th>
+                    <th style={{ padding: '12px', color: '#5c3d3d', fontWeight: 600, borderBottom: '1px solid #d8c6c7' }}>עובדת משובצת</th>
+                    <th style={{ padding: '12px', color: '#5c3d3d', fontWeight: 600, borderBottom: '1px solid #d8c6c7' }}>תאריך יעד</th>
                   </tr>
                 </thead>
                 <tbody>
                   {REQUIRED_STAGES.map(stage => {
                     const assignedWorkersIds = savedWigData.stageAssignments?.[stage.name] || [];
-                    const assignedNames = assignedWorkersIds.map((id: string) => workers.find(w => w._id === id)?.username).join(', ');
+                    const assignedNames = assignedWorkersIds.map((id: string) => workers.find(w => w._id === id)?.username).filter(Boolean).join(', ') || '—';
                     const deadline = savedWigData.stageDeadlines?.[stage.name];
-                    const formattedDeadline = deadline ? new Date(deadline).toLocaleDateString('he-IL') : 'לא נקבע';
+                    const formattedDeadline = deadline ? new Date(deadline).toLocaleDateString('he-IL') : '—';
 
                     if(assignedWorkersIds.length === 0) return null;
 
                     return (
-                      <tr key={stage.name}>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}><strong>{stage.name}</strong></td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #eee' }}>{assignedNames || 'לא שובץ'}</td>
-                        <td style={{ padding: '8px', borderBottom: '1px solid #eee', color: '#d32f2f', fontWeight: 'bold' }}>{formattedDeadline}</td>
+                      <tr key={stage.name} style={{ borderBottom: '1px solid #f0e8e9' }}>
+                        <td style={{ padding: '10px 12px', color: '#5c3d3d', fontWeight: 500 }}>{stage.name}</td>
+                        <td style={{ padding: '10px 12px' }}>{assignedNames}</td>
+                        <td style={{ padding: '10px 12px', color: '#d8676d', fontWeight: 500 }}>{formattedDeadline}</td>
                       </tr>
                     )
                   })}
@@ -382,37 +481,77 @@ export const NewOrderForm: React.FC = () => {
               </table>
             </div>
 
-            <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px', background: '#f8f9fa', textAlign: 'center' }}>
-              <h3 style={{ margin: '0 0 10px 0' }}>💳 סיכום תשלום</h3>
-              <p style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#27ae60', margin: 0 }}>סה"כ לתשלום: ₪{savedWigData.price || 'לא הוזן'}</p>
+            {/* Price Summary */}
+            <div style={{ 
+              marginBottom: '35px',
+              padding: '20px',
+              background: '#f5e6e8',
+              borderRadius: '6px',
+              textAlign: 'center'
+            }}>
+              <p style={{ margin: '0 0 10px 0', color: '#999', fontSize: '12px', textTransform: 'uppercase' }}>סך הכול</p>
+              <p style={{ fontSize: '26px', fontWeight: 600, color: '#5c3d3d', margin: 0 }}>₪{savedWigData.price || '—'}</p>
             </div>
 
-            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              {savedWigData.imageUrl && (
-                <div style={{ flex: 1, textAlign: 'center', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-                  <h4 style={{ marginTop: 0 }}>תמונת הלקוחה</h4>
-                  <img src={savedWigData.imageUrl} alt="Customer" style={{ width: '150px', height: '150px', objectFit: 'cover', borderRadius: '8px' }} />
-                </div>
-              )}
-              {savedWigData.customerSignature && (
-                <div style={{ flex: 1, textAlign: 'center', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-                  <h4 style={{ marginTop: 0 }}>חתימת הלקוחה לאישור</h4>
-                  <img src={savedWigData.customerSignature} alt="Signature" style={{ maxHeight: '100px', maxWidth: '100%' }} />
-                </div>
-              )}
+            {/* Images Section */}
+            {(savedWigData.imageUrl || savedWigData.customerSignature) && (
+              <div style={{ 
+                marginBottom: '30px',
+                display: 'grid',
+                gridTemplateColumns: savedWigData.imageUrl && savedWigData.customerSignature ? '1fr 1fr' : '1fr',
+                gap: '20px'
+              }}>
+                {savedWigData.imageUrl && (
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 10px 0', color: '#5c3d3d', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>תמונת לקוחה</p>
+                    <img src={savedWigData.imageUrl} alt="Customer" style={{ 
+                      width: '100%', 
+                      maxWidth: '150px', 
+                      height: 'auto', 
+                      objectFit: 'cover', 
+                      borderRadius: '4px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+                    }} />
+                  </div>
+                )}
+                {savedWigData.customerSignature && (
+                  <div style={{ textAlign: 'center' }}>
+                    <p style={{ margin: '0 0 10px 0', color: '#5c3d3d', fontSize: '12px', fontWeight: 600, textTransform: 'uppercase' }}>חתימת לקוחה</p>
+                    <img src={savedWigData.customerSignature} alt="Signature" style={{ 
+                      maxHeight: '80px', 
+                      maxWidth: '100%',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+                    }} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer */}
+            <div style={{ 
+              borderTop: '1px solid #e8d7d8',
+              paddingTop: '20px',
+              marginTop: 'auto',
+              textAlign: 'center',
+              fontSize: '11px',
+              color: '#999'
+            }}>
+              <p style={{ margin: '5px 0' }}>צילי לנדמן — פיאות יוקרתיות</p>
+              <p style={{ margin: '5px 0' }}>☎️ 050-123-4567 | 📍 תל אביב</p>
+              <p style={{ margin: '10px 0 0 0', fontSize: '10px', color: '#ccc' }}>© Zili Landaman Wigs | WigFlow System</p>
             </div>
 
           </div>
         </div>
       )}
 
-      <h1 className="form-title">WigFlow - {isRepairFlow ? 'רישום לקוחה לתיקון' : 'הזמנת פאה חדשה'}</h1>
+      <h1 className="form-title">zili — {isRepairFlow ? 'רישום לקוחה לתיקון' : 'הזמנת פאה חדשה'}</h1>
 
       {step === 1 && (
         <div className="search-section animate-in">
           <h3>שלב 1: זיהוי לקוחה</h3>
           <div className="search-box">
-            <input {...register('customerSearch')} placeholder="תעודת זהות או שם מלא (למשל: רחל כהן)..." className="form-input" />
+            <input {...register('customerSearch')} placeholder="תעודת זהות או שם מלא..." className="form-input" />
             <button type="button" onClick={handleCustomerSearch} className="btn-search" disabled={loading}>
               {loading ? 'מחפש...' : 'חפשי לקוחה'}
             </button>
@@ -424,7 +563,7 @@ export const NewOrderForm: React.FC = () => {
         
         {step === 2 && (
           <fieldset className="form-section animate-in">
-            <legend>שלב 2: רישום לקוחה חדשה</legend>
+            <div className="section-subtitle">שלב 2 — רישום לקוחה חדשה</div>
             <div className="form-grid">
               <input className="form-input" {...register('firstName', { required: true })} placeholder="שם פרטי *" />
               <input className="form-input" {...register('lastName', { required: true })} placeholder="שם משפחה *" />
@@ -441,7 +580,6 @@ export const NewOrderForm: React.FC = () => {
 
         {step === 3 && (
           <fieldset className="form-section animate-in">
-            <legend>שלב 3: מפרט הפאה (מידות ועיצוב)</legend>
             
             {customer && (
               <div className="customer-banner">
@@ -450,17 +588,16 @@ export const NewOrderForm: React.FC = () => {
               </div>
             )}
 
-            <div className="barcode-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-              <h3 style={{ marginBottom: '10px' }}>קוד זיהוי פאה *</h3>
-              <input 
-                className="form-input" 
-                style={{ textAlign: 'center', fontSize: '1.2rem', fontWeight: 'bold', maxWidth: '300px', letterSpacing: '2px' }}
-                placeholder="הקלידי קוד פאה (למשל: WIG-555)" 
-                {...register('orderCode', { required: true })} 
+            <div className="barcode-container">
+              <h3>קוד זיהוי פאה *</h3>
+              <input
+                className="form-input"
+                placeholder="הקלידי קוד פאה (למשל: WIG-555)"
+                {...register('orderCode', { required: true })}
               />
             </div>
 
-            <h4 className="section-subtitle">📏 מידות ראש </h4>
+            <div className="section-subtitle">מידות ראש</div>
             <div className="form-grid">
               <input type="number" step="0.1" className="form-input" {...register('circumference')} placeholder="היקף ראש (ס״מ)" />
               <input type="number" step="0.1" className="form-input" {...register('napeLength')} placeholder="אורך עורף (ס״מ)" />
@@ -468,131 +605,97 @@ export const NewOrderForm: React.FC = () => {
               <input type="number" step="0.1" className="form-input" {...register('frontToBack')} placeholder="פדחת לעורף (ס״מ)" />
             </div>
 
-            <h4 className="section-subtitle">⚙️ מפרט טכני ועיצוב</h4>
+            <div className="section-subtitle">מפרט טכני ועיצוב</div>
             <div className="form-grid">
-              <select className="form-input" style={{ color: !selectedHairType ? '#757575' : '#000' }} defaultValue="" {...register('hairType', { required: true })}>
-                <option value="" disabled hidden>סוג שיער </option>
-                <option value="חלק" style={{ color: '#000' }}>חלק</option>
-                <option value="שיער תנועתי" style={{ color: '#000' }}>שיער תנועתי</option>
-                <option value="שיער גלי" style={{ color: '#000' }}>שיער גלי</option>
-                <option value="מתולתל" style={{ color: '#000' }}>מתולתל</option>
+              <select className="form-input" defaultValue="" {...register('hairType', { required: true })}>
+                <option value="" disabled hidden>סוג שיער</option>
+                <option>חלק</option>
+                <option>שיער תנועתי</option>
+                <option>שיער גלי</option>
+                <option>מתולתל</option>
+              </select>
+
+              <select className="form-input" defaultValue="" {...register('topConstruction', { required: true })}>
+                <option value="" disabled hidden>סוג סקין</option>
+                <option>סקין</option>
+                <option>שבלול</option>
+                <option>לייסטופ</option>
+                <option>לייס פרונט</option>
+                <option>דיפ לייס</option>
               </select>
               
-              <select className="form-input" style={{ color: !selectedTopConstruction ? '#757575' : '#000' }} defaultValue="" {...register('topConstruction', { required: true })}>
-                <option value="" disabled hidden>סוג סקין </option>
-                <option value="סקין" style={{ color: '#000' }}>סקין</option>
-                <option value="שבלול" style={{ color: '#000' }}>שבלול</option>
-                <option value="לייסטופ" style={{ color: '#000' }}>לייסטופ</option>
-                <option value="לייס פרונט" style={{ color: '#000' }}>לייס פרונט</option>
-                <option value="דיפ לייס" style={{ color: '#000' }}>דיפ לייס</option>
-              </select>
-              
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <select className="form-input" style={{ color: !watch('baseColor') ? '#a9a9a9' : '#000', flex: 1 }} defaultValue="" {...register('baseColor')}>
-                  <option value="" disabled hidden style={{ color: '#a9a9a9' }}>צבע בסיס</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
+              <div className="color-pair">
+                <select className="form-input" defaultValue="" {...register('baseColor')}>
+                  <option value="" disabled hidden>צבע בסיס</option>
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(n => <option key={n} value={String(n)}>{n}</option>)}
                 </select>
-                
-                <input className="form-input" style={{ flex: 1 }} {...register('highlights')} placeholder="גוונים (למשל: 10-12)" />
+                <input className="form-input" {...register('highlights')} placeholder="גוונים (למשל: 10-12)" />
               </div>
               
-              <select className="form-input" style={{ color: !selectedNetSize ? '#757575' : '#000' }} defaultValue="" {...register('netSize', { required: true })}>
-                <option value="" disabled hidden>מידת רשת </option>
-                <option value="XS" style={{ color: '#000' }}>XS</option>
-                <option value="S" style={{ color: '#000' }}>S</option>
-                <option value="M" style={{ color: '#000' }}>M</option>
-                <option value="L" style={{ color: '#000' }}>L</option>
-                <option value="XL" style={{ color: '#000' }}>XL</option>
+              <select className="form-input" defaultValue="" {...register('netSize', { required: true })}>
+                <option value="" disabled hidden>מידת רשת</option>
+                <option>XS</option>
+                <option>S</option>
+                <option>M</option>
+                <option>L</option>
+                <option>XL</option>
               </select>
             </div>
 
-          <h4 className="section-subtitle">🎨 עיצוב וגימור</h4>
+            <div className="section-subtitle">עיצוב וגימור</div>
             <div className="form-grid">
-              
-              <div className="form-input" style={{ display: 'flex', flexDirection: 'column', gap: '8px', height: 'auto', padding: '15px' }}>
-                <span style={{ fontWeight: 'bold', color: '#555', marginBottom: '5px' }}>עיצוב פרונט </span>
-                {[
-                  'ע"י רגילה שטוחה',
-                  'בייבי הייר קל',
-                  'בייבי הייר כבד',
-                  'פוני צד',
-                  'פוני בובה'
-                ].map(option => (
-                  <label key={option} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <input 
-                      type="checkbox" 
-                      value={option}
-                      {...register('frontStyle', { required: true })} 
-                      style={{ transform: 'scale(1.2)' }}
-                    />
+              <div className="front-style-box">
+                <span className="box-label">עיצוב פרונט</span>
+                {['ע"י רגילה שטוחה','בייבי הייר קל','בייבי הייר כבד','פוני צד','פוני בובה'].map(option => (
+                  <label key={option} className="checkbox-row">
+                    <input type="checkbox" value={option} {...register('frontStyle', { required: true })} />
                     {option}
                   </label>
                 ))}
               </div>
               
-             <select className="form-input" style={{ color: !selectedFinalStyle ? '#757575' : '#000', alignSelf: 'start' }} defaultValue="" {...register('finalStyle', { required: true })}>
+              <select className="form-input select-inline" defaultValue="" {...register('finalStyle', { required: true })}>
                 <option value="" disabled hidden>סוג סירוק</option>
-                <option value="חלק" style={{ color: '#000' }}>חלק</option>
-                <option value="מוברש" style={{ color: '#000' }}>מוברש</option>
-                <option value="גלי" style={{ color: '#000' }}>גלי</option>
-                <option value="תלתלים" style={{ color: '#000' }}>תלתלים</option>
-                <option value="בייביליס" style={{ color: '#000' }}>בייביליס</option>
-                <option value="יבוש טבעי" style={{ color: '#000' }}>יבוש טבעי</option>
+                <option>חלק</option>
+                <option>מוברש</option>
+                <option>גלי</option>
+                <option>תלתלים</option>
+                <option>בייביליס</option>
+                <option>יבוש טבעי</option>
               </select>
               
               <textarea className="form-input full-width" {...register('specialNotes')} placeholder="הערות מיוחדות..."></textarea>
             </div>
 
-            <h4 className="section-subtitle highlight">👤 שיבוץ צוות (ניתן לבחור כמה עובדות לכל שלב)</h4>
+            <div className="section-subtitle">שיבוץ צוות</div>
             <div className="form-grid">
               {REQUIRED_STAGES.map(stage => {
                 const stageWorkers = workers.filter(w => w.specialty === stage.specialty);
                 return (
-                  <div className="input-group" key={stage.name} style={{ border: '1px solid #eee', padding: '10px', borderRadius: '8px', backgroundColor: '#fafafa', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                      <label className="input-label" style={{ fontWeight: 'bold', marginBottom: '10px', display: 'block' }}>
-                        {stage.name} {stage.name === 'התאמת שיער' && '*'}
-                      </label>
-                      
-                      {stageWorkers.length === 0 ? (
-                        <span style={{ fontSize: '0.85rem', color: '#e74c3c' }}>אין עובדות זמינות להתמחות זו</span>
-                      ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          {stageWorkers.map(w => (
-                            <label key={w._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.95rem' }}>
-                              <input
-                                type="checkbox"
-                                checked={(plannedAssignments[stage.name] || []).includes(w._id)}
-                                onChange={() => toggleWorkerForStage(stage.name, w._id)}
-                                style={{ transform: 'scale(1.2)' }}
-                              />
-                              {w.fullName || w.username}
-                            </label>
-                          ))}
-                        </div>
-                      )}
+                  <div className="stage-card" key={stage.name}>
+                    <div className="stage-card-title">
+                      {stage.name}{stage.name === 'התאמת שיער' && ' *'}
                     </div>
-
-                    {stageWorkers.length > 0 && (
-                      <div style={{ marginTop: '15px', borderTop: '1px dashed #ccc', paddingTop: '10px' }}>
-                        <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#555', display: 'block', marginBottom: '5px' }}>
-                          📅 תאריך יעד לשלב:
+                    {stageWorkers.length === 0 ? (
+                      <span className="stage-no-workers">אין עובדות זמינות</span>
+                    ) : (
+                      stageWorkers.map(w => (
+                        <label key={w._id} className="stage-worker-row">
+                          <input
+                            type="checkbox"
+                            checked={(plannedAssignments[stage.name] || []).includes(w._id)}
+                            onChange={() => toggleWorkerForStage(stage.name, w._id)}
+                          />
+                          {w.fullName || w.username}
                         </label>
+                      ))
+                    )}
+                    {stageWorkers.length > 0 && (
+                      <div className="stage-deadline">
+                        <label>תאריך יעד לשלב</label>
                         <input
                           type="date"
                           className="form-input"
-                          style={{ padding: '6px', fontSize: '0.9rem', width: '100%', borderColor: '#ddd' }}
                           value={stageDeadlines[stage.name] || ''}
                           onChange={(e) => setStageDeadlines({ ...stageDeadlines, [stage.name]: e.target.value })}
                         />
@@ -603,49 +706,40 @@ export const NewOrderForm: React.FC = () => {
               })}
             </div>
 
-            <h4 className="section-subtitle">💳 תשלום</h4>
+            <div className="section-subtitle">תשלום</div>
             <div className="form-grid">
               <input type="number" className="form-input" {...register('price', { required: true })} placeholder="מחיר סופי *" />
               <input type="number" className="form-input" {...register('advancePayment')} placeholder="מקדמה" />
             </div>
 
-            <h4 className="section-subtitle">📸 תמונת לקוחה (תשולב במסמך העסקה)</h4>
-            <div className="camera-container" style={{ border: '2px dashed #ccc', padding: '20px', borderRadius: '8px', textAlign: 'center', marginBottom: '20px' }}>
+            <div className="section-subtitle">תמונת לקוחה</div>
+            <div className="camera-container">
               {!isCameraOpen && !capturedImage && (
-                <button type="button" onClick={startCamera} style={{ padding: '10px 20px', fontSize: '1rem', cursor: 'pointer', backgroundColor: '#e3f2fd', border: '1px solid #2196f3', borderRadius: '5px' }}>
-                  פתח מצלמה וצלם לקוחה 📷
+                <button type="button" className="btn-secondary" onClick={startCamera}>
+                  פתח מצלמה וצלם לקוחה
                 </button>
               )}
-
               {isCameraOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-                  <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxWidth: '400px', borderRadius: '8px', border: '2px solid #333' }}></video>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button type="button" onClick={capturePhoto} style={{ padding: '10px 20px', fontSize: '1rem', cursor: 'pointer', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '5px' }}>
-                      צלם תמונה 📸
-                    </button>
-                    <button type="button" onClick={stopCamera} style={{ padding: '10px 20px', fontSize: '1rem', cursor: 'pointer', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '5px' }}>
-                      בטל מצלמה
-                    </button>
+                <div className="camera-preview">
+                  <video ref={videoRef} autoPlay playsInline />
+                  <div className="neworder-camera-btns">
+                    <button type="button" className="btn-capture" onClick={capturePhoto}>צלם תמונה</button>
+                    <button type="button" className="btn-close-cam" onClick={stopCamera}>בטל</button>
                   </div>
                 </div>
               )}
-
               {capturedImage && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-                  <p style={{ color: '#4caf50', fontWeight: 'bold' }}>✓ התמונה צולמה בהצלחה</p>
-                  <img src={capturedImage} alt="Customer" style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', border: '2px solid #4caf50' }} />
-                  <button type="button" onClick={retakePhoto} style={{ padding: '8px 15px', fontSize: '0.9rem', cursor: 'pointer', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '5px' }}>
-                    צלם מחדש 🔄
-                  </button>
+                <div className="captured-preview">
+                  <span className="capture-success">✓ התמונה צולמה בהצלחה</span>
+                  <img src={capturedImage} alt="Customer" />
+                  <button type="button" className="btn-secondary" onClick={retakePhoto}>צלם מחדש</button>
                 </div>
               )}
-
-              <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
             </div>
 
             <div className="signature-container">
-              <h4>חתימת לקוחה לאישור:</h4>
+              <h4>חתימת לקוחה לאישור</h4>
               <SignaturePad onSave={(sig) => setSignatureData(sig)} />
               {signatureData && <div className="sig-status">✓ החתימה נשמרה</div>}
             </div>
@@ -667,28 +761,23 @@ export const NewOrderForm: React.FC = () => {
         )}
       </form>
 
-      {/* מסך סיכום הצלחה */}
       {savedWigData && !loading && (
         <div className="sticker-overlay animate-in">
           <div className="print-sticker">
-            <div className="sticker-header">WigFlow - העסקה נקלטה!</div>
-            
-            <div className="sticker-content" style={{ textAlign: 'center' }}>
-              <h3 style={{ color: '#27ae60' }}>{pdfStatus}</h3>
+            <div className="sticker-header">zili — העסקה נקלטה</div>
+            <div className="sticker-content">
+              <h3>{pdfStatus}</h3>
               <p>לקוחה: {savedWigData.customerName}</p>
               <p>קוד הזמנה: <strong>{savedWigData.orderCode}</strong></p>
             </div>
-            
-            <div className="sticker-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
-              <button className="btn-close" style={{ flex: 1, backgroundColor: '#34495e' }} onClick={() => navigate('/dashboard')}>
+            <div className="sticker-actions">
+              <button className="btn-close" style={{ background: 'var(--zili-deep)', color: 'white' }} onClick={() => navigate('/dashboard')}>
                 מעבר לדאשבורד
               </button>
-              
-              <button className="btn-close" style={{ flex: 1, backgroundColor: '#2ecc71' }} onClick={() => window.location.reload()}>
-                התחלת קבלה חדשה
+              <button className="btn-close" style={{ background: 'var(--zili-success)', color: 'white' }} onClick={() => window.location.reload()}>
+                קבלה חדשה
               </button>
             </div>
-
           </div>
         </div>
       )}

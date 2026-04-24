@@ -104,16 +104,18 @@ export const MainOverviewTable: React.FC = () => {
 
   return (
     <div className="overview-container">
-      <h2 className="overview-title">📋 סקירה כללית - ניהול פאות ותיקונים</h2>
+      <div className="overview-header">
+        <h2>סקירה כללית — פאות ותיקונים</h2>
+        {!loading && <span className="overview-count">{wigs.length} פריטים</span>}
+      </div>
 
-     
       {wigToDelete && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal-content">
-            <h3 style={{color: 'red'}}>⚠️ אזהרה: מחיקה לצמיתות</h3>
-            <p>הזן קוד מנהל (123456) כדי למחוק:</p>
-            <input 
-              type="text" 
+        <div className="zili-modal-overlay">
+          <div className="zili-modal">
+            <h3>⚠️ מחיקה לצמיתות</h3>
+            <p>הזן קוד מנהל כדי לאשר את המחיקה</p>
+            <input
+              type="text"
               className="admin-code-input"
               value={adminCode}
               onChange={(e) => setAdminCode(e.target.value)}
@@ -121,19 +123,20 @@ export const MainOverviewTable: React.FC = () => {
               autoFocus
             />
             <div className="admin-modal-actions">
-              <button className="btn-confirm-delete" onClick={confirmDelete} disabled={isDeleting}>
+              <button className="btn-danger" onClick={confirmDelete} disabled={isDeleting}>
                 {isDeleting ? 'מוחק...' : 'אשר מחיקה'}
               </button>
-              <button className="btn-cancel-delete" onClick={cancelDelete}>ביטול</button>
+              <button className="btn-secondary" onClick={cancelDelete}>ביטול</button>
             </div>
           </div>
         </div>
       )}
 
       {loading ? (
-        <p>טוען נתונים...</p>
+        <div className="loading-state">טוען נתונים...</div>
       ) : (
-        <table className="overview-table">
+        <div className="zili-table-wrapper">
+        <table className="zili-table">
           <thead>
             <tr>
               <th>קוד</th>
@@ -142,27 +145,32 @@ export const MainOverviewTable: React.FC = () => {
               <th>תחנה</th>
               <th>עובדת</th>
               <th>דחיפות</th>
-              <th>מחיקה</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {wigs.map((wig) => (
               <tr key={wig._id}>
-                <td>{wig.wigCode}</td>
+                <td><strong>{wig.wigCode}</strong></td>
                 <td>{wig.customerName}</td>
-                <td><span className="badge-stage">{wig.overallStatus}</span></td>
+                <td><span className="badge badge-stage">{wig.overallStatus}</span></td>
                 <td>{wig.currentStation}</td>
                 <td>{renderWorkers(wig)}</td>
-                <td>{wig.isUrgent ? '🔴 דחוף' : '🟢 רגיל'}</td>
                 <td>
-                  <button className="btn-delete-wig" onClick={() => handleDeleteClick(wig._id)}>
-                    🗑️
+                  <span className={wig.isUrgent ? 'badge badge-urgent' : 'badge badge-normal'}>
+                    {wig.isUrgent ? 'דחוף' : 'רגיל'}
+                  </span>
+                </td>
+                <td>
+                  <button className="btn-delete-wig" onClick={() => handleDeleteClick(wig._id)} title="מחיקה">
+                    ✕
                   </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

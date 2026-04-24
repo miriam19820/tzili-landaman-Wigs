@@ -1,260 +1,344 @@
-/* מבנה הכרטיסייה */
+/* ===== TaskItem ===== */
+
 .task-card {
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-    transition: transform 0.2s, box-shadow 0.2s;
-    direction: rtl;
-    overflow: hidden; /* מונע מדברים לפרוץ החוצה */
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  background: var(--zili-white);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  box-shadow: var(--zili-shadow);
+  transition: box-shadow 0.2s, transform 0.15s;
+  direction: rtl;
+  overflow: hidden;
 }
 
 .task-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+  box-shadow: var(--zili-shadow-lg);
+  transform: translateY(-2px);
 }
 
 .urgent-card {
-    border: 2px solid #fca5a5;
-    background-color: #fef2f2;
+  border-right: 4px solid var(--zili-danger);
+  background: #fff9f9;
 }
 
-/* אזור התמונה */
+.rejection-border {
+  border-right: 4px solid var(--zili-warning);
+}
+
+/* ===== Image ===== */
 .task-image-container {
-    flex-shrink: 0;
-    width: 140px;
-    height: 140px;
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 1.5px solid var(--zili-border);
 }
 
 .task-thumbnail {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
 }
-
-.task-image-container:hover .task-thumbnail {
-    transform: scale(1.05);
-}
+.task-image-container:hover .task-thumbnail { transform: scale(1.05); }
 
 .zoom-hint {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0,0,0,0.6);
-    color: white;
-    text-align: center;
-    font-size: 12px;
-    padding: 4px;
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(61, 43, 46, 0.6);
+  color: white;
+  text-align: center;
+  font-size: 11px;
+  padding: 4px;
+  letter-spacing: 0.3px;
 }
 
-/* תוכן הכרטיסייה */
+/* ===== Content ===== */
 .task-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0; /* קריטי כדי למנוע חריגת טקסט */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
 }
 
+/* ===== Header ===== */
 .task-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    border-bottom: 2px solid #f1f5f9;
-    padding-bottom: 12px;
-    gap: 12px;
-    flex-wrap: wrap; /* מאפשר לשורת הכותרת לרדת שורה אם צפוף */
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--zili-blush);
+  padding-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .task-titles {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .task-titles h3 {
-    margin: 0;
-    font-size: 20px;
-    color: #1e293b;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--zili-deep);
+  font-weight: 600;
 }
 
-.arrow {
-    color: #94a3b8;
-    font-size: 18px;
+.arrow { color: var(--zili-muted); }
+
+/* ===== Badges ===== */
+.type-badge-new {
+  background: var(--zili-blush);
+  color: var(--zili-deep);
+  border: 1px solid var(--zili-border);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.type-badge-repair {
+  background: #fff3e0;
+  color: var(--zili-warning);
+  border: 1px solid #ffe0b2;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .urgent-badge {
-    background-color: #ef4444;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    white-space: nowrap;
+  background: #fde8ea;
+  color: var(--zili-danger);
+  border: 1px solid #f5c6cb;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
+.re-work-badge {
+  background: #fff3e0;
+  color: var(--zili-warning);
+  border: 1px solid #ffe0b2;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ===== Meta Pills ===== */
 .task-meta {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap; /* חשוב למסכים צרים */
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.wig-code-pill, .customer-name-pill {
-    background-color: #f1f5f9;
-    color: #334155;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: bold;
-    border: 1px solid #e2e8f0;
-    white-space: nowrap;
+.wig-code-pill {
+  background: var(--zili-warm);
+  color: var(--zili-deep);
+  border: 1px solid var(--zili-border);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  white-space: nowrap;
 }
 
-/* אזור הערות */
+.customer-name-pill {
+  background: var(--zili-blush);
+  color: var(--zili-deep);
+  border: 1px solid var(--zili-border);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ===== Detail Boxes ===== */
 .task-details-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .detail-box {
-    padding: 12px 16px;
-    border-radius: 10px;
-    font-size: 15px;
-    line-height: 1.5;
-    word-break: break-word; /* שובר מילים ארוכות כדי שלא יפרצו */
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  line-height: 1.5;
+  word-break: break-word;
+  border-right: 3px solid transparent;
 }
 
 .detail-box p {
-    margin: 6px 0 0 0;
-    white-space: pre-line;
+  margin: 5px 0 0;
+  white-space: pre-line;
 }
 
 .deadline-box {
-    background-color: #f8fafc;
-    border-right: 4px solid #94a3b8;
+  background: var(--zili-warm);
+  border-right-color: var(--zili-border);
+  color: var(--zili-text);
 }
 
 .general-note-box {
-    background-color: #fffbeb;
-    border-right: 4px solid #f59e0b;
-    color: #78350f;
+  background: #fffbf0;
+  border-right-color: var(--zili-warning);
+  color: var(--zili-text);
 }
 
 .specific-note-box {
-    background-color: #eff6ff;
-    border-right: 4px solid #3b82f6;
-    color: #1e3a8a;
-    font-size: 16px;
+  background: var(--zili-blush);
+  border-right-color: var(--zili-rose);
+  color: var(--zili-deep);
 }
 
-/* כפתורים ופעולות */
+/* ===== QA Rejection ===== */
+.qa-rejection-box {
+  background: #fff3e0;
+  border-right-color: var(--zili-warning);
+}
+
+.qa-rejection-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--zili-warning);
+  margin-bottom: 8px;
+}
+
+.qa-rejection-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.qa-note-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--zili-text);
+  font-style: italic;
+  margin: 0;
+}
+
+.qa-thumbnail-wrapper {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1.5px solid var(--zili-border);
+}
+
+.qa-mini-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.zoom-hint-mini {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(61, 43, 46, 0.6);
+  color: white;
+  font-size: 9px;
+  text-align: center;
+  padding: 2px;
+}
+
+/* ===== Actions ===== */
 .task-actions {
-    margin-top: auto;
-    padding-top: 10px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 16px;
-    align-items: center;
-    flex-wrap: wrap; /* מאפשר לכפתורים לרדת שורה */
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .specs-btn {
-    background-color: #0ea5e9;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-    box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+  background: var(--zili-blush);
+  color: var(--zili-deep);
+  border: 1.5px solid var(--zili-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-
-.specs-btn:hover { background-color: #0284c7; transform: translateY(-2px); }
+.specs-btn:hover { background: var(--zili-border); }
 
 .complete-btn {
-    background-color: #10b981;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, var(--zili-mauve), var(--zili-deep));
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 9px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
 }
+.complete-btn:hover    { opacity: 0.88; transform: translateY(-1px); }
+.complete-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-.complete-btn:hover { background-color: #059669; transform: translateY(-2px); }
-.complete-btn:disabled { background-color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
-
-/* חלון צף לתמונה */
+/* ===== Overlays ===== */
 .task-image-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background-color: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center;
-    z-index: 1000; cursor: pointer;
+  position: fixed;
+  inset: 0;
+  background: rgba(61, 43, 46, 0.88);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
 }
-.task-image-overlay img { max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
 
-/* ==============================================================
-   הקסם של המובייל! מתקן את כל הזוועה שהייתה בתמונה
-============================================================== */
+.task-image-overlay img {
+  max-width: 90%;
+  max-height: 90vh;
+  border-radius: var(--radius-md);
+  box-shadow: var(--zili-shadow-lg);
+}
+
+.qa-overlay { flex-direction: column; gap: 12px; }
+
+.qa-overlay-caption {
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(61, 43, 46, 0.6);
+  padding: 6px 16px;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
-    .task-card {
-        flex-direction: column; /* מסדר את התמונה מעל הטקסט במקום בצד */
-        padding: 16px;
-        gap: 16px;
-    }
-    
-    .task-image-container {
-        width: 100%;
-        height: 200px; /* תמונה רחבה ויפה למעלה */
-    }
-    
-    .task-header {
-        flex-direction: column; /* מסדר את הכותרות והשמות אחד תחת השני */
-        align-items: flex-start;
-    }
-
-    .task-titles h3 {
-        font-size: 18px; /* קצת מקטין פונט כדי שיכנס יפה */
-    }
-    
-    .task-meta {
-        width: 100%;
-    }
-
-    /* החלק הכי חשוב: מסדר את הכפתורים אחד מעל השני ברוחב מלא! */
-    .task-actions {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-        gap: 12px;
-    }
-
-    .specs-btn, .complete-btn {
-        width: 100%; /* כפתורים ברוחב מלא למובייל */
-        padding: 14px;
-        text-align: center;
-        font-size: 18px;
-    }
+  .task-card { flex-direction: column; padding: 16px; gap: 14px; }
+  .task-image-container { width: 100%; height: 180px; }
+  .task-header { flex-direction: column; align-items: flex-start; }
+  .task-actions { flex-direction: column; align-items: stretch; }
+  .specs-btn, .complete-btn { width: 100%; text-align: center; padding: 12px; }
 }

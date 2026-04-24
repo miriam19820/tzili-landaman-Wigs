@@ -1,60 +1,40 @@
-/* InternalNoteBox.css */
-
 .internal-note-container {
-    background-color: #fff3e0;
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 20px;
-    border: 1px solid #ffb74d;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  background: var(--zili-warm);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  margin-top: 20px;
 }
 
 .internal-note-title {
-    color: #e65100;
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--zili-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .internal-note-textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 12px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-family: inherit;
-    font-size: 0.95rem;
-    resize: vertical;
-    box-sizing: border-box; /* חשוב כדי שהפדינג לא יחרוג מהרוחב */
+  width: 100%;
+  min-height: 100px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--zili-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--zili-text);
+  background: var(--zili-white);
+  resize: vertical;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .internal-note-textarea:focus {
-    outline: none;
-    border-color: #ef6c00;
-    box-shadow: 0 0 0 2px rgba(239, 108, 0, 0.1);
-}
-
-.internal-note-button {
-    margin-top: 12px;
-    background-color: #ef6c00;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    width: 100%;
-}
-
-.internal-note-button:hover:not(:disabled) {
-    background-color: #e65100;
-}
-
-.internal-note-button:disabled {
-    background-color: #ffccbc;
-    cursor: not-allowed;
+  border-color: var(--zili-rose);
+  box-shadow: 0 0 0 3px rgba(212, 160, 167, 0.18);
 }

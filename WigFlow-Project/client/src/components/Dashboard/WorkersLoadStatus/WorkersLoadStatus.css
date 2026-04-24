@@ -1,61 +1,81 @@
+/* ===== WorkersLoadStatus ===== */
+
 .workers-container {
-  max-width: 1100px;
-  margin: 20px auto 30px;
-  padding: 30px;
-  direction: rtl;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--zili-white);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: var(--zili-shadow);
 }
 
 .workers-title {
-  text-align: center;
-  color: #6f42c1;
-  margin-bottom: 25px;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--zili-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--zili-border);
+  margin-bottom: 22px;
+  text-align: right;
 }
 
 .workers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
 }
 
 .worker-card {
-  background-color: #f8f5ff;
-  border: 1px solid #e0d4f7;
-  border-radius: 10px;
-  padding: 15px;
+  background: var(--zili-warm);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
   text-align: center;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.worker-card:hover {
+  box-shadow: var(--zili-shadow);
+  transform: translateY(-2px);
 }
 
 .worker-name {
-  font-weight: bold;
-  color: #6f42c1;
-  font-size: 16px;
-  margin-bottom: 5px;
+  font-weight: 700;
+  color: var(--zili-deep);
+  font-size: 15px;
+  margin-bottom: 4px;
 }
 
 .worker-specialty {
-  color: #6c757d;
-  font-size: 13px;
-  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--zili-muted);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .worker-count {
-  background-color: #6f42c1;
-  color: white;
-  border-radius: 20px;
-  padding: 4px 14px;
-  font-size: 14px;
-  font-weight: bold;
   display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.worker-count.busy {
+  background: var(--zili-blush);
+  color: var(--zili-deep);
+}
+
+.worker-count.free {
+  background: #e8f5ec;
+  color: var(--zili-success);
 }
 
 .loading-text {
   text-align: center;
-  color: #6c757d;
-  padding: 30px;
+  color: var(--zili-muted);
+  padding: 40px;
+  font-size: 14px;
 }

@@ -14,59 +14,47 @@ export const WorkersLoadStatus: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
-    
     Promise.all([
-      fetch('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()),
-      fetch('http://localhost:5000/api/wigs', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()),
-      fetch('http://localhost:5000/api/repairs/dashboard-view', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json())
+      fetch('http://localhost:5000/api/users', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch('http://localhost:5000/api/wigs', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch('http://localhost:5000/api/repairs/dashboard-view', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
     ])
-      .then(([usersData, wigsData, repairsData]) => { 
+      .then(([usersData, wigsData, repairsData]) => {
         const workersList = Array.isArray(usersData) ? usersData : (usersData.data || []);
-        const newWigs = Array.isArray(wigsData.data) ? wigsData.data : [];
-        const repairs = Array.isArray(repairsData.data) ? repairsData.data : [];
-        
-        const allActiveWigs = [...newWigs, ...repairs];
-
-      
-        const workersWithLoad = workersList.map((worker: any) => {
+        const allActive = [
+          ...(Array.isArray(wigsData.data) ? wigsData.data : []),
+          ...(Array.isArray(repairsData.data) ? repairsData.data : [])
+        ];
+        const withLoad = workersList.map((worker: any) => {
           let count = 0;
-          allActiveWigs.forEach(wig => {
-       
-            if (wig.assignedWorkers && wig.assignedWorkers.some((w: any) => w._id === worker._id)) count++;
+          allActive.forEach(wig => {
+            if (wig.assignedWorkers?.some((w: any) => w._id === worker._id)) count++;
             if (wig.assignedTo && (wig.assignedTo._id === worker._id || wig.assignedTo === worker.username)) count++;
           });
           return { ...worker, activeWigs: count };
         });
-
-        setWorkers(workersWithLoad); 
-        setLoading(false); 
+        setWorkers(withLoad);
+        setLoading(false);
       })
-      .catch((err) => {
-        console.error("שגיאה בטעינת עומס עובדות:", err);
-        setWorkers([]); 
-        setLoading(false); 
-      });
+      .catch(() => { setWorkers([]); setLoading(false); });
   }, []);
 
-  const workersOnly = Array.isArray(workers) 
-    ? workers.filter(w => w.specialty !== 'ניהול') 
-    : [];
+  const workersOnly = Array.isArray(workers) ? workers.filter(w => w.specialty !== 'ניהול') : [];
 
   return (
     <div className="workers-container">
-      <h2 className="workers-title">👩‍💼 עומס עבודה - מצב נוכחי בזמן אמת</h2>
+      <div className="workers-title">עומס עבודה — מצב נוכחי</div>
       {loading ? (
         <p className="loading-text">טוען נתונים...</p>
       ) : workersOnly.length === 0 ? (
-        <p className="loading-text">אין עובדות להצגה כרגע</p>
+        <p className="loading-text">אין עובדות להצגה</p>
       ) : (
         <div className="workers-grid">
           {workersOnly.map(worker => (
             <div key={worker._id} className="worker-card">
               <div className="worker-name">{worker.fullName}</div>
               <div className="worker-specialty">{worker.specialty}</div>
-              <span className="worker-count" style={{ backgroundColor: worker.activeWigs && worker.activeWigs > 0 ? '#27ae60' : '#6f42c1'}}>
+              <span className={`worker-count ${worker.activeWigs && worker.activeWigs > 0 ? 'busy' : 'free'}`}>
                 {worker.activeWigs ?? 0} פאות פעילות
               </span>
             </div>

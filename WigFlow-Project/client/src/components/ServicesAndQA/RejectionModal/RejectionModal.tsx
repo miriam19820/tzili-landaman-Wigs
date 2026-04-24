@@ -50,47 +50,53 @@ export const RejectionModal: React.FC<RejectionModalProps> = ({ isOpen, customer
   return (
     <div className="modal-overlay">
       <div className="modal-content" dir="rtl">
-        <h2>פסילת פאה - {customerName}</h2>
-        
-        <div className="modal-section">
-          <label>מה הבעיה? (הערה לעובדת):</label>
-          <textarea 
-            value={reason} 
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="למשל: השביל לא במקום, חסר שיער בצד ימין..."
-          />
+        <div className="modal-header">
+          <h2>פסילת פאה</h2>
+          <div className="modal-customer">{customerName}</div>
         </div>
 
-        <div className="modal-section">
-          <label>📷 צלמי את הבעיה (חובה):</label>
-          <input 
-            type="file" 
-            accept="image/*" 
-            capture="environment" 
-            onChange={handleCapture}
-            className="photo-input"
-          />
-          {photo && <img src={photo} alt="תצוגה מקדימה" className="rejection-preview" />}
-        </div>
+        <div className="modal-body">
+          <div className="modal-section">
+            <label>מה הבעיה</label>
+            <textarea
+              className="modal-textarea"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="למשל: השביל לא במקום, חסר שיער בצד ימין..."
+            />
+          </div>
 
-        <div className="modal-section">
-          <label>לאילו שלבים להחזיר?</label>
-          <div className="stages-grid">
-            {STAGES.map(stage => (
-              <button 
-                key={stage}
-                className={`stage-btn ${selectedStages.includes(stage) ? 'active' : ''}`}
-                onClick={() => handleToggleStage(stage)}
-              >
-                {stage}
-              </button>
-            ))}
+          <div className="modal-section">
+            <label>צלמי את הבעיה (חובה)</label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleCapture}
+              className="photo-input"
+            />
+            {photo && <img src={photo} alt="תצוגה מקדימה" className="rejection-preview" />}
+          </div>
+
+          <div className="modal-section">
+            <label>לאילו שלבים להחזיר</label>
+            <div className="stages-grid">
+              {STAGES.map(stage => (
+                <button
+                  key={stage}
+                  className={`stage-btn ${selectedStages.includes(stage) ? 'active' : ''}`}
+                  onClick={() => handleToggleStage(stage)}
+                >
+                  {stage}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
         <div className="modal-actions">
           <button className="btn-cancel" onClick={onClose}>ביטול</button>
-          <button className="btn-confirm-reject" onClick={handleConfirmAction}>אשר פסילה ושלח תמונה ❌</button>
+          <button className="btn-confirm-reject" onClick={handleConfirmAction}>אשר פסילה</button>
         </div>
       </div>
     </div>

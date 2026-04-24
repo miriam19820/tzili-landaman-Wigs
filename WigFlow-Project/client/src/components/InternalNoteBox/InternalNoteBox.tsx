@@ -11,9 +11,9 @@ interface Props {
 export const InternalNoteBox: React.FC<Props> = ({ note, setNote }) => {
   return (
     <div className="internal-note-container">
-      <h4 className="internal-note-title">
-        <span>📝</span> הערה פנימית על הלקוחה (לא מופיע ב-PDF)
-      </h4>
+      <div className="internal-note-title">
+        הערה פנימית על הלקוחה — לא מופיע ב-PDF
+      </div>
       
       <textarea 
         className="internal-note-textarea"

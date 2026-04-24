@@ -208,11 +208,11 @@ export const DiagnosisChecklist: React.FC = () => {
         </div>
       )}
 
-      <h2 className="diagnosis-title">אבחון ושיבוץ פאה לתיקון 📝</h2>
+      <h2 className="diagnosis-title">קבלת פאה לתיקון</h2>
       
       {/* אזור לקוחה מרווח ובולט */}
       <div className="card-section customer-section">
-        <h3 className="section-subtitle">👤 פרטי הלקוחה והערות התנהגות</h3>
+        <div className="section-subtitle">פרטי הלקוחה</div>
         
         <div className="search-controls">
           <input type="text" placeholder="חיפוש לקוחה לפי שם או ת.ז..." value={customerSearch} onChange={e => setCustomerSearch(e.target.value)} />
@@ -222,7 +222,7 @@ export const DiagnosisChecklist: React.FC = () => {
         {customerName && <p className="customer-found-msg">לקוחה נבחרה: <strong>{customerName}</strong></p>}
         
         <div className="customer-note-wrapper">
-          <label className="big-label">דגשים מיוחדים על הלקוחה (אופציונלי):</label>
+          <label className="big-label">דגשים מיוחדים על הלקוחה:</label>
           <textarea 
             className="huge-textarea general-note" 
             placeholder="לדוגמה: לקוחה רגישה מאוד, חשוב לה יחס אישי, לשים לב ש..."
@@ -239,13 +239,13 @@ export const DiagnosisChecklist: React.FC = () => {
         </div>
         <label className={`urgent-toggle ${isUrgent ? 'is-urgent' : ''}`}>
           <input type="checkbox" checked={isUrgent} onChange={e => setIsUrgent(e.target.checked)} />
-          סימון התיקון כדחוף! 🔴
+          דחוף
         </label>
       </div>
 
 
       <div className="card-section camera-section">
-        <h3 className="section-subtitle">📸 תמונת מצב (לפני תיקון)</h3>
+        <div className="section-subtitle">תמונת מצב</div>
         {!isCameraOpen && capturedImages.length < 2 && (
           <button onClick={startCamera} className="camera-open-btn">+ צלמי מצב פאה מהנייד/טאבלט</button>
         )}
@@ -253,7 +253,7 @@ export const DiagnosisChecklist: React.FC = () => {
           <div className="video-wrapper">
             <video ref={videoRef} autoPlay playsInline className="video-preview"></video>
             <div className="camera-actions">
-              <button onClick={capturePhoto} className="btn-capture">צלמי 📸</button>
+          <button onClick={capturePhoto} className="btn-capture">צלמי</button>
               <button onClick={stopCamera} className="btn-close">סגור מצלמה</button>
             </div>
           </div>
@@ -276,15 +276,15 @@ export const DiagnosisChecklist: React.FC = () => {
             <h3 className="category-title">{cat.name}</h3>
             
             <div className="category-worker-box">
-              <label className="small-label">שובץ לעובדת:</label>
+              <label className="small-label">עובדת:</label>
               <StaffAllocator category={cat.name} onSelect={(workerId) => handleCategoryWorkerChange(cat.name, workerId)} />
               
-              <label className="small-label" style={{marginTop: '10px'}}>תאריך יעד (דד-ליין):</label>
+              <label className="small-label">תאריך יעד:</label>
               <input type="date" className="deadline-input" onChange={(e) => handleCategoryDeadlineChange(cat.name, e.target.value)} />
             </div>
 
             <div className="tasks-list">
-              <label className="small-label">סמני משימות לביצוע:</label>
+              <label className="small-label">משימות לביצוע:</label>
               {cat.subTypes.map(sub => {
                 const isSelected = selectedTasks.find(t => t.subCategory === sub);
                 return (
@@ -311,14 +311,14 @@ export const DiagnosisChecklist: React.FC = () => {
 
 
       <div className="card-section final-stages-section">
-        <h3 className="section-subtitle">🏁 שלבי סיום חובה (חפיפה ובקרה)</h3>
+        <div className="section-subtitle">שלבי סיום — חפיפה ובקרת איכות</div>
         <div className="final-stages-grid">
           <div className="final-stage-box">
-            <label className="big-label">🧼 חופפת וספרית:</label>
+            <label className="big-label">חופפת וספרית</label>
             <StaffAllocator category="חפיפה" onSelect={(id) => setWasherId(id)} />
           </div>
           <div className="final-stage-box">
-            <label className="big-label">🔎 מבקרת איכות (QA):</label>
+            <label className="big-label">מבקרת איכות</label>
             <StaffAllocator category="בקרה" onSelect={(id) => setAdminId(id)} />
           </div>
         </div>

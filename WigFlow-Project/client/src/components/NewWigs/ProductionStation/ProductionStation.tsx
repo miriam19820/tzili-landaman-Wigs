@@ -141,13 +141,10 @@ export const ProductionStation: React.FC = () => {
         <div className="station-container" dir="rtl">
             <header className="station-header">
                 <div className="header-actions">
-                    <h2>תחנת עבודה: {isWorker ? loggedInUser.username : (allWorkers.find(w => (w._id || w.id) === currentWorkerId)?.username || 'ניהול משימות')}</h2>
+                    <h2>תחנת עבודה — {isWorker ? loggedInUser.username : (allWorkers.find(w => (w._id || w.id) === currentWorkerId)?.username || 'ניהול משימות')}</h2>
                     <div className="btn-group">
-                        <button 
-                            onClick={toggleListening} 
-                            className={`voice-btn ${isListening ? 'listening' : ''}`}
-                        >
-                            {isListening ? '🎙️ מקשיב...' : '🎤 פקודה קולית'}
+                        <button onClick={toggleListening} className={`voice-btn ${isListening ? 'listening' : ''}`}>
+                            {isListening ? 'מקשיב...' : 'פקודה קולית'}
                         </button>
                     </div>
                 </div>
@@ -178,9 +175,9 @@ export const ProductionStation: React.FC = () => {
 
             <main className="tasks-display-area">
                 {!currentWorkerId ? (
-                    <div className="empty-view"><h3>אנא בחרי עובדת לתחילת העבודה 👋</h3></div>
+                    <div className="empty-view"><h3>אנא בחרי עובדת לתחילת העבודה</h3></div>
                 ) : myTasks.length === 0 ? (
-                    <div className="empty-view"><h3>אין פאות שממתינות בתחנה שלך.</h3></div>
+                    <div className="empty-view"><h3>אין פאות שממתינות בתחנה שלך</h3></div>
                 ) : (
                     <div className="wigs-list">
                         {myTasks.map((task, index) => (

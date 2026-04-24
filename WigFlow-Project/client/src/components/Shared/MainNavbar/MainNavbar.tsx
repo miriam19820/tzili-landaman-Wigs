@@ -1,5 +1,68 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import logo from '../../../assets/images/zili-logo.png';
+import './MainNavbar.css';
 
 export const MainNavbar: React.FC = () => {
-  return <div>MainNavbar</div>;
+  const location = useLocation();
+  const userString = localStorage.getItem('user');
+  const user = userString ? JSON.parse(userString) : null;
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
+
+  const isActive = (path: string) =>
+    location.pathname === path ? 'nav-link active' : 'nav-link';
+
+  const isAdmin = user?.role === 'Admin' || user?.role === 'Secretary';
+  const isWorker = user?.role === 'Worker' || user?.role === 'Admin';
+  const isQA = user?.role === 'Inspector' || user?.role === 'QC' || user?.role === 'Admin';
+
+  const roleLabel: Record<string, string> = {
+    Admin: 'מנהלת',
+    Worker: 'עובדת',
+    Secretary: 'מזכירה',
+    QC: 'בקרת איכות',
+    Inspector: 'בקרת איכות',
+  };
+
+  return (
+    <nav className="zili-navbar">
+      <Link to="/" className="navbar-brand">
+        <img src={logo} alt="zili" className="navbar-logo-img" />
+      </Link>
+
+      <div className="navbar-links">
+        {isAdmin && (
+          <>
+            <Link to="/" className={isActive('/')}>הזמנת פאה</Link>
+            <Link to="/repairs/new" className={isActive('/repairs/new')}>קבלת תיקון</Link>
+            <Link to="/service/new" className={isActive('/service/new')}>הזמנת שירות</Link>
+            <Link to="/dashboard" className={isActive('/dashboard')}>דאשבורד</Link>
+            <Link to="/history" className={isActive('/history')}>היסטוריה</Link>
+          </>
+        )}
+        {isWorker && (
+          <>
+            <Link to="/production" className={isActive('/production')}>תחנת ייצור</Link>
+            <Link to="/repairs/tasks" className={isActive('/repairs/tasks')}>תחנת תיקונים</Link>
+          </>
+        )}
+        {isQA && (
+          <Link to="/qa" className={isActive('/qa')}>בקרת איכות</Link>
+        )}
+      </div>
+
+      <div className="navbar-user">
+        <div className="navbar-user-info">
+          <div className="navbar-user-name">{user?.username}</div>
+          <div className="navbar-user-role">{roleLabel[user?.role] || user?.role}</div>
+        </div>
+        <button className="btn-logout" onClick={handleLogout}>יציאה</button>
+      </div>
+    </nav>
+  );
 };

@@ -116,7 +116,7 @@ export const QADashboard: React.FC = () => {
   return (
     <div className="qa-dashboard-container" dir="rtl">
       <div className="qa-header">
-        <h1 className="qa-title">מרכז בקרת איכות - WigFlow 🔍</h1>
+        <h1 className="qa-title">בקרת איכות</h1>
         <p className="qa-subtitle">אישור פאות מוכנות ותיעוד ויזואלי של יציאה מהסלון</p>
       </div>
       
@@ -126,9 +126,9 @@ export const QADashboard: React.FC = () => {
             <p>סורק פאות בבדיקה...</p>
         </div>
       ) : tasks.length === 0 ? (
-        <div className="empty-state">
-          <h3>אין כרגע פאות שממתינות לבקרה. 🎉</h3>
-          <p>כל הפאות בייצור או מוכנות למסירה.</p>
+          <div className="empty-state">
+          <h3>אין פאות שממתינות לבקרה</h3>
+          <p>כל הפאות בייצור או מוכנות למסירה</p>
         </div>
       ) : (
         <div className="qa-grid">
@@ -156,15 +156,12 @@ export const QADashboard: React.FC = () => {
                         onChange={(e) => handleFileUpload(e, task._id)}
                     />
                     <label htmlFor={`capture-${task._id}`} className={`btn-approve ${uploading === task._id ? 'loading' : ''}`}>
-                        {uploading === task._id ? 'מעלה...' : 'צלמי ואשרי ✅'}
+                        {uploading === task._id ? 'מעלה...' : 'צלמי ואשרי'}
                     </label>
                 </div>
 
-                <button 
-                  className="btn-reject"
-                  onClick={() => openRejectionModal(task)}
-                >
-                  פסילה לתיקון ❌
+                <button className="btn-reject" onClick={() => openRejectionModal(task)}>
+                  פסילה לתיקון
                 </button>
               </div>
             </div>

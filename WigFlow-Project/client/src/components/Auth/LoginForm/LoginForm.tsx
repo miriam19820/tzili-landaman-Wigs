@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import logo from '../../../assets/images/zili-logo.png';
 import './LoginForm.css';
 
 axios.defaults.baseURL = 'http://localhost:5000/api';
@@ -48,54 +49,46 @@ export const LoginForm: React.FC = () => {
   return (
     <div className="login-wrapper" dir="rtl">
       <div className="login-box">
-        <h2>WigFlow</h2>
-        <p>התחברות למערכת ניהול הסלון</p>
-        
+        <div className="login-brand">
+          <img src={logo} alt="zili" className="login-logo-img" />
+          <span className="login-subtitle">ניהול פאות ותוספות שיער</span>
+          <div className="login-divider" />
+        </div>
+
         <form onSubmit={handleLogin} className="login-form">
           {error && <div className="error-message">{error}</div>}
-          
-          <div className="input-group">
-            <label>שם משתמש:</label>
-            <input 
-              type="text" 
+
+          <div className="form-group">
+            <label>שם משתמש</label>
+            <input
+              className="zili-input"
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="הזיני שם משתמש"
-              required 
+              required
             />
           </div>
 
-          <div className="input-group">
-            <label>סיסמה:</label>
-            <div style={{ position: 'relative' }}>
-              <input 
+          <div className="form-group">
+            <label>סיסמה</label>
+            <div className="password-field">
+              <input
+                className="zili-input"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="הזיני סיסמה"
-                required 
+                required
               />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  left: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '18px'
-                }}
-              >
+              <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? '🙈' : '👁️'}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? 'מתחבר...' : 'כניסה למערכת'}
+          <button type="submit" className="btn-primary login-btn" disabled={loading}>
+            {loading ? 'מתחברת...' : 'כניסה למערכת'}
           </button>
         </form>
       </div>

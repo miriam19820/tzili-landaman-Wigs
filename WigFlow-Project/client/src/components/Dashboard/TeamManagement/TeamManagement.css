@@ -1,84 +1,190 @@
+/* ===== TeamManagement ===== */
+
 .team-management-container {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  margin-top: 20px;
-  border: 1px solid #eee;
+  background: var(--zili-white);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: var(--zili-shadow);
 }
 
+/* ===== Section Titles ===== */
 .team-title {
-  color: #2c3e50;
-  margin-bottom: 20px;
-  font-size: 1.2rem;
-  border-bottom: 2px solid #f39c12;
-  padding-bottom: 10px;
-  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--zili-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--zili-border);
+  margin-bottom: 22px;
+  display: block;
+}
+
+.team-divider {
+  border: none;
+  border-top: 1px solid var(--zili-border);
+  margin: 28px 0;
+}
+
+/* ===== Form Card ===== */
+.team-form-card {
+  background: var(--zili-warm);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+  margin-bottom: 4px;
 }
 
 .team-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
   align-items: end;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
+  gap: 6px;
 }
 
 .form-group label {
-  font-size: 0.9rem;
-  color: #555;
-  margin-bottom: 5px;
+  font-size: 11px;
   font-weight: 600;
+  color: var(--zili-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
-.form-group input, .form-group select {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 1rem;
+.form-group input,
+.form-group select {
+  padding: 9px 13px;
+  border: 1.5px solid var(--zili-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--zili-text);
+  background: var(--zili-white);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.form-group input:focus, .form-group select:focus {
-  border-color: #f39c12;
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--zili-rose);
+  box-shadow: 0 0 0 3px rgba(212, 160, 167, 0.18);
+}
+
+/* ===== Form Buttons Row ===== */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
 }
 
 .btn-submit-worker {
-  background-color: #27ae60;
+  background: linear-gradient(135deg, var(--zili-mauve), var(--zili-deep));
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 1rem;
+  padding: 9px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  height: 42px;
+  white-space: nowrap;
+  transition: opacity 0.2s, transform 0.1s;
+  height: 40px;
 }
+.btn-submit-worker:hover { opacity: 0.88; transform: translateY(-1px); }
 
-.btn-submit-worker:hover {
-  background-color: #219653;
+.btn-cancel-worker {
+  background: var(--zili-blush);
+  color: var(--zili-muted);
+  border: 1.5px solid var(--zili-border);
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  height: 40px;
+  transition: background 0.2s;
 }
+.btn-cancel-worker:hover { background: var(--zili-border); }
 
+/* ===== Message Box ===== */
 .message-box {
   grid-column: 1 / -1;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
   text-align: center;
-  font-weight: bold;
 }
-
 .message-box.success {
-  background-color: #d4edda;
-  color: #155724;
+  background: #e8f5ec;
+  color: var(--zili-success);
+  border: 1px solid #c3e6cb;
+}
+.message-box.error {
+  background: #fde8ea;
+  color: var(--zili-danger);
+  border: 1px solid #f5c6cb;
 }
 
-.message-box.error {
-  background-color: #f8d7da;
-  color: #721c24;
+/* ===== Workers Table ===== */
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.team-table th {
+  background: var(--zili-warm);
+  color: var(--zili-deep);
+  padding: 11px 16px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--zili-border);
+}
+
+.team-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--zili-blush);
+  font-size: 14px;
+  color: var(--zili-text);
+}
+
+.team-table tr:last-child td { border-bottom: none; }
+.team-table tr:hover td { background: var(--zili-warm); }
+
+/* ===== Specialty Badge ===== */
+.specialty-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--zili-blush);
+  color: var(--zili-deep);
+}
+
+/* ===== Edit Button ===== */
+.btn-edit-worker {
+  background: none;
+  border: none;
+  color: var(--zili-muted);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, color 0.2s;
+  font-family: inherit;
+}
+.btn-edit-worker:hover {
+  background: var(--zili-blush);
+  color: var(--zili-deep);
 }

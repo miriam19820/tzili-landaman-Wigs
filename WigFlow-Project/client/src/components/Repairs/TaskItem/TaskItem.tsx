@@ -109,7 +109,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
       {showRejectionImageFull && task.qaRejectionPhoto && (
         <div className="task-image-overlay qa-overlay" onClick={() => setShowRejectionImageFull(false)}>
             <img src={task.qaRejectionPhoto} alt="תמונת פסילה מוגדלת" />
-            <div className="qa-overlay-caption">⚠️ צילום התקלה מהמבקרת</div>
+            <div className="qa-overlay-caption">צילום התקלה מהמבקרת</div>
         </div>
       )}
 
@@ -118,7 +118,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
         {task.imageUrl && (
             <div className="task-image-container" onClick={() => setShowImageFull(true)}>
                 <img src={task.imageUrl} alt="מצב הפאה" className="task-thumbnail" />
-                <div className="zoom-hint">🔍 תמונת מקור</div>
+        <div className="zoom-hint">תמונת מקור</div>
             </div>
         )}
 
@@ -134,11 +134,11 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
                     {task.type === 'חדשה' ? (
                         <h3>{task.category} <span className="arrow">←</span> {task.subCategory}</h3>
                     ) : (
-                        <h3>תיקונים לביצוע: <span style={{ color: '#0ea5e9' }}>{task.subCategories?.join(' | ')}</span></h3>
+                        <h3>תיקונים: <span className="repair-tasks-inline">{task.subCategories?.join(' | ')}</span></h3>
                     )}
                     
-                    {task.isUrgent && <span className="urgent-badge">דחוף! 🔴</span>}
-                    {task.qaRejectionPhoto && <span className="re-work-badge">סבב תיקון חוזר ⚠️</span>}
+                    {task.isUrgent && <span className="urgent-badge">דחוף</span>}
+                    {task.qaRejectionPhoto && <span className="re-work-badge">סבב תיקון חוזר</span>}
                 </div>
                 <div className="task-meta">
                     <span className="wig-code-pill">{task.wigCode}</span>
@@ -150,9 +150,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
                 {/* --- בלוק בקרת איכות - מוצג רק אם המשימה נפסלה --- */}
                 {task.qaRejectionPhoto && (
                     <div className="detail-box qa-rejection-box">
-                        <div className="qa-rejection-header">
-                            <strong>⚠️ המבקרת החזירה את הפאה לתיקון:</strong>
-                        </div>
+                        <div className="qa-rejection-header">המבקרת החזירה את הפאה לתיקון</div>
                         <div className="qa-rejection-content">
                             <p className="qa-note-text">"{task.qaNote}"</p>
                             <div className="qa-thumbnail-wrapper" onClick={() => setShowRejectionImageFull(true)}>
@@ -165,27 +163,27 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
 
                 {task.deadline && (
                     <div className="detail-box deadline-box">
-                        <strong>📅 תאריך יעד:</strong> {formatDeadline(task.deadline)}
+                        <strong>תאריך יעד:</strong> {formatDeadline(task.deadline)}
                     </div>
                 )}
-                
+
                 {task.internalNote && (
                     <div className="detail-box general-note-box">
-                        <strong>📌 רקע מהקבלה:</strong>
+                        <strong>רקע מהקבלה:</strong>
                         <p>{task.internalNote}</p>
                     </div>
                 )}
 
                 {task.type === 'חדשה' && task.notes && (
                     <div className="detail-box specific-note-box">
-                        <strong>✍️ הוראות ביצוע לשלב:</strong>
+                        <strong>הוראות לשלב:</strong>
                         <p>{task.notes}</p>
                     </div>
                 )}
 
                 {task.type === 'תיקון' && task.groupedNotes && task.groupedNotes.length > 0 && (
                     <div className="detail-box specific-note-box">
-                        <strong>✍️ הוראות ביצוע לתיקונים:</strong>
+                        <strong>הוראות לתיקונים:</strong>
                         {task.groupedNotes.map((note, idx) => (
                             <p key={idx}>• {note}</p>
                         ))}
@@ -195,16 +193,10 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
 
             <div className="task-actions">
                 {onOpenSpecs && (
-                    <button onClick={onOpenSpecs} className="specs-btn">
-                        📋 מפרט טכני
-                    </button>
+                    <button onClick={onOpenSpecs} className="specs-btn">מפרט טכני</button>
                 )}
-                <button 
-                    onClick={handleCompleteClick}
-                    disabled={isUpdating}
-                    className="complete-btn"
-                >
-                    {isUpdating ? 'מעדכן...' : 'סיימתי את התיקון, העבר לבקרה ✔'}
+                <button onClick={handleCompleteClick} disabled={isUpdating} className="complete-btn">
+                    {isUpdating ? 'מעדכן...' : 'סיימתי — העבר לבקרה'}
                 </button>
             </div>
         </div>
