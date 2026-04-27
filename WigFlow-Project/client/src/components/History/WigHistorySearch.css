@@ -1,0 +1,365 @@
+/* WigHistorySearch.css */
+
+.history-page-container {
+    padding: 30px 20px;
+    min-height: 100vh;
+    background-color: #f8fafc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.history-search-card {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.history-title {
+    color: #1e293b;
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-weight: 800;
+    border-bottom: 3px solid #f1f5f9;
+    padding-bottom: 15px;
+    text-align: right;
+}
+
+/* חיפוש */
+.history-search-wrapper {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.history-input {
+    flex: 1;
+    padding: 16px 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    transition: border-color 0.2s;
+    text-align: right;
+}
+
+.history-input:focus {
+    outline: none;
+    border-color: #6366f1;
+}
+
+.history-btn {
+    padding: 16px 36px;
+    background-color: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.history-btn:hover { background-color: #4338ca; }
+
+/* --- מבנה פריסה (סרגל צד + תוכן) --- */
+.history-layout-wrapper {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+.history-content-main {
+    flex: 1;
+}
+
+/* סרגל צד דביק */
+.wig-notes-sidebar {
+    flex: 0 0 320px;
+    position: sticky;
+    top: 20px;
+}
+
+.sidebar-sticky-content {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid #e2e8f0;
+    max-height: calc(100vh - 40px);
+    display: flex;
+    flex-direction: column;
+}
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 10px;
+}
+
+.notes-header h4 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* --- עיצוב הצ'אט --- */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding: 5px;
+    margin-bottom: 15px;
+    scrollbar-width: thin;
+}
+
+/* בועת צ'אט */
+.chat-bubble {
+    background: #ffffff;
+    border-radius: 12px 12px 0 12px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: relative;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s;
+}
+
+.chat-bubble:hover {
+    transform: translateX(-3px);
+}
+
+/* צבעים לפי סוג כותב */
+.admin-note { border-right: 4px solid #6366f1; background: #f5f3ff; }
+.worker-note { border-right: 4px solid #10b981; background: #f0fdf4; }
+.repair-note { border-right: 4px solid #f59e0b; background: #fffbeb; }
+
+.bubble-content {
+    color: #334155;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.bubble-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.75rem;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    padding-top: 5px;
+}
+
+.sender { font-weight: 800; color: #475569; }
+.stage-tag { color: #64748b; font-weight: 600; background: #f1f5f9; padding: 1px 6px; border-radius: 4px; }
+
+/* כפתור פלוס */
+.add-sidebar-note {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+/* כרטיס סיכום עליון */
+.wig-summary-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 24px 30px;
+    margin-bottom: 40px;
+    border-right: 8px solid #6366f1;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.summary-main-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.title-with-btn { display: flex; align-items: center; gap: 20px; }
+.title-with-btn h3 { margin: 0; font-size: 1.8rem; color: #0f172a; }
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.summary-item label { color: #64748b; font-weight: bold; margin-left: 8px; }
+.summary-item span { color: #334155; font-size: 1.05rem; }
+.price-tag { color: #16a34a !important; font-weight: 800; }
+
+.history-thumb-reference {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 2px solid #e2e8f0;
+}
+
+/* גריד התוצאות */
+.history-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 25px;
+}
+
+.column-title {
+    font-size: 1.3rem;
+    color: #1e293b;
+    margin-bottom: 20px;
+    border-bottom: 3px solid #f1f5f9;
+    padding-bottom: 12px;
+    text-align: right;
+}
+
+.history-item-box {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+/* סטטוסים ותגיות */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+.status-badge.מוכן { background: #dcfce7; color: #166534; }
+
+.sidebar-quick-info { border-top: 1px dashed #e2e8f0; padding-top: 15px; }
+.status-highlight { display: block; background: #eff6ff; color: #2563eb; padding: 4px; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 5px; }
+
+/* מודלים */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.7);
+    z-index: 10000;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.note-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.note-modal-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.btn-save-note { background: #22c55e; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn-cancel-note { background: #f1f5f9; color: #475569; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; }
+
+/* פסי גלילה */
+.chat-container::-webkit-scrollbar { width: 4px; }
+.chat-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+@media (max-width: 1024px) {
+    .history-layout-wrapper { flex-direction: column; }
+    .wig-notes-sidebar { width: 100%; position: static; }
+}
+
+.animate-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* עיצוב מיכל התמונות בתוך כרטיס תיקון */
+.repair-images-preview {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px dashed #eee;
+}
+
+.img-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.img-container label {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.img-container img {
+  width: 100%;
+  max-width: 120px; /* גודל תצוגה מקדימה */
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.img-container img:hover {
+  transform: scale(1.05);
+}
+
+/* עיצוב המודל של המסך המלא */
+.fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.fullscreen-content img {
+  max-width: 90%;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+}
+
+.close-btn {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: white;
+  font-size: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}

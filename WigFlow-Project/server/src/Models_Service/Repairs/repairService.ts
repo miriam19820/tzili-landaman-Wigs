@@ -1,5 +1,12 @@
+<<<<<<< Updated upstream
 import { Repair } from './repairModel';
 import { User } from '../User/userModel';
+=======
+import { Repair } from './repairModel.js';
+import { User } from '../User/userModel.js';
+import * as customerService from '../Customer/customerService.js';
+import { addHistoryEvent } from '../WigHistory/wigHistoryService.js';
+>>>>>>> Stashed changes
 
 async function getRepairById(id: string) {
   const repair = await Repair.findById(id)
@@ -214,12 +221,65 @@ async function createRepairOrder(repairData: any) {
     wigCode: repairData.wigCode,       
     customer: repairData.customerId,  
     isUrgent: isUrgent,               
+<<<<<<< Updated upstream
     tasks: allTasks                   
+=======
+    tasks: repairData.tasks, 
+    beforeImageUrl: photoUrl, // שמרנו את התמונה כ"לפני"
+    internalNote: repairData.internalNote 
+>>>>>>> Stashed changes
   });
 
-  return await newRepair.save();
+  const savedRepair = await newRepair.save();
+
+  // הוספת הרישום להיסטוריה - תחילת תיקון
+  await addHistoryEvent({
+    wigCode: savedRepair.wigCode,
+    actionType: 'תיקון',
+    stage: 'פתיחת תיקון',
+    workerName: 'מזכירות', // או מי שמזינה את הפרטים
+    description: `הפאה נכנסה לתיקון: ${repairData.tasks.map((t: any) => t.subCategory).join(', ')}`,
+    beforeImageUrl: photoUrl,
+    notes: repairData.internalNote
+  });
+
+  return savedRepair;
 }
 
+<<<<<<< Updated upstream
+=======
+
+async function finalizeRepairWithQA(repairId: string, afterImageUrl: string) {
+  const repair = await Repair.findById(repairId).populate('customer');
+  if (!repair) throw new Error("תיקון לא נמצא");
+
+  repair.afterImageUrl = afterImageUrl; 
+  repair.overallStatus = 'מוכן';
+  repair.inspectedAt = new Date();
+
+  repair.tasks.forEach(task => {
+    task.status = 'בוצע';
+  });
+
+  const savedRepair = await repair.save();
+
+  // הוספת הרישום להיסטוריה - סיום תיקון מוצלח
+  await addHistoryEvent({
+    wigCode: savedRepair.wigCode,
+    actionType: 'תיקון',
+    stage: 'סיום תיקון ובקרה',
+    workerName: 'בקרת איכות', 
+    description: 'התיקון הושלם בהצלחה ואושר בבקרת איכות',
+    beforeImageUrl: savedRepair.beforeImageUrl, // מחלצים מהתיקון את התמונה של ההתחלה
+    afterImageUrl: afterImageUrl,              // שומרים את התמונה של הסוף
+    notes: savedRepair.internalNote
+  });
+
+  return savedRepair;
+}
+
+
+>>>>>>> Stashed changes
 async function getDashboardView() {
   const activeRepairs = await Repair.find()
     .populate('customer', 'firstName lastName')
@@ -270,6 +330,11 @@ async function getTasksByWorker(workerId: string) {
           wigCode: repair.wigCode,
           customerName,
           isUrgent: repair.isUrgent,
+<<<<<<< Updated upstream
+=======
+          internalNote: repair.internalNote,
+          imageUrl: repair.beforeImageUrl,
+>>>>>>> Stashed changes
           taskIndex: index,
           task
         });

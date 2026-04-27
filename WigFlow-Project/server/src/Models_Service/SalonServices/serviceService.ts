@@ -1,13 +1,47 @@
+<<<<<<< Updated upstream
 import { Service } from './serviceModel';
 
 export const createService = async (serviceData: any) => {
+=======
+import { Service } from './serviceModel.js';
+import { NewWig } from '../NewWigs/newWigModel.js'; 
+import { Repair } from '../Repairs/repairModel.js';
+import * as customerService from '../Customer/customerService.js'; 
+import { addHistoryEvent } from '../WigHistory/wigHistoryService.js';
+
+export const createService = async (serviceData: any) => {
+  if (typeof serviceData.customer === 'string' && serviceData.customer.length < 24) {
+    const foundCustomer = await customerService.findCustomerByName(serviceData.customer);
+    if (!foundCustomer) {
+      throw new Error(`הלקוחה "${serviceData.customer}" לא נמצאה במערכת. יש להוסיף אותה קודם.`);
+    }
+    serviceData.customer = foundCustomer._id;
+  }
+
+>>>>>>> Stashed changes
   if (serviceData.serviceType === 'Style Only') {
     serviceData.status = 'Pending Style'; 
   } else {
     serviceData.status = 'Pending Wash';
   }
 
-  return await Service.create(serviceData);
+  // 1. יצירת השירות ושמירתו במשתנה
+  const newService = await Service.create(serviceData);
+
+  // 2. רישום להיסטוריה המרכזית
+  // שימי לב: אנחנו משתמשים ב-wigCode אם הוא קיים ב-serviceData, 
+  // או ב-newWigReference אם מדובר בפאה חדשה בתהליך.
+  await addHistoryEvent({
+    wigCode: serviceData.wigCode || "סירוק כללי", 
+    actionType: 'סירוק',
+    stage: 'פתיחת הזמנת שירות',
+    workerName: 'מזכירות',
+    description: `הוזמן שירות: ${newService.serviceType} (סגנון: ${newService.styleCategory})`,
+    beforeImageUrl: newService.beforeImageUrl,
+    notes: newService.notes?.secretary
+  });
+
+  return newService;
 };
 
 export const getServiceById = async (id: string) => {
