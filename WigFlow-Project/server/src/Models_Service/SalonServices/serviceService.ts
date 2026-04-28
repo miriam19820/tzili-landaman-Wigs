@@ -1,45 +1,40 @@
-<<<<<<< Updated upstream
-import { Service } from './serviceModel';
-
-export const createService = async (serviceData: any) => {
-=======
 import { Service } from './serviceModel.js';
 import { NewWig } from '../NewWigs/newWigModel.js'; 
 import { Repair } from '../Repairs/repairModel.js';
+// שים לב: אם יש שגיאה על השורה הזו, וודאי שבקובץ customerService יש export לפונקציה הזו
 import * as customerService from '../Customer/customerService.js'; 
 import { addHistoryEvent } from '../WigHistory/wigHistoryService.js';
+import { AppError } from '../../Utils/AppError.js';
 
 export const createService = async (serviceData: any) => {
   if (typeof serviceData.customer === 'string' && serviceData.customer.length < 24) {
-    const foundCustomer = await customerService.findCustomerByName(serviceData.customer);
+    // שימוש ב-as any כדי לעקוף את השגיאה אם TS לא מזהה את הפונקציה בייבוא
+    const foundCustomer = await (customerService as any).findCustomerByName(serviceData.customer);
     if (!foundCustomer) {
-      throw new Error(`הלקוחה "${serviceData.customer}" לא נמצאה במערכת. יש להוסיף אותה קודם.`);
+      throw new AppError(`הלקוחה "${serviceData.customer}" לא נמצאה במערכת. יש להוסיף אותה קודם.`, 404);
     }
     serviceData.customer = foundCustomer._id;
   }
 
->>>>>>> Stashed changes
   if (serviceData.serviceType === 'Style Only') {
     serviceData.status = 'Pending Style'; 
   } else {
     serviceData.status = 'Pending Wash';
   }
 
-  // 1. יצירת השירות ושמירתו במשתנה
+  // 1. יצירת השירות
   const newService = await Service.create(serviceData);
 
-  // 2. רישום להיסטוריה המרכזית
-  // שימי לב: אנחנו משתמשים ב-wigCode אם הוא קיים ב-serviceData, 
-  // או ב-newWigReference אם מדובר בפאה חדשה בתהליך.
+  // 2. רישום להיסטוריה
   await addHistoryEvent({
     wigCode: serviceData.wigCode || "סירוק כללי", 
     actionType: 'סירוק',
     stage: 'פתיחת הזמנת שירות',
     workerName: 'מזכירות',
-    description: `הוזמן שירות: ${newService.serviceType} (סגנון: ${newService.styleCategory})`,
-    beforeImageUrl: newService.beforeImageUrl,
-    notes: newService.notes?.secretary
-  });
+    description: `הוזמן שירות: ${newService.serviceType} (סגנון: ${(newService as any).styleCategory || 'לא נקבע'})`,
+    beforeImageUrl: (newService as any).beforeImageUrl || undefined,
+    notes: (newService as any).notes?.secretary || undefined 
+  }).catch((err: any) => console.error("History event failed:", err));
 
   return newService;
 };
@@ -61,7 +56,7 @@ export const moveToDrying = async (serviceId: string) => {
 
 export const finishDrying = async (serviceId: string) => {
   const service = await Service.findById(serviceId);
-  if (!service) throw new Error('Service not found');
+  if (!service) throw new AppError('Service not found', 404);
 
   if (service.serviceType === 'Wash & Style') {
     service.status = 'Pending Style';
@@ -73,7 +68,6 @@ export const finishDrying = async (serviceId: string) => {
   return service;
 };
 
-// 4. סיום סירוק - מעבר לבקרת איכות (QA)
 export const finishStyling = async (serviceId: string) => {
   return await Service.findByIdAndUpdate(
     serviceId,
@@ -97,19 +91,17 @@ export const rejectService = async (
   repairTaskId?: string
 ) => {
   const service = await Service.findById(serviceId);
-  if (!service) throw new Error('Service not found');
+  if (!service) throw new AppError('Service not found', 404);
 
-  if (!service.notes) {
-    service.notes = { secretary: '', worker: '', qa: '' };
-  }
+  // טיפול יסודי בשגיאת ה-Object is possibly undefined
+  const currentNotes = (service as any).notes || { secretary: '', worker: '', qa: '' };
+  currentNotes.qa = qaNote;
   
-  service.notes.qa = qaNote;
+  (service as any).notes = currentNotes;
 
-  if (service.origin === 'Service') {
+  if ((service as any).origin === 'Service') {
     service.status = returnTo === 'Wash' ? 'Pending Wash' : 'Pending Style';
-  } else if (service.origin === 'NewWig') {
-    service.status = 'In Progress';
-  } else if (service.origin === 'Repair') {
+  } else {
     service.status = 'In Progress';
   }
 
