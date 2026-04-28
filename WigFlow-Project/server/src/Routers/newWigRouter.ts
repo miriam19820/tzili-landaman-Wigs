@@ -2,9 +2,9 @@ import { Router, Request, Response, NextFunction } from 'express';
 import * as newWigService from '../Models_Service/NewWigs/newWigService.js';
 import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware.js';
 import nodemailer from 'nodemailer';
+import { sendSalonUpdate } from '../Services/notificationService.js';
 
 const newWigRouter = Router();
-
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -92,8 +92,9 @@ newWigRouter.get('/:id', verifyToken, async (req: Request, res: Response, next: 
 
 newWigRouter.patch('/:id/next-step', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { nextWorkerId } = req.body; 
-    const updatedWig = await newWigService.moveToNextStage(req.params.id, nextWorkerId);
+    const { nextWorkerId, nextWorkerIds } = req.body; 
+    const workerIds = nextWorkerIds || (nextWorkerId ? [nextWorkerId] : []);
+    const updatedWig = await newWigService.moveToNextStage(req.params.id, workerIds);
     res.status(200).json(updatedWig); 
   } catch (error) {
     next(error);
@@ -136,11 +137,29 @@ newWigRouter.delete('/:id', verifyAdmin, async (req: Request, res: Response, nex
     next(error);
   }
 });
+
 newWigRouter.patch('/:id/special-notes', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { notes } = req.body;
     const updatedWig = await newWigService.updateSpecialNotes(req.params.id, notes);
     res.status(200).json({ success: true, data: updatedWig });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+newWigRouter.patch('/:id/deliver', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updatedWig = await newWigService.markWigAsDelivered(req.params.id);
+  
+    if (updatedWig) {
+      sendSalonUpdate(updatedWig, 'נמסר ללקוחה (העסקה הושלמה!)').catch((err: any) => 
+        console.error(`Failed to send WhatsApp delivery notification: ${err.message}`)
+      );
+    }
+
+    res.status(200).json({ success: true, message: 'הפאה עודכנה כנמסרה, נשלח וואטסאפ, והיא הוסרה מהדאשבורד', data: updatedWig });
   } catch (error) {
     next(error);
   }

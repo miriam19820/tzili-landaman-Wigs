@@ -1,5 +1,6 @@
 .overview-container {
   padding: 0;
+  width: 100%;
 }
 
 .overview-header {
@@ -10,73 +11,122 @@
 }
 
 .overview-header h2 {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--zili-deep);
+  margin: 0;
 }
 
-.overview-count {
+/* הגדרות הטבלה למניעת שבירת עיצוב */
+.zili-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.zili-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.zili-table th,
+.zili-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid #f0e8e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.zili-table th {
+  background-color: #fdf6f6;
+  font-weight: 600;
+  color: #6b4c4c;
   font-size: 12px;
-  color: var(--zili-muted);
-  background: var(--zili-blush);
-  padding: 4px 12px;
-  border-radius: 20px;
 }
 
-/* Delete button */
+.zili-table tr:hover td {
+  background-color: #fdf9f9;
+}
+
+/* רוחב עמודות קבוע */
+.zili-table th:nth-child(1), .zili-table td:nth-child(1) { width: 10%; }
+.zili-table th:nth-child(2), .zili-table td:nth-child(2) { width: 18%; }
+.zili-table th:nth-child(3), .zili-table td:nth-child(3) { width: 14%; }
+.zili-table th:nth-child(4), .zili-table td:nth-child(4) { width: 16%; }
+.zili-table th:nth-child(5), .zili-table td:nth-child(5) { width: 18%; }
+.zili-table th:nth-child(6), .zili-table td:nth-child(6) { width: 10%; }
+.zili-table th:nth-child(7), .zili-table td:nth-child(7) { width: 120px; min-width: 120px; text-align: center; }
+
+/* הגבלת רוחב עמודת הפעולות */
+.col-actions {
+  width: 110px;
+  min-width: 110px;
+  text-align: center;
+}
+
+.actions-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  width: 120px;
+}
+
+.deliver-slot {
+  width: 80px;
+  min-width: 80px;
+}
+
+.btn-deliver-wig {
+  background-color: #4a705e;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-deliver-wig:hover {
+  background-color: #3b5c4d;
+}
+
+/* כפתור מחיקה - קטן יותר כדי לא להפריע */
 .btn-delete-wig {
   background: none;
-  border: 1.5px solid var(--zili-border);
-  border-radius: var(--radius-sm);
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 14px;
+  border: 1px solid var(--zili-border);
   color: var(--zili-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
   transition: all 0.2s;
 }
+
 .btn-delete-wig:hover {
-  border-color: var(--zili-danger);
-  color: var(--zili-danger);
-  background: #fde8ea;
+  background: #fff5f5;
+  color: #d9534f;
+  border-color: #d9534f;
 }
 
-/* Admin modal */
-.admin-modal-overlay { /* uses .zili-modal-overlay from global */ }
-
-.admin-modal-content {
-  /* uses .zili-modal from global */
+/* באדג'ים (Badge) */
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-.admin-modal-content h3 {
-  color: var(--zili-danger);
-  margin-bottom: 8px;
-}
-
-.admin-modal-content p {
-  color: var(--zili-muted);
-  font-size: 14px;
-  margin-bottom: 16px;
-}
-
-.admin-code-input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 20px;
-  border: 1.5px solid var(--zili-border);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-size: 20px;
-  letter-spacing: 4px;
-  font-family: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-.admin-code-input:focus {
-  border-color: var(--zili-rose);
-  box-shadow: 0 0 0 3px rgba(212, 160, 167, 0.2);
-}
-
-.admin-modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
+.badge-stage {
+  background: var(--zili-blush);
+  color: var(--zili-deep);
 }

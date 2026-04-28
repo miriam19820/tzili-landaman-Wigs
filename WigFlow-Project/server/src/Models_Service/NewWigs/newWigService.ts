@@ -157,7 +157,10 @@ const getSpecialtyForStage = (stage: string): string => {
 };
 
 export const createNewWig = async (wigData: any) => {
-  if (!wigData.orderCode) wigData.orderCode = `WIG-${Math.floor(1000 + Math.random() * 9999)}`;
+  // תיקון: חסימת המצאת קוד פאה אוטומטי - מחייב הזנה ידנית בלבד
+  if (!wigData.orderCode || wigData.orderCode.trim() === '') {
+    throw new AppError('חובה להזין קוד פאה באופן ידני', 400);
+  }
   return await NewWig.create(wigData);
 };
 
@@ -170,7 +173,11 @@ export const getWigsByWorker = async (workerId: string) => {
 };
 
 export const getAllWigsWithWorkers = async () => {
-  const wigs = await NewWig.find().populate('customer').populate('assignedWorkers');
+  // תיקון: העלמת פאות שנמסרו מהדאשבורד (מסנן את סטטוס 'נמסר')
+  const wigs = await NewWig.find({ currentStage: { $ne: 'נמסר' } })
+    .populate('customer')
+    .populate('assignedWorkers');
+    
   return wigs.map((wig: any) => ({
       _id: wig._id,
       wigCode: wig.orderCode,
@@ -191,10 +198,30 @@ export const deleteWig = async (id: string) => {
   if (!deletedWig) throw new AppError('הפאה לא נמצאה', 404); 
   return deletedWig;
 };
+
 export const updateSpecialNotes = async (wigId: string, notes: string) => {
   return await NewWig.findByIdAndUpdate(
     wigId,
     { $set: { specialNotes: notes } },
+    { new: true }
+  );
+};
+
+
+export const markWigAsDelivered = async (wigId: string) => {
+  const historyEntry = {
+    stage: 'נמסר ללקוחה',
+    date: new Date(),
+    worker: 'מזכירות'
+  };
+
+  return await NewWig.findByIdAndUpdate(
+    wigId,
+    { 
+      currentStage: 'נמסר',
+      assignedWorkers: [], 
+      $push: { history: historyEntry } 
+    },
     { new: true }
   );
 };

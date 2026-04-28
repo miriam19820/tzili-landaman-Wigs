@@ -1,5 +1,6 @@
 import { Repair } from './repairModel.js';
 import { User } from '../User/userModel.js';
+import { AppError } from '../../Utils/AppError.js'; // שימוש ב-AppError של הפרויקט
 import * as customerService from '../Customer/customerService.js';
 
 /**
@@ -11,16 +12,35 @@ async function getRepairById(id: string) {
     .populate('tasks.assignedTo', 'username');
 
   if (!repair) {
-    throw new Error("תיקון לא נמצא");
+    throw new AppError("תיקון לא נמצא", 404);
   }
 
   return repair;
 }
 
+/**
+ * פונקציה חדשה: סימון תיקון כנמסר ללקוחה (ארכוב מהדאשבורד)
+ */
+async function markRepairAsDelivered(id: string) {
+  const repair = await Repair.findByIdAndUpdate(
+    id,
+    { $set: { overallStatus: 'נמסר' } },
+    { new: true }
+  ).populate('customer');
 
+  if (!repair) {
+    throw new AppError("התיקון לא נמצא במערכת", 404);
+  }
+
+  return repair;
+}
+
+/**
+ * פסילת משימה בבקרת איכות והחזרתה לעובדת
+ */
 async function rejectTask(repairId: string, taskIndex: number, note: string) {
   const repair = await Repair.findById(repairId);
-  if (!repair) throw new Error("תיקון לא נמצא");
+  if (!repair) throw new AppError("תיקון לא נמצא", 404);
 
   repair.tasks[taskIndex].status = 'ממתין';
 
@@ -30,7 +50,9 @@ async function rejectTask(repairId: string, taskIndex: number, note: string) {
   return await repair.save();
 }
 
-
+/**
+ * עדכון סטטוס משימה ספציפית
+ */
 async function updateTaskStatus(repairId: string, taskIndex: number, status: string) {
   const updatedRepair = await Repair.findByIdAndUpdate(
     repairId,
@@ -39,13 +61,15 @@ async function updateTaskStatus(repairId: string, taskIndex: number, status: str
   );
 
   if (!updatedRepair) {
-    throw new Error("לא ניתן לעדכן את המשימה - התיקון לא נמצא");
+    throw new AppError("לא ניתן לעדכן את המשימה - התיקון לא נמצא", 404);
   }
 
   return updatedRepair;
 }
 
-
+/**
+ * ניהול עומסי עבודה - משימות פתוחות
+ */
 async function getWorkerLoadOpen(workerId: string) {
   return await Repair.countDocuments({
     'tasks.assignedTo': workerId,
@@ -53,7 +77,9 @@ async function getWorkerLoadOpen(workerId: string) {
   });
 }
 
-
+/**
+ * ניהול עומסי עבודה - משימות שבוצעו
+ */
 async function getWorkerLoadClose(workerId: string) {
   return await Repair.countDocuments({
     'tasks.assignedTo': workerId,
@@ -61,7 +87,9 @@ async function getWorkerLoadClose(workerId: string) {
   });
 }
 
-
+/**
+ * דו"ח עומס עבודה מלא - משימות פתוחות
+ */
 async function FullWorkloadReportOpenJobs() {
   const allWorkers = await User.find({ role: 'Worker' });
 
@@ -77,6 +105,9 @@ async function FullWorkloadReportOpenJobs() {
   return report;
 }
 
+/**
+ * דו"ח עומס עבודה מלא - משימות שנסגרו
+ */
 async function FullWorkloadReportCloseJobs() {
   const allWorkers = await User.find({ role: 'Worker' });
 
@@ -92,7 +123,9 @@ async function FullWorkloadReportCloseJobs() {
   return report;
 }
 
-
+/**
+ * שליפת עובדות זמינות לפי קטגוריית התמחות
+ */
 async function getAvailableWorkersByCategory(category: string) {
   let searchCategories = [category];
   
@@ -119,7 +152,9 @@ async function getAvailableWorkersByCategory(category: string) {
   return workersWithLoad;
 }
 
-
+/**
+ * עדכון סטטוס פאה ל"בוצע" (סיום כל המשימות)
+ */
 async function updateWigStatusToDone(wigCode: string) {
   const updatedRepair = await Repair.findOneAndUpdate(
     { wigCode: wigCode },
@@ -128,35 +163,42 @@ async function updateWigStatusToDone(wigCode: string) {
   );
 
   if (!updatedRepair) {
-    throw new Error(`פאה עם קוד ${wigCode} לא נמצאה במערכת`);
+    throw new AppError(`פאה עם קוד ${wigCode} לא נמצאה במערכת`, 404);
   }
   return updatedRepair;
 }
 
-
+/**
+ * הוספת הערה לפי קוד פאה וקטגוריה
+ */
 async function addNoteByWigAndCategory(wigCode: string, category: string, note: string) {
   const repair = await Repair.findOne({ wigCode: wigCode });
-  if (!repair) throw new Error("לא נמצאה פאה עם קוד כזה");
+  if (!repair) throw new AppError("לא נמצאה פאה עם קוד כזה", 404);
   
   const task = repair.tasks.find((t: any) => t.category === category);
-  if (!task) throw new Error(`לא נמצא תיקון מסוג ${category} לפאה זו`);
+  if (!task) throw new AppError(`לא נמצא תיקון מסוג ${category} לפאה זו`, 404);
   
   task.notes = note;
   return await repair.save();
 }
 
+/**
+ * בדיקה האם כל התיקונים בפאה הושלמו
+ */
 async function checkRepairCompletion(wigCode: string) {
   const repair = await Repair.findOne({ wigCode: wigCode });
-  if (!repair) throw new Error("לא נמצאה פאה עם קוד כזה");
+  if (!repair) throw new AppError("לא נמצאה פאה עם קוד כזה", 404);
   
   const allTasksDone = repair.tasks.every((task: any) => task.status === "בוצע");
   return allTasksDone;
 }
 
-
+/**
+ * עדכון משימה והתקדמות לשלב הבא בזרימת העבודה
+ */
 async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string) {
   const repair = await Repair.findOne({ wigCode: wigCode });
-  if (!repair) throw new Error("לא נמצאה פאה עם קוד כזה");
+  if (!repair) throw new AppError("לא נמצאה פאה עם קוד כזה", 404);
 
   const currentTask = repair.tasks.find((t: any) => t.subCategory === subCategoryName && t.status === 'ממתין');
 
@@ -164,13 +206,12 @@ async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string)
     currentTask.status = 'בוצע';
     await repair.save();
   } else {
-    throw new Error(`המשימה ${subCategoryName} לא נמצאה או שכבר בוצעה`);
+    throw new AppError(`המשימה ${subCategoryName} לא נמצאה או שכבר בוצעה`, 400);
   }
 
   const nextTask = repair.tasks.find((t: any) => t.status === 'ממתין');
 
   if (nextTask) {
-   
     const nextWorker = await User.findById(nextTask.assignedTo).select('username');
     const workerName = nextWorker ? nextWorker.username : 'לא ידוע';
 
@@ -183,17 +224,18 @@ async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string)
       }
     };
   } else {
-  
+    // אם אין משימות נוספות, בודקים אם יש צורך בחפיפה ובקרה אוטומטית
     const hasWash = repair.tasks.some((t: any) => t.category === 'חפיפה');
     const hasQA = repair.tasks.some((t: any) => t.category === 'בקרה');
 
     if (!hasWash || !hasQA) {
       const finalSteps: any[] = [];
+      const firstAssignedWorker = repair.tasks[0]?.assignedTo;
       if (!hasWash) {
         finalSteps.push({
           category: 'חפיפה',
           subCategory: 'חלק',
-          assignedTo: repair.tasks[0]?.assignedTo,
+          assignedTo: firstAssignedWorker,
           status: 'ממתין',
           notes: 'חפיפה אוטומטית לאחר סיום תיקונים'
         });
@@ -202,7 +244,7 @@ async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string)
         finalSteps.push({
           category: 'בקרה',
           subCategory: 'בדיקה סופית',
-          assignedTo: repair.tasks[0]?.assignedTo,
+          assignedTo: firstAssignedWorker,
           status: 'ממתין'
         });
       }
@@ -223,7 +265,9 @@ async function updateTaskAndMoveToNext(wigCode: string, subCategoryName: string)
   }
 }
 
-
+/**
+ * יצירת הזמנת תיקון חדשה
+ */
 async function createRepairOrder(repairData: any) {
   const isUrgent = repairData.isUrgent || false;
 
@@ -243,10 +287,12 @@ async function createRepairOrder(repairData: any) {
   return await newRepair.save();
 }
 
-
+/**
+ * סגירת תיקון סופית לאחר אישור QA
+ */
 async function finalizeRepairWithQA(repairId: string, afterImageUrl: string) {
   const repair = await Repair.findById(repairId);
-  if (!repair) throw new Error("תיקון לא נמצא");
+  if (!repair) throw new AppError("תיקון לא נמצא", 404);
 
   repair.afterImageUrl = afterImageUrl; 
   repair.overallStatus = 'מוכן';
@@ -258,9 +304,12 @@ async function finalizeRepairWithQA(repairId: string, afterImageUrl: string) {
   return await repair.save();
 }
 
-
+/**
+ * שליפת תצוגת דאשבורד - כולל סינון פריטים שנמסרו
+ */
 async function getDashboardView() {
-  const activeRepairs = await Repair.find()
+  // תיקון: סינון של 'נמסר' כדי שהדאשבורד יהיה נקי ומקצועי
+  const activeRepairs = await Repair.find({ overallStatus: { $ne: 'נמסר' } })
     .populate('customer', 'firstName lastName')
     .populate('tasks.assignedTo', 'username')
     .sort({ isUrgent: -1, createdAt: 1 });
@@ -291,7 +340,9 @@ async function getDashboardView() {
   });
 }
 
-
+/**
+ * שליפת משימות לפי עובדת
+ */
 async function getTasksByWorker(workerId: string) {
   const repairs = await Repair.find({ 'tasks.assignedTo': workerId })
     .populate('customer', 'firstName lastName');
@@ -306,7 +357,7 @@ async function getTasksByWorker(workerId: string) {
           customerName: repair.customer ? `${(repair.customer as any).firstName} ${(repair.customer as any).lastName}` : 'לא ידוע',
           isUrgent: repair.isUrgent,
           internalNote: repair.internalNote,
-          imageUrl: repair.imageUrl,
+          imageUrl: (repair as any).imageUrl,
           taskIndex: index,
           task 
         });
@@ -316,17 +367,20 @@ async function getTasksByWorker(workerId: string) {
   return result.sort((a, b) => (Number(b.isUrgent)) - (Number(a.isUrgent)));
 }
 
-
+/**
+ * מחיקת תיקון מהמערכת
+ */
 async function deleteRepair(id: string) {
   const deletedRepair = await Repair.findByIdAndDelete(id);
   if (!deletedRepair) {
-    throw new Error('התיקון המבוקש לא נמצא במערכת');
+    throw new AppError('התיקון המבוקש לא נמצא במערכת', 404);
   }
   return deletedRepair;
 }
 
 export {
   getRepairById,
+  markRepairAsDelivered,
   rejectTask, 
   updateTaskStatus,
   getWorkerLoadOpen,

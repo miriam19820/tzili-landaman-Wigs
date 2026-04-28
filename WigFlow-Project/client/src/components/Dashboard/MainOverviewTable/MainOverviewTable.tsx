@@ -21,7 +21,6 @@ export const MainOverviewTable: React.FC = () => {
   const [adminCode, setAdminCode] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-
   const fetchAllData = () => {
     setLoading(true);
     const token = localStorage.getItem('token');
@@ -31,10 +30,8 @@ export const MainOverviewTable: React.FC = () => {
       fetch('http://localhost:5000/api/repairs/dashboard-view', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json())
     ])
       .then(([wigsData, repairsData]) => { 
-        // מוסיפים שדה type כדי שנדע אם זו פאה או תיקון בעת המחיקה
         const newWigs = Array.isArray(wigsData.data) ? wigsData.data.map((w: any) => ({...w, type: 'wig'})) : [];
         const repairs = Array.isArray(repairsData.data) ? repairsData.data.map((r: any) => ({...r, type: 'repair'})) : [];
-        
         setWigs([...newWigs, ...repairs]); 
         setLoading(false); 
       })
@@ -49,50 +46,69 @@ export const MainOverviewTable: React.FC = () => {
     fetchAllData();
   }, []);
 
-  
   const handleDeleteClick = (id: string) => {
     setWigToDelete(id);
     setAdminCode('');
   };
+  
   const cancelDelete = () => {
     setWigToDelete(null);
     setAdminCode('');
   };
-
 
   const confirmDelete = async () => {
     if (!adminCode) {
       alert("יש להזין קוד מנהל");
       return;
     }
-
     const item = wigs.find(w => w._id === wigToDelete);
     if (!item) return;
 
     setIsDeleting(true);
     const token = localStorage.getItem('token');
-    
-
     const endpoint = item.type === 'repair' 
       ? `http://localhost:5000/api/repairs/${wigToDelete}` 
       : `http://localhost:5000/api/wigs/${wigToDelete}`;
 
     try {
-    
       await axios.delete(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
         data: { adminCode: adminCode } 
       });
-
       alert('המחיקה בוצעה בהצלחה');
       setWigToDelete(null);
       fetchAllData();
     } catch (error: any) {
-      const msg = error.response?.data?.message || 'שגיאה במחיקה. ודא שקוד המנהל נכון.';
-      alert(msg);
+      alert(error.response?.data?.message || 'שגיאה במחיקה.');
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleMarkAsDelivered = async (item: DashboardWig) => {
+    const isConfirmed = window.confirm('האם את בטוחה שהפריט נמסר ללקוחה?');
+    if (!isConfirmed) return;
+
+    const token = localStorage.getItem('token');
+    // הבחנה חשובה בין נתיב פאה לנתיב תיקון למניעת 404
+    const endpoint = item.type === 'repair' 
+      ? `http://localhost:5000/api/repairs/${item._id}/deliver` 
+      : `http://localhost:5000/api/wigs/${item._id}/deliver`;
+    
+    try {
+      await axios.patch(endpoint, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert('עודכן כנמסר בהצלחה!');
+      fetchAllData();
+    } catch (error: any) {
+      alert('אירעה שגיאה. ודאי שהשרת מעודכן בנתיב deliver.');
+    }
+  };
+
+  const isReadyForDelivery = (wig: DashboardWig) => {
+    const station = (wig.currentStation || '').trim();
+    const status = (wig.overallStatus || '').trim();
+    return station.includes('מוכנה למסירה') || station.includes('מוכן') || 
+           status.includes('מוכנה למסירה') || status.includes('מוכן');
   };
 
   const renderWorkers = (wig: DashboardWig) => {
@@ -113,18 +129,18 @@ export const MainOverviewTable: React.FC = () => {
         <div className="zili-modal-overlay">
           <div className="zili-modal">
             <h3>⚠️ מחיקה לצמיתות</h3>
-            <p>הזן קוד מנהל כדי לאשר את המחיקה</p>
+            <p>הזן קוד מנהל לאישור</p>
             <input
               type="text"
               className="admin-code-input"
               value={adminCode}
               onChange={(e) => setAdminCode(e.target.value)}
-              placeholder="קוד מנהל"
+              placeholder="קוד"
               autoFocus
             />
             <div className="admin-modal-actions">
               <button className="btn-danger" onClick={confirmDelete} disabled={isDeleting}>
-                {isDeleting ? 'מוחק...' : 'אשר מחיקה'}
+                {isDeleting ? 'מוחק...' : 'אשר'}
               </button>
               <button className="btn-secondary" onClick={cancelDelete}>ביטול</button>
             </div>
@@ -136,40 +152,47 @@ export const MainOverviewTable: React.FC = () => {
         <div className="loading-state">טוען נתונים...</div>
       ) : (
         <div className="zili-table-wrapper">
-        <table className="zili-table">
-          <thead>
-            <tr>
-              <th>קוד</th>
-              <th>לקוחה</th>
-              <th>סטטוס</th>
-              <th>תחנה</th>
-              <th>עובדת</th>
-              <th>דחיפות</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {wigs.map((wig) => (
-              <tr key={wig._id}>
-                <td><strong>{wig.wigCode}</strong></td>
-                <td>{wig.customerName}</td>
-                <td><span className="badge badge-stage">{wig.overallStatus}</span></td>
-                <td>{wig.currentStation}</td>
-                <td>{renderWorkers(wig)}</td>
-                <td>
-                  <span className={wig.isUrgent ? 'badge badge-urgent' : 'badge badge-normal'}>
-                    {wig.isUrgent ? 'דחוף' : 'רגיל'}
-                  </span>
-                </td>
-                <td>
-                  <button className="btn-delete-wig" onClick={() => handleDeleteClick(wig._id)} title="מחיקה">
-                    ✕
-                  </button>
-                </td>
+          <table className="zili-table">
+            <thead>
+              <tr>
+                <th>קוד</th>
+                <th>לקוחה</th>
+                <th>סטטוס</th>
+                <th>תחנה</th>
+                <th>עובדת</th>
+                <th>דחיפות</th>
+                <th style={{ textAlign: 'center' }}>פעולות</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {wigs.map((wig) => (
+                <tr key={wig._id}>
+                  <td><strong>{wig.wigCode}</strong></td>
+                  <td>{wig.customerName}</td>
+                  <td><span className="badge badge-stage">{wig.overallStatus}</span></td>
+                  <td>{wig.currentStation}</td>
+                  <td>{renderWorkers(wig)}</td>
+                  <td>
+                    <span className={wig.isUrgent ? 'badge badge-urgent' : 'badge badge-normal'}>
+                      {wig.isUrgent ? 'דחוף' : 'רגיל'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="actions-wrapper">
+                      <button className="btn-delete-wig" onClick={() => handleDeleteClick(wig._id)}>✕</button>
+                      <div className="deliver-slot">
+                        {isReadyForDelivery(wig) && (
+                          <button className="btn-deliver-wig" onClick={() => handleMarkAsDelivered(wig)}>
+                            📦 נמסר
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

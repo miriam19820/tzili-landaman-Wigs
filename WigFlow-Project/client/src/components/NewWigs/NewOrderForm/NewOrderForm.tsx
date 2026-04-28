@@ -82,7 +82,6 @@ export const NewOrderForm: React.FC = () => {
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-    // תיקון: הסרת הלוכסן מ-'users' כדי להשתמש ב-baseURL בצורה תקינה
     axios.get('users')
       .then((res: any) => {
           const usersList = Array.isArray(res.data) ? res.data : res.data.data;
@@ -114,7 +113,6 @@ export const NewOrderForm: React.FC = () => {
               pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
               const pdfBase64 = pdf.output('datauristring');
               
-              // תיקון: הסרת הלוכסן מתחילת הנתיב
               await axios.post('wigs/send-summary-email', { 
                 wigData: savedWigData, 
                 pdfBase64 
@@ -182,7 +180,6 @@ export const NewOrderForm: React.FC = () => {
     }
     setLoading(true);
     try {
-      // תיקון: הסרת הלוכסן מתחילת הנתיב
       const res = await axios.get(`customers/search/${encodeURIComponent(searchValue)}`);
       const searchData = res.data;
       if (searchData.exists) {
@@ -218,7 +215,6 @@ export const NewOrderForm: React.FC = () => {
   const handleQuickCustomerRegistration = async (data: NewOrderFormInputs) => {
     setLoading(true);
     try {
-      // תיקון: הסרת הלוכסן מתחילת הנתיב
       const response = await axios.post('customers', {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -260,7 +256,6 @@ export const NewOrderForm: React.FC = () => {
     try {
       let finalCustomerId = customer?._id;
       if (!finalCustomerId) {
-        // תיקון: הסרת הלוכסן מתחילת הנתיב
         const newRes = await axios.post('customers', {
           firstName: data.firstName, 
           lastName: data.lastName, 
@@ -273,6 +268,7 @@ export const NewOrderForm: React.FC = () => {
 
       const payload: any = {
         ...data,
+        orderCode: data.orderCode.trim(), // הוספת Trim לניקוי רווחים מיותרים
         customer: finalCustomerId,
         assignedWorkers: firstStageWorkers, 
         stageAssignments: plannedAssignments, 
@@ -296,7 +292,6 @@ export const NewOrderForm: React.FC = () => {
       if (!payload.frontStyle || payload.frontStyle.length === 0) delete payload.frontStyle;
       if (!payload.finalStyle) delete payload.finalStyle;
 
-      // תיקון: הסרת הלוכסן מתחילת הנתיב
       const response = await axios.post('wigs/new', payload);
       const newWig = response.data.data || response.data;
       
@@ -593,6 +588,7 @@ export const NewOrderForm: React.FC = () => {
               <input
                 className="form-input"
                 placeholder="הקלידי קוד פאה (למשל: WIG-555)"
+                required
                 {...register('orderCode', { required: true })}
               />
             </div>
