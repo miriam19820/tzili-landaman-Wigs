@@ -1,20 +1,11 @@
 import { Router } from 'express';
-<<<<<<< HEAD
-import * as serviceService from '../Models_Service/SalonServices/serviceService';
-
-const serviceRouter = Router();
-
-// 1. יצירת שירות חדש (שרה ומרים)
-serviceRouter.post('/', async (req, res) => {
-=======
 import * as serviceService from '../Models_Service/SalonServices/serviceService'; 
 import { verifyToken, verifyAdmin, verifyWorker, verifyQC } from '../Middlewares/authMiddleware';
 
 const serviceRouter = Router();
 
-// הזמנת שירות חדש (רק מנהלת/מזכירה)
+// 1. יצירת שירות חדש (רק מנהלת/מזכירה)
 serviceRouter.post('/', verifyAdmin, async (req, res) => {
->>>>>>> 4b486c0bd58f9af880f93a227e41ab2a058e1302
   try {
     const newService = await serviceService.createService(req.body);
     res.status(201).json(newService);
@@ -23,55 +14,36 @@ serviceRouter.post('/', verifyAdmin, async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-// 2. שליפת כל השירותים
-serviceRouter.get('/', async (req, res) => {
-=======
-// שליפת נתוני פאה בשירות (כל משתמש מחובר)
+// 2. שליפת שירות לפי ID
 serviceRouter.get('/:id', verifyToken, async (req, res) => {
->>>>>>> 4b486c0bd58f9af880f93a227e41ab2a058e1302
   try {
-    // כאן אפשר להוסיף פונקציה ב-serviceService אם הבנות יצרו כזו
-    res.status(200).json({ message: "נתיב שליפת שירותים פעיל" });
+    const service = await serviceService.getServiceById(req.params.id);
+    res.status(200).json(service);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 });
 
-<<<<<<< HEAD
-// 3. פסילת שירות והחזרה לתיקון (משימת מפתחת 4 - Reject)
-serviceRouter.patch('/reject/:id', async (req, res) => {
-=======
-// --- פעולות של עובדות ייצור ---
+// --- פעולות של עובדות (חפיפה/סירוק/ייבוש) ---
+
 serviceRouter.patch('/:id/start-drying', verifyWorker, async (req, res) => {
->>>>>>> 4b486c0bd58f9af880f93a227e41ab2a058e1302
   try {
-    const { id } = req.params;
-    const { qaNote, returnTo } = req.body;
-    
-    const result = await serviceService.rejectService(id, qaNote, returnTo);
+    const result = await serviceService.moveToDrying(req.params.id);
     res.status(200).json(result);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
 });
 
-<<<<<<< HEAD
-// 4. אישור שירות (מוכן למסירה)
-serviceRouter.patch('/approve/:id', async (req, res) => {
-=======
 serviceRouter.patch('/:id/finish-drying', verifyWorker, async (req, res) => {
->>>>>>> 4b486c0bd58f9af880f93a227e41ab2a058e1302
   try {
-    const result = await serviceService.approveService(req.params.id);
+    const result = await serviceService.finishDrying(req.params.id);
     res.status(200).json(result);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
 });
 
-<<<<<<< HEAD
-=======
 serviceRouter.patch('/:id/finish-styling', verifyWorker, async (req, res) => {
   try {
     const updatedService = await serviceService.finishStyling(req.params.id);
@@ -81,8 +53,8 @@ serviceRouter.patch('/:id/finish-styling', verifyWorker, async (req, res) => {
   }
 });
 
+// --- פעולות בקרת איכות (QA) - משימת מפתחת 4 ---
 
-// --- פעולות בקרת איכות (QA) - רק מחלקת QC או מנהלת ---
 serviceRouter.patch('/:id/approve', verifyQC, async (req, res) => {
   try {
     const approvedService = await serviceService.approveService(req.params.id);
@@ -107,5 +79,4 @@ serviceRouter.patch('/:id/reject', verifyQC, async (req, res) => {
   }
 });
 
->>>>>>> 4b486c0bd58f9af880f93a227e41ab2a058e1302
 export default serviceRouter;
