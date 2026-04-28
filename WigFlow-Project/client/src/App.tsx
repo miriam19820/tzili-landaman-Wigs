@@ -1,8 +1,21 @@
-import React, { useState } from 'react'; // הוספתי useState לכל מקרה
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import AdminCombinedDashboard from './pages/AdminCombinedDashboard';
 import axios from 'axios';
 
-// 1. הגדרות Axios (נשאר בדיוק אותו דבר)
+// 2. ייבוא הקומפוננטות
+import { ProductionStation } from './components/NewWigs/ProductionStation/ProductionStation';
+import { NewOrderForm } from './components/NewWigs/NewOrderForm/NewOrderForm';
+import { LoginForm } from './components/Auth/LoginForm/LoginForm';
+import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
+import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
+import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister/QuickCustomerRegister';
+import { ServiceOrderForm } from './components/ServicesAndQA/ServiceOrderForm/ServiceOrderForm';
+import { QADashboard } from './components/ServicesAndQA/QADashboard/QADashboard';
+import { MainOverviewTable } from './components/Dashboard/MainOverviewTable/MainOverviewTable';
+import { WorkersLoadStatus } from './components/Dashboard/WorkersLoadStatus/WorkersLoadStatus';
+
+
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 axios.interceptors.request.use(
@@ -16,19 +29,8 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 2. ייבוא הקומפוננטות (וידאתי שכל ה-Imports קיימים)
-import { ProductionStation } from './components/NewWigs/ProductionStation/ProductionStation';
-import { NewOrderForm } from './components/NewWigs/NewOrderForm/NewOrderForm';
-import { LoginForm } from './components/Auth/LoginForm/LoginForm';
-import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
-import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
-import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister/QuickCustomerRegister';
-import { ServiceOrderForm } from './components/ServicesAndQA/ServiceOrderForm/ServiceOrderForm';
-import { QADashboard } from './components/ServicesAndQA/QADashboard/QADashboard';
-import { MainOverviewTable } from './components/Dashboard/MainOverviewTable/MainOverviewTable';
-import { WorkersLoadStatus } from './components/Dashboard/WorkersLoadStatus/WorkersLoadStatus';
 
-// --- קומפוננטת הניווט (כאן הוספתי את הכפתור שלך) ---
+// --- קומפוננטת הניווט ---
 const Navigation = () => {
   const location = useLocation();
   const userString = localStorage.getItem('user');
@@ -58,7 +60,10 @@ const Navigation = () => {
           <>
             <Link to="/" style={linkStyle('/')}>הזמנת פאה חדשה</Link>
             <Link to="/repairs/new" style={linkStyle('/repairs/new')}>קבלת פאה לתיקון</Link>
-            {/* הוספתי את הקישור שלך כאן */}
+            
+            {/* הכפתור החדש שמוביל לדף המשולב */}
+            <Link to="/admin/all-active" style={linkStyle('/admin/all-active')}>📊 מבט על משולב</Link>
+            
             <Link to="/service/new" style={linkStyle('/service/new')}>הזמנת שירות</Link>
             <Link to="/dashboard" style={linkStyle('/dashboard')}>דאשבורד עומס</Link>
           </>
@@ -67,7 +72,7 @@ const Navigation = () => {
         {(user?.role === 'Worker' || user?.role === 'Admin') && (
           <>
             <Link to="/production" style={linkStyle('/production')}>תחנת ייצור</Link>
-            <Link to="/repairs/tasks" style={linkStyle('/repairs/tasks')}>תחנת תיקונים</Link>
+            <Link to={`/repairs/tasks/${user?.id || user?._id}`} style={linkStyle(`/repairs/tasks/${user?.id || user?._id}`)} > תחנת תיקונים</Link>
           </>
         )}
 
@@ -103,29 +108,20 @@ function App() {
         
         <div style={{ padding: '0 20px' }}>
           <Routes>
-            <Route path="/login" element={token ? <Navigate to={user?.role === 'Worker' ? "/repairs/tasks" : "/"} replace /> : <LoginForm />} />
-            
-            {/* נתיבי מנהלת */}
+            <Route path="/login" element={token ? <Navigate to={user?.role === 'Worker' ? `/repairs/tasks/${user?.id || user?._id}` : "/"} replace /> : <LoginForm />} />            {/* נתיבי מנהלת */}
             <Route path="/" element={<ProtectedRoute><NewOrderForm /></ProtectedRoute>} />
             <Route path="/repairs/new" element={<ProtectedRoute><DiagnosisChecklist /></ProtectedRoute>} />
             <Route path="/repairs/quick-register" element={<ProtectedRoute><QuickCustomerRegister /></ProtectedRoute>} />
             
-            {/* שילבתי את הדפים שלך כאן בתוך ה-Routes */}
+            <Route path="/admin/all-active" element={<ProtectedRoute><AdminCombinedDashboard /></ProtectedRoute>} />
+            
             <Route path="/service/new" element={<ProtectedRoute><ServiceOrderForm /></ProtectedRoute>} />
             <Route path="/qa" element={<ProtectedRoute><QADashboard /></ProtectedRoute>} />
 
             <Route path="/dashboard" element={<ProtectedRoute><div><MainOverviewTable /><WorkersLoadStatus /></div></ProtectedRoute>} />
 
-            {/* נתיבי עובדת ייצור */}
             <Route path="/production" element={<ProtectedRoute><ProductionStation /></ProtectedRoute>} />
-            
-            {/* נתיב תחנת תיקונים */}
-            <Route path="/repairs/tasks" element={
-              <ProtectedRoute>
-                <RepairWorkerList workerId={user?.id || user?._id || ''} />
-              </ProtectedRoute>
-            } />
-            
+            <Route path="/repairs/tasks/:workerId" element={<ProtectedRoute><RepairWorkerList /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
           </Routes>
         </div>

@@ -4,7 +4,6 @@ import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddl
 
 const repairRouter = Router();
 
-// 1. פתיחת כרטיס תיקון חדש (רק מנהלת/מזכירה)
 repairRouter.post('/', verifyAdmin, async (req, res, next) => {
   try {
     const newRepair = await repairService.createRepairOrder(req.body);
@@ -14,7 +13,6 @@ repairRouter.post('/', verifyAdmin, async (req, res, next) => {
   }
 });
 
-// 2. שליפת נתונים מרוכזים למסך המזכירה (רק מנהלת)
 repairRouter.get('/dashboard-view', verifyAdmin, async (req, res, next) => {
   try {
     const dashboard = await repairService.getDashboardView();
@@ -24,7 +22,6 @@ repairRouter.get('/dashboard-view', verifyAdmin, async (req, res, next) => {
   }
 });
 
-// 3. שליפת דוח עומסי עבודה של הצוות (רק מנהלת)
 repairRouter.get('/worker-load', verifyAdmin, async (req, res, next) => {
   try {
     const report = await repairService.FullWorkloadReportOpenJobs();
@@ -34,7 +31,6 @@ repairRouter.get('/worker-load', verifyAdmin, async (req, res, next) => {
   }
 });
 
-// 4. שליפת עובדות פנויות לפי קטגוריית תיקון (מחוברים בלבד)
 repairRouter.get('/available-workers/:category', verifyToken, async (req, res, next) => {
   try {
     const workers = await repairService.getAvailableWorkersByCategory(req.params.category);
@@ -44,7 +40,6 @@ repairRouter.get('/available-workers/:category', verifyToken, async (req, res, n
   }
 });
 
-// 5. שליפת הרשימה האישית של המשימות לעובדת המחוברת (עובדת ומנהלת)
 repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req, res, next) => {
   try {
     const tasks = await repairService.getTasksByWorker(req.params.workerId);
@@ -54,7 +49,6 @@ repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req, res, next)
   }
 });
 
-// 6. שליפת תיקון בודד לפי ה-ID שלו (מחוברים בלבד)
 repairRouter.get('/:id', verifyToken, async (req, res, next) => {
   try {
     const repair = await repairService.getRepairById(req.params.id);
@@ -64,16 +58,13 @@ repairRouter.get('/:id', verifyToken, async (req, res, next) => {
   }
 });
 
-// 7. עדכון סטטוס המשימה ובדיקה האם התיקון כולו הסתיים (עובדת ומנהלת)
 repairRouter.patch('/:id/task/:index', verifyWorker, async (req, res, next) => {
   try {
     const { id, index } = req.params;
     const { status } = req.body;
     
-    // מעדכנים את המשימה הספציפית ל"בוצע"
     const updatedRepair = await repairService.updateTaskStatus(id, parseInt(index), status);
     
-    // בודקים אם עכשיו הפאה סיימה את *כל* התיקונים שלה (תוקן הבאג שהיה כאן בעבר!)
     const isComplete = updatedRepair.tasks.every(task => task.status === "בוצע");
     
     if (isComplete) {
@@ -84,6 +75,22 @@ repairRouter.patch('/:id/task/:index', verifyWorker, async (req, res, next) => {
       success: true, 
       data: updatedRepair, 
       message: isComplete ? 'המשימה והתיקונים כולם הסתיימו!' : 'המשימה עודכנה בהצלחה'
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+repairRouter.patch('/update-status/:id', verifyAdmin, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; 
+
+    const updatedRepair = await repairService.updateOverallStatus(id, status);
+
+    res.json({ 
+      success: true, 
+      message: `סטטוס הפאה עודכן ל-${status} בהצלחה`, 
+      data: updatedRepair 
     });
   } catch (error) {
     next(error);

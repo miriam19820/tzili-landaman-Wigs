@@ -4,6 +4,7 @@ import './DiagnosisChecklist.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
+// רשימת הקטגוריות המקורית והנכונה שלך
 const REPAIR_CATEGORIES = [
   { id: 'machine', name: 'מכונה', subTypes: ['העברת רשת', 'תיקון רשת', 'התקנת לייס', 'השטחת סקין', 'דילול/מילוי'] },
   { id: 'color', name: 'צבע', subTypes: ['גוונים', 'שורש', 'שטיפה', 'הבהרה'] },
@@ -20,9 +21,9 @@ export const DiagnosisChecklist: React.FC = () => {
   const [isUrgent, setIsUrgent] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  
   const [categoryWorkers, setCategoryWorkers] = useState<Record<string, string>>({});
 
+  // ה-useEffect המקורי עם ה-const כפי שביקשת
   useEffect(() => {
     if (location.state?.idNumber) {
       const returnedId = location.state.idNumber;
@@ -35,7 +36,11 @@ export const DiagnosisChecklist: React.FC = () => {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/api/customers/search/${id}`);
+      // שליפת הטוקן מה-localStorage כדי לעבור את ה-Middleware בשרת
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`http://localhost:3000/api/customers/search/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data.exists) {
         setCustomerId(response.data.customer._id);
         setCustomerName(`${response.data.customer.firstName} ${response.data.customer.lastName}`);
@@ -69,7 +74,6 @@ export const DiagnosisChecklist: React.FC = () => {
 
   const handleCategoryWorkerChange = (categoryName: string, workerId: string) => {
     setCategoryWorkers(prev => ({ ...prev, [categoryName]: workerId }));
-    
     setSelectedTasks(prev => prev.map(t => 
       t.category === categoryName ? { ...t, assignedTo: workerId } : t
     ));
@@ -111,7 +115,10 @@ export const DiagnosisChecklist: React.FC = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/api/repairs', repairData);
+      const token = localStorage.getItem('token');
+      const response = await axios.post('http://localhost:3000/api/repairs', repairData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       if (response.status === 201 || response.status === 200) {
         alert("כרטיס תיקון נפתח בהצלחה! ✅");
@@ -121,6 +128,7 @@ export const DiagnosisChecklist: React.FC = () => {
         setCustomerId('');
         setCustomerName('');
         setIdNumber('');
+        navigate('/admin/all-active');
       }
     } catch (error: any) {
       alert(`שגיאה: ${error.response?.data?.message || 'שגיאת תקשורת בפתיחת התיקון'}`);
