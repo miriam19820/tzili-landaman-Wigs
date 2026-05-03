@@ -49,6 +49,20 @@ export const addInternalNote = async (customerId: string, noteData: { content: s
     return await customer.save();
 };
 
+
 export const getAllCustomers = async () => {
     return await Customer.find().sort({ firstName: 1 });
+};
+export const deleteInternalNote = async (customerId: string, noteId: string) => {
+    const customer = await Customer.findByIdAndUpdate(
+        customerId,
+        { $pull: { internalNotes: { _id: noteId } } },
+        { new: true }
+    );
+    
+    if (!customer) {
+        throw new AppError('הלקוחה לא נמצאה במערכת', 404);
+    }
+    
+    return customer;
 };

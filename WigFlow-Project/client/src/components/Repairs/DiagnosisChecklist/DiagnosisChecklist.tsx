@@ -175,6 +175,16 @@ export const DiagnosisChecklist: React.FC = () => {
 
     try {
       const response = await axios.post('/repairs', repairData);
+      // שמירת ההערה בהיסטוריית הלקוחה
+      const combinedNote = `${customerGeneralNote ? `[כללי]: ${customerGeneralNote} \n` : ''}${internalNote}`.trim();
+      if (combinedNote) {
+        try {
+          await axios.post(`/customers/${customerId}/notes`, {
+            content: combinedNote,
+            context: "הזמנת תיקון"
+          });
+        } catch (e) { console.error("Failed to save note", e); }
+      }
 
       if (response.status === 201 || response.status === 200) {
         alert('✅ התיקון נשמר בהצלחה והועבר לתחנות!');

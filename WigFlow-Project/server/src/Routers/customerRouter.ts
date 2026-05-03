@@ -91,5 +91,22 @@ customerRouter.post('/:id/notes', verifyToken, async (req, res) => {
     });
   }
 });
+customerRouter.delete('/:id/notes/:noteId', verifyToken, async (req, res) => {
+  try {
+    const { id, noteId } = req.params;
+    const updatedCustomer = await customerService.deleteInternalNote(id, noteId);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'ההערה נמחקה בהצלחה',
+      notes: updatedCustomer.internalNotes 
+    });
+  } catch (error: any) {
+    res.status(error.statusCode || 400).json({ 
+      message: 'שגיאה במחיקת הערה', 
+      error: error.message 
+    });
+  }
+});
 
 export default customerRouter;

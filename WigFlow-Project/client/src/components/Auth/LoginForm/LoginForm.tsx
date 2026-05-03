@@ -22,25 +22,30 @@ export const LoginForm: React.FC = () => {
         username,
         password
       });
-
-    
+      
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
+      // הניתוב החכם אחרי ההתחברות
       if (user.role === 'Admin') {
         window.location.href = '/'; 
       } else if (user.role === 'Worker') {
-        window.location.href = '/repairs/tasks'; 
+        // אם מדובר ברחלי או כל עובדת בקרה - ניתוב ישיר ללוח הבקרה
+        if (user.specialty?.includes('בקר') || user.specialty?.includes('איכות')) {
+           window.location.href = '/qa';
+        } else {
+           window.location.href = '/repairs/tasks'; 
+        }
       } else if (user.role === 'QC' || user.role === 'Inspector') {
         window.location.href = '/qa'; 
       } else {
         window.location.href = '/';
       }
+
     } catch (err: any) {
-      setError(err.response?.data?.message || 'שם משתמש או סיסמה שגויים. אנא נסי שוב.');
+      setError(err.response?.data?.message || 'שגיאה בהתחברות.');
     } finally {
       setLoading(false);
     }
@@ -51,13 +56,13 @@ export const LoginForm: React.FC = () => {
       <div className="login-box">
         <div className="login-brand">
           <img src={logo} alt="zili" className="login-logo-img" />
-          <span className="login-subtitle">ניהול פאות ותוספות שיער</span>
+          <span className="login-subtitle">מערכת ניהול סלון פאות</span>
           <div className="login-divider" />
         </div>
 
         <form onSubmit={handleLogin} className="login-form">
           {error && <div className="error-message">{error}</div>}
-
+          
           <div className="form-group">
             <label>שם משתמש</label>
             <input
@@ -65,7 +70,7 @@ export const LoginForm: React.FC = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="הזיני שם משתמש"
+              placeholder="הקלידי שם משתמש"
               required
             />
           </div>
@@ -78,17 +83,17 @@ export const LoginForm: React.FC = () => {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="הזיני סיסמה"
+                placeholder="הקלידי סיסמה"
                 required
               />
               <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? '🙈' : '👁️'}
+                {showPassword ? '👁️' : '🙈'}
               </button>
             </div>
           </div>
 
           <button type="submit" className="btn-primary login-btn" disabled={loading}>
-            {loading ? 'מתחברת...' : 'כניסה למערכת'}
+            {loading ? 'מתחבר...' : 'כניסה למערכת'}
           </button>
         </form>
       </div>

@@ -15,6 +15,7 @@ export const ServiceOrderForm: React.FC = () => {
   const [internalNote, setInternalNote] = useState('');
 
   const [formData, setFormData] = useState({
+    wigCode: '', // התוספת שלנו!
     serviceType: 'חפיפה וסירוק',
     styleCategory: 'חלק',
     isUrgent: false,
@@ -50,12 +51,28 @@ export const ServiceOrderForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerId) { alert('חובה לזהות לקוחה לפני יצירת משימה!'); return; }
+    if (!formData.wigCode.trim()) { alert('חובה להזין קוד פאה!'); return; }
+    
     setLoading(true);
     try {
+      // 1. יצירת משימת השירות (שולחים גם את קוד הפאה)
       await axios.post('/services', { customer: customerId, internalNote, ...formData });
+      
+      // 2. שמירת ההערה בהיסטוריית הלקוחה
+      if (internalNote.trim()) {
+        try {
+          await axios.post(`/customers/${customerId}/notes`, {
+            content: internalNote,
+            context: "במהלך פתיחת הזמנת שירות"
+          });
+        } catch (e) { 
+          console.error("Failed to save note", e); 
+        }
+      }
+
       alert('הזמנת שירות נוצרה בהצלחה!');
       setCustomerSearch(''); setCustomerId(''); setCustomerName(''); setInternalNote('');
-      setFormData({ serviceType: 'חפיפה וסירוק', styleCategory: 'חלק', isUrgent: false, note: '' });
+      setFormData({ wigCode: '', serviceType: 'חפיפה וסירוק', styleCategory: 'חלק', isUrgent: false, note: '' });
     } catch (error: any) {
       alert(`שגיאה ביצירת המשימה: ${error.response?.data?.message || 'שגיאת שרת'}`);
     } finally { setLoading(false); }
@@ -88,6 +105,18 @@ export const ServiceOrderForm: React.FC = () => {
 
       {customerId && (
         <form onSubmit={handleSubmit} className="service-form-body animate-in">
+
+          <div className="form-group">
+            <label className="form-label">קוד פאה *</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="למשל: WIG-1234"
+              value={formData.wigCode}
+              onChange={(e) => setFormData({...formData, wigCode: e.target.value})}
+              required
+            />
+          </div>
 
           <div className="form-group">
             <label className="form-label">סוג השירות</label>

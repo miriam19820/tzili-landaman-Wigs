@@ -16,7 +16,7 @@ userRouter.post('/login', async (req, res) => {
   }
 });
 
-userRouter.get('/', verifyToken, async (req, res) => {
+userRouter.get('/', verifyAdmin, async (req, res) => {
     try {
         const users = await userService.getAllUsers();
         res.status(200).json(users);

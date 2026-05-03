@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import './WigHistorySearch.css';
 
-
-
-const TimelineItem: React.FC<{ item: any; type: 'production' | 'service' | 'repair'; onNote: () => void }> = ({ item, type, onNote }) => {
+const TimelineItem: React.FC<{ item: any; type: 'production' | 'service' | 'repair'; onNote: () => void; onImageClick: (url: string) => void }> = ({ item, type, onNote, onImageClick }) => {
   const [open, setOpen] = useState(false);
 
   const getStageName = () => {
@@ -65,21 +63,80 @@ const TimelineItem: React.FC<{ item: any; type: 'production' | 'service' | 'repa
             {type === 'service' && (
               <>
                 <div className="item-meta-row">
-                  <span className="item-meta-label">סגנון</span>
-                  <span>{item.styleCategory || '—'}</span>
+                  <span className="item-meta-label">סוג שירות</span>
+                  <span>{item.serviceType || '—'}</span>
                 </div>
-                {item.assignedTo && (
+                
+                {item.styleCategory && item.styleCategory !== 'ללא' && (
                   <div className="item-meta-row">
+                    <span className="item-meta-label">סגנון</span>
+                    <span>{item.styleCategory}</span>
+                  </div>
+                )}
+
+                {/* בלוק בולט לפסילות QA עם תמונה והערות */}
+                {item.status === 'Rejected' && (
+                  <div style={{ backgroundColor: '#fff1f0', border: '1px solid #ffa39e', padding: '12px', borderRadius: '6px', marginTop: '10px' }}>
+                    <strong style={{ color: '#cf1322', display: 'block', marginBottom: '8px' }}>
+                      ⚠️ הפאה נפסלה בבקרת איכות
+                    </strong>
+                    <p style={{ fontSize: '13px', margin: '0 0 12px 0', whiteSpace: 'pre-wrap', color: '#5c0011', lineHeight: '1.5' }}>
+                      {item.notes?.qa || item.note}
+                    </p>
+
+                    {item.qaRejectionPhoto && (
+                      <img
+                        src={item.qaRejectionPhoto}
+                        alt="תמונת התקלה מהבקרה"
+                        style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '2px solid #ffccc7', cursor: 'zoom-in' }}
+                        onClick={() => onImageClick(item.qaRejectionPhoto)}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {item.assignedTo && (
+                  <div className="item-meta-row" style={{ marginTop: '8px' }}>
                     <span className="item-meta-label">עובדת</span>
                     <span>{item.assignedTo.fullName || item.assignedTo.username}</span>
                   </div>
                 )}
-                {item.note && <div className="item-note-box">{item.note}</div>}
+
+                {/* הערה רגילה אם זה לא פסילה */}
+                {item.status !== 'Rejected' && item.note && (
+                  <div className="item-note-box">{item.note}</div>
+                )}
+
+                {/* תמונת אישור סופי אם הפאה אושרה ב-QA */}
+                {item.status === 'Ready' && item.afterImageUrl && (
+                  <div style={{ marginTop: '10px' }}>
+                    <span className="item-meta-label">אושר סופית בבקרת איכות:</span>
+                    <img 
+                      src={item.afterImageUrl} 
+                      alt="תמונת אישור" 
+                      style={{ display: 'block', marginTop: '6px', width: '120px', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '2px solid #b7eb8f', cursor: 'zoom-in' }} 
+                      onClick={() => onImageClick(item.afterImageUrl)}
+                    />
+                  </div>
+                )}
               </>
             )}
 
             {type === 'repair' && (
               <>
+                {/* תמונת ה"לפני" של התיקון */}
+                {item.beforeImageUrl && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <span className="item-meta-label">תמונת הבעיה בקבלת התיקון:</span>
+                    <img 
+                      src={item.beforeImageUrl} 
+                      alt="לפני התיקון" 
+                      style={{ display: 'block', marginTop: '6px', width: '120px', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--zili-border)', cursor: 'zoom-in' }} 
+                      onClick={() => onImageClick(item.beforeImageUrl)}
+                    />
+                  </div>
+                )}
+                
                 <ul className="tasks-bullet-list">
                   {item.tasks?.map((t: any, idx: number) => (
                     <li key={idx} className="task-line-item">
@@ -142,11 +199,50 @@ export const WigHistorySearch: React.FC = () => {
 
   const handleSaveNote = async () => {
     if (!noteText.trim()) { alert('נא להזין תוכן להערה'); return; }
+
+    const customerId = history?.wigDetails?.customer?._id;
+    if (!customerId) {
+      alert('לא ניתן לשמור הערה: לא נמצא מזהה לקוחה.');
+      return;
+    }
+
     try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `http://localhost:5000/api/customers/${customerId}/notes`,
+        {
+          content: noteText,
+          context: noteTarget?.title || 'הערת היסטוריה'
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
       alert(`ההערה עבור "${noteTarget?.title}" נשמרה בהצלחה`);
       setIsNoteModalOpen(false);
+      handleSearch(); 
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה בשמירת ההערה');
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!noteId) return;
+    if (!window.confirm('האם את בטוחה שברצונך למחוק הערה זו?')) return;
+
+    const customerId = history?.wigDetails?.customer?._id;
+    if (!customerId) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/customers/${customerId}/notes/${noteId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       handleSearch();
-    } catch { alert('שגיאה בשמירת ההערה'); }
+    } catch (err) {
+      console.error(err);
+      alert('שגיאה במחיקת ההערה');
+    }
   };
 
   return (
@@ -174,11 +270,16 @@ export const WigHistorySearch: React.FC = () => {
 
       {/* Fullscreen Image */}
       {fullscreenImage && (
-        <div className="fullscreen-overlay" onClick={() => setFullscreenImage(null)}>
-          <div className="fullscreen-content" onClick={e => e.stopPropagation()}>
-            <img src={fullscreenImage} alt="Fullscreen" />
-            <button className="close-btn" onClick={() => setFullscreenImage(null)}>&times;</button>
-          </div>
+        <div 
+          style={{ position: 'fixed', inset: 0, background: 'rgba(61, 43, 46, 0.88)', backdropFilter: 'blur(4px)', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+          onClick={() => setFullscreenImage(null)}
+        >
+          <img 
+            src={fullscreenImage} 
+            alt="תמונה מוגדלת" 
+            style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} 
+          />
+          <button style={{ position: 'absolute', top: '20px', left: '20px', background: 'var(--zili-white)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', fontSize: '24px', color: 'var(--zili-deep)', cursor: 'pointer' }} onClick={() => setFullscreenImage(null)}>✕</button>
         </div>
       )}
 
@@ -220,6 +321,49 @@ export const WigHistorySearch: React.FC = () => {
                   : <p className="no-notes-placeholder">אין הערות כלליות</p>
                 }
               </div>
+
+              {history.wigDetails.customer?.internalNotes && history.wigDetails.customer.internalNotes.length > 0 && (
+                <div className="customer-internal-notes" style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed var(--zili-border)' }}>
+                  <h4 style={{ fontSize: '12px', fontWeight: 600, color: 'var(--zili-muted)', marginBottom: '10px' }}>היסטוריית הערות לקוחה:</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {[...history.wigDetails.customer.internalNotes].reverse().map((note: any, index: number) => (
+                      <div key={note._id || index} className="sticky-note-paper" style={{ background: '#fff3cd', borderColor: '#ffc107', position: 'relative' }}>
+                        
+                        {note._id && (
+                          <button
+                            onClick={() => handleDeleteNote(note._id)}
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              left: '4px',
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#856404',
+                              fontSize: '14px',
+                              fontWeight: 'bold',
+                              cursor: 'pointer',
+                              opacity: 0.5,
+                              padding: '2px 6px'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.5'}
+                            title="מחק הערה"
+                          >
+                            ✕
+                          </button>
+                        )}
+
+                        <div style={{ fontSize: '10.5px', color: '#856404', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '4px', paddingLeft: '20px' }}>
+                          <strong style={{ opacity: 0.8 }}>{note.context || 'הערה'}</strong>
+                          <span>{new Date(note.createdAt).toLocaleString('he-IL', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                        </div>
+                        <div style={{ whiteSpace: 'pre-wrap' }}>{note.content}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="sidebar-quick-info">
                 <div className="quick-item">
                   <label>סטטוס נוכחי</label>
@@ -275,7 +419,8 @@ export const WigHistorySearch: React.FC = () => {
                   <div className="timeline">
                     {history.productionHistory.map((h: any, i: number) => (
                       <TimelineItem key={i} item={h} type="production"
-                        onNote={() => openNoteModal('production_stage', `שלב ${h.stage}`)} />
+                        onNote={() => openNoteModal('production_stage', `שלב ${h.stage}`)}
+                        onImageClick={(url) => setFullscreenImage(url)} />
                     ))}
                   </div>
                 ) : <p className="no-data">אין נתוני ייצור</p>}
@@ -288,7 +433,8 @@ export const WigHistorySearch: React.FC = () => {
                   <div className="timeline">
                     {history.serviceHistory.map((s: any, i: number) => (
                       <TimelineItem key={i} item={s} type="service"
-                        onNote={() => openNoteModal('service', `שירות ${s.serviceType}`)} />
+                        onNote={() => openNoteModal('service', `שירות ${s.serviceType}`)}
+                        onImageClick={(url) => setFullscreenImage(url)} />
                     ))}
                   </div>
                 ) : <p className="no-data">אין נתוני שירות</p>}
@@ -301,7 +447,8 @@ export const WigHistorySearch: React.FC = () => {
                   <div className="timeline">
                     {history.repairHistory.map((r: any, i: number) => (
                       <TimelineItem key={i} item={r} type="repair"
-                        onNote={() => openNoteModal('repair', `תיקון ${r.overallStatus}`)} />
+                        onNote={() => openNoteModal('repair', `תיקון ${r.overallStatus}`)}
+                        onImageClick={(url) => setFullscreenImage(url)} />
                     ))}
                   </div>
                 ) : <p className="no-data">אין נתוני תיקונים</p>}

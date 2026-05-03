@@ -147,7 +147,10 @@ export const deleteUser = async (userId: string) => {
 
 export const getWorkerUnifiedTasks = async (workerId: string) => {
    
-    const newWigs = await NewWig.find({ assignedWorkers: { $in: [workerId] } }).populate('customer');
+    const newWigs = await NewWig.find({ 
+        assignedWorkers: { $in: [workerId] },
+        currentStage: { $nin: ['בקרה', 'מוכנה למסירה', 'נמסר'] }
+    }).populate('customer');
     const wigTasks = newWigs.map((wig: any) => ({
         repairId: wig._id.toString(), 
         type: 'חדשה', 
@@ -166,6 +169,9 @@ export const getWorkerUnifiedTasks = async (workerId: string) => {
 
     repairTasksRaw.forEach((t: any) => {
         const repairIdStr = t.repairId.toString();
+        
+        // סינון משימות בקרה — הן שייכות ל-QA Dashboard בלבד
+        if (t.task.category === 'בקרה') return;
     
         if (!groupedRepairs.has(repairIdStr)) {
             groupedRepairs.set(repairIdStr, {

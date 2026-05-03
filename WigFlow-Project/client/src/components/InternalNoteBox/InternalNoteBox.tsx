@@ -12,7 +12,7 @@ export const InternalNoteBox: React.FC<Props> = ({ note, setNote }) => {
   return (
     <div className="internal-note-container">
       <div className="internal-note-title">
-        הערה פנימית על הלקוחה — לא מופיע ב-PDF
+       
       </div>
       
       <textarea 

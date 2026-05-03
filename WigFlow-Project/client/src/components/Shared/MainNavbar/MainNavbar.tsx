@@ -19,18 +19,21 @@ export const MainNavbar: React.FC = () => {
 
   const isAdmin = user?.role === 'Admin' || user?.role === 'Secretary';
   const isWorker = user?.role === 'Worker' || user?.role === 'Admin';
-  const isQA = user?.role === 'Inspector' || user?.role === 'QC' || user?.role === 'Admin';
+  
+  // התיקון: בדיקה חכמה שתוודא שרחלי תראה את הכפתור של בקרת איכות
+  const isQA = user?.role === 'Inspector' || user?.role === 'QC' || user?.role === 'Admin' || 
+               user?.specialty?.includes('בקר') || user?.specialty?.includes('איכות');
 
   const roleLabel: Record<string, string> = {
     Admin: 'מנהלת',
     Worker: 'עובדת',
     Secretary: 'מזכירה',
     QC: 'בקרת איכות',
-    Inspector: 'בקרת איכות',
+    Inspector: 'מבקרת'
   };
 
   return (
-    <nav className="zili-navbar">
+    <nav className="zili-navbar" dir="rtl">
       <Link to="/" className="navbar-brand">
         <img src={logo} alt="zili" className="navbar-logo-img" />
       </Link>
@@ -45,12 +48,14 @@ export const MainNavbar: React.FC = () => {
             <Link to="/history" className={isActive('/history')}>היסטוריה</Link>
           </>
         )}
-        {isWorker && (
+        
+        {isWorker && !isQA && (
           <>
             <Link to="/production" className={isActive('/production')}>תחנת ייצור</Link>
             <Link to="/repairs/tasks" className={isActive('/repairs/tasks')}>תחנת תיקונים</Link>
           </>
         )}
+
         {isQA && (
           <Link to="/qa" className={isActive('/qa')}>בקרת איכות</Link>
         )}

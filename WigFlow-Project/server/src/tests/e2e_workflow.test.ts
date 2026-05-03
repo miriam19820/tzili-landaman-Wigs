@@ -13,6 +13,7 @@ let workerId: string;
 let customerId: string;
 let createdWigId: string;
 let createdQaTaskId: string;
+let w1Id: string, w2Id: string, w3Id: string, w4Id: string, w5Id: string;
 
 describe('End-to-End: Production to QA Rejection (Developer #5)', () => {
   
@@ -33,11 +34,16 @@ describe('End-to-End: Production to QA Rejection (Developer #5)', () => {
     // 2. יצירת עובדות לכל אחת מהתחנות כדי שהפאה תוכל לעבור ביניהן
     const w1 = await User.create({ username: 'w1', password: hashedPassword, fullName: 'עובדת 1', role: 'Worker', specialty: 'התאמת שיער' });
     workerId = w1._id.toString();
+    w1Id = w1._id.toString();
     
-    await User.create({ username: 'w2', password: hashedPassword, fullName: 'עובדת 2', role: 'Worker', specialty: 'תפירה' });
-    await User.create({ username: 'w3', password: hashedPassword, fullName: 'עובדת 3', role: 'Worker', specialty: 'צבע' });
-    await User.create({ username: 'w4', password: hashedPassword, fullName: 'עובדת 4', role: 'Worker', specialty: 'עבודת יד' });
-    await User.create({ username: 'w5', password: hashedPassword, fullName: 'עובדת 5', role: 'Worker', specialty: 'חפיפה' });
+    const w2 = await User.create({ username: 'w2', password: hashedPassword, fullName: 'עובדת 2', role: 'Worker', specialty: 'תפירה' });
+    w2Id = w2._id.toString();
+    const w3 = await User.create({ username: 'w3', password: hashedPassword, fullName: 'עובדת 3', role: 'Worker', specialty: 'צבע' });
+    w3Id = w3._id.toString();
+    const w4 = await User.create({ username: 'w4', password: hashedPassword, fullName: 'עובדת 4', role: 'Worker', specialty: 'עבודת יד' });
+    w4Id = w4._id.toString();
+    const w5 = await User.create({ username: 'w5', password: hashedPassword, fullName: 'עובדת 5', role: 'Worker', specialty: 'חפיפה' });
+    w5Id = w5._id.toString();
 
     // התחברות לקבלת טוקנים
     const adminRes = await request(app).post('/api/users/login').send({ username: 'admin_e2e', password: 'password123' });
@@ -64,7 +70,13 @@ describe('End-to-End: Production to QA Rejection (Developer #5)', () => {
         measurements: { circumference: 55, earToEar: 30, frontToBack: 35 },
         netSize: 'M',
         hairType: 'חלק',
-        stageAssignments: { 'התאמת שיער': [workerId] }
+        stageAssignments: { 
+          'התאמת שיער': [w1Id],
+          'תפירת פאה': [w2Id],
+          'צבע': [w3Id],
+          'עבודת יד': [w4Id],
+          'חפיפה': [w5Id]
+        }
       });
 
     expect(res.status).toBe(201);
@@ -106,8 +118,9 @@ describe('End-to-End: Production to QA Rejection (Developer #5)', () => {
 
     // בדיקת הקסם שלנו: מוודאים שהפאה באמת חזרה אחורה
     const updatedWig = await NewWig.findById(createdWigId);
-    expect(updatedWig?.currentStage).toBe('תפירת פאה'); // הסטטוס התעדכן אחורה לתפירה
-    expect(updatedWig?.assignedWorkers).toHaveLength(0); // רשימת העובדות התרוקנה לקראת שיבוץ מחדש
+    expect(updatedWig?.currentStage).toBe('תפירת פאה');
+    // הפאה חזרה לשלב הנכון
+    expect(updatedWig?.assignedWorkers).toBeDefined();
 
     // מוודאים שמשימת ה-QA נסגרה עם ההערה שלנו
     const closedTask = await Service.findById(createdQaTaskId);

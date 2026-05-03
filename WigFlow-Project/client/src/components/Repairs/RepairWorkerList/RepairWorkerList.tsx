@@ -149,7 +149,7 @@ export const RepairWorkerList: React.FC<RepairWorkerListProps> = ({ workerId }) 
                   className="btn-complete-repair"
                   onClick={() => handleStatusUpdate(taskData.repairId, taskData.taskIndex)}
                 >
-                  סיימתי — העבר לבקרה
+               סיימתי —העברי שלב
                 </button>
               </div>
             </div>

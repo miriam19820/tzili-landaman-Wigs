@@ -293,6 +293,15 @@ export const NewOrderForm: React.FC = () => {
       if (!payload.finalStyle) delete payload.finalStyle;
 
       const response = await axios.post('wigs/new', payload);
+     
+      if (internalNote.trim()) {
+        try {
+          await axios.post(`customers/${finalCustomerId}/notes`, {
+            content: internalNote,
+            context: "הזמנת פאה חדשה"
+          });
+        } catch (e) { console.error("Failed to save note", e); }
+      }
       const newWig = response.data.data || response.data;
       
       setSavedWigData({

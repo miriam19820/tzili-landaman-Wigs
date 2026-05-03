@@ -1,8 +1,6 @@
-// src/Models_Service/NewWigs/newWigService.ts
 import { NewWig } from './newWigModel.js';
 import { User } from '../User/userModel.js'; 
 import { AppError } from '../../Utils/AppError.js';
-import { Customer } from '../Customer/customerModel.js'; 
 import { Service } from '../SalonServices/serviceModel.js'; 
 import { Repair } from '../Repairs/repairModel.js'; 
 import { sendSalonUpdate } from '../../Services/notificationService.js';
@@ -17,11 +15,12 @@ const STAGES_FLOW = [
   'בקרה'
 ];
 
-
 export const getWigHistoryByBarcode = async (barcode: string) => {
-    const wig = await NewWig.findOne({ orderCode: barcode.trim() }).populate('customer');
+    const wig = await NewWig.findOne({ 
+        orderCode: { $regex: new RegExp(`^${barcode.trim()}$`, 'i') }
+    }).populate('customer');
+    
     if (!wig) throw new AppError('לא נמצאה פאה עם קוד זה', 404);
-
 
     const repairs = await Repair.find({ wigCode: wig.orderCode })
         .populate('tasks.assignedTo', 'username fullName') 
@@ -30,7 +29,6 @@ export const getWigHistoryByBarcode = async (barcode: string) => {
     return {
         wigDetails: {
             ...wig.toObject(),
-
             images: (wig as any).images || [wig.imageUrl].filter(Boolean)
         },
         repairHistory: repairs, 
@@ -42,10 +40,14 @@ export const getWigHistoryByBarcode = async (barcode: string) => {
 };
 
 export const moveToNextStage = async (wigId: string, specificWorkerIds?: string[]) => {
-
   const wig = await NewWig.findById(wigId).populate('assignedWorkers');
   if (!wig) {
     throw new AppError('הפאה לא נמצאה במערכת', 404);
+  }
+
+  // התיקון לשרת: אם הפאה כבר בבקרה או נמסרה (בגלל לחיצה כפולה/זיהוי קולי כפול), סיימנו בהצלחה מבלי לזרוק 400!
+  if (wig.currentStage === 'בקרה' || wig.currentStage === 'מוכנה למסירה' || wig.currentStage === 'נמסר') {
+      return wig;
   }
 
   const workersWhoFinished = wig.assignedWorkers.map((w: any) => w.fullName || w.username).join(', ');
@@ -56,9 +58,8 @@ export const moveToNextStage = async (wigId: string, specificWorkerIds?: string[
   };
 
   let nextStage = '';
-  let isReturningToQA = false;
+  let isMovingToQA = false;
   let remainingRepairStages = (wig as any).pendingRepairStages || [];
-
 
   if (remainingRepairStages && remainingRepairStages.length > 0) {
     const currentRepairIdx = remainingRepairStages.indexOf(wig.currentStage);
@@ -66,39 +67,43 @@ export const moveToNextStage = async (wigId: string, specificWorkerIds?: string[
       nextStage = remainingRepairStages[currentRepairIdx + 1];
     } else {
       nextStage = 'בקרה';
-      isReturningToQA = true;
+      isMovingToQA = true;
       remainingRepairStages = []; 
     }
   } else {
-    const currentStageIndex = STAGES_FLOW.indexOf(wig.currentStage);
-    if (currentStageIndex === -1) throw new AppError('סטטוס פאה אינו תקין', 400);
-
-    if (wig.currentStage === 'חפיפה') {
+    // מנקה רווחים מיותרים כדי למנוע באגים של אי-התאמה במערך
+    const currentStageIndex = STAGES_FLOW.findIndex(s => s.trim() === wig.currentStage.trim());
+    
+    if (currentStageIndex === -1) {
+       nextStage = STAGES_FLOW[1]; // גיבוי למקרה של תקלה בנתונים
+    } else if (currentStageIndex === STAGES_FLOW.length - 2) {
       nextStage = 'בקרה';
-      isReturningToQA = true;
-    } else if (currentStageIndex >= STAGES_FLOW.length - 1) {
-        throw new AppError('הפאה כבר בשלב סופי', 400);
+      isMovingToQA = true;
     } else {
       nextStage = STAGES_FLOW[currentStageIndex + 1];
     }
   }
 
-
-  if (isReturningToQA) {
-    await Service.create({
-      customer: wig.customer,
-      serviceType: 'Production QA',
-      origin: 'NewWig',
-      newWigReference: wig._id,
-      status: 'QA',
-      notes: { secretary: 'פאה הגיעה לבקרת איכות' }
-    });
-
+  if (isMovingToQA || nextStage === 'בקרה') {
+    try {
+      await Service.create({
+        customer: wig.customer,
+        serviceType: 'Production QA',
+        origin: 'NewWig',
+        newWigReference: wig._id,
+        status: 'QA',
+        styleCategory: 'ללא',
+        notes: { secretary: 'פאה הגיעה לבקרת איכות מסיום ייצור או תיקון', worker: '', qa: '' }
+      });
+      console.log(`✅ Service QA נוצר לפאה ${wig.orderCode}`);
+    } catch (serviceError: any) {
+      console.error(`❌ שגיאה ביצירת Service QA:`, serviceError.message);
+    }
     return await NewWig.findByIdAndUpdate(
       wigId, 
       { 
         currentStage: 'בקרה',
-        assignedWorkers: [],
+        assignedWorkers: [], 
         pendingRepairStages: [], 
         qaNote: '',
         $push: { history: historyEntry } 
@@ -106,7 +111,6 @@ export const moveToNextStage = async (wigId: string, specificWorkerIds?: string[
       { new: true }
     ).populate('customer');
   }
-
 
   let nextWorkerIdsToAssign: string[] = [];
   if (specificWorkerIds && specificWorkerIds.length > 0) {
@@ -122,7 +126,6 @@ export const moveToNextStage = async (wigId: string, specificWorkerIds?: string[
     if (!nextWorker) throw new AppError(`לא נמצאה עובדת זמינה להתמחות ${specialty}`, 404);
     nextWorkerIdsToAssign = [nextWorker._id.toString()];
   }
-
 
   const updatedWig = await NewWig.findByIdAndUpdate(
     wigId,
@@ -140,9 +143,9 @@ export const moveToNextStage = async (wigId: string, specificWorkerIds?: string[
         logger.error(`Failed to send notification: ${err.message}`)
     );
   }
+  
   return updatedWig;
 };
-
 
 const getSpecialtyForStage = (stage: string): string => {
   const specialtyMap: Record<string, string> = {
@@ -157,10 +160,17 @@ const getSpecialtyForStage = (stage: string): string => {
 };
 
 export const createNewWig = async (wigData: any) => {
-  // תיקון: חסימת המצאת קוד פאה אוטומטי - מחייב הזנה ידנית בלבד
   if (!wigData.orderCode || wigData.orderCode.trim() === '') {
-    throw new AppError('חובה להזין קוד פאה באופן ידני', 400);
+    wigData.orderCode = `WIG-${Math.floor(1000 + Math.random() * 9000)}`;
   }
+
+  if (!wigData.measurements || 
+      !wigData.measurements.circumference || 
+      !wigData.measurements.earToEar || 
+      !wigData.measurements.frontToBack) {
+    throw new AppError('חובה להזין את כל מידות הלקוחה (היקף, אוזן לאוזן, ומצח לעורף)', 400);
+  }
+
   return await NewWig.create(wigData);
 };
 
@@ -173,7 +183,6 @@ export const getWigsByWorker = async (workerId: string) => {
 };
 
 export const getAllWigsWithWorkers = async () => {
-  // תיקון: העלמת פאות שנמסרו מהדאשבורד (מסנן את סטטוס 'נמסר')
   const wigs = await NewWig.find({ currentStage: { $ne: 'נמסר' } })
     .populate('customer')
     .populate('assignedWorkers');
@@ -206,7 +215,6 @@ export const updateSpecialNotes = async (wigId: string, notes: string) => {
     { new: true }
   );
 };
-
 
 export const markWigAsDelivered = async (wigId: string) => {
   const historyEntry = {

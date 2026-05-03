@@ -134,7 +134,7 @@ describe('Repairs API Tests (Developer #3)', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     // הפונקציה החכמה אמורה להחזיר שהמשימה עברה לחפיפה!
-    expect(response.body.message).toContain('כעת התור של'); 
+    expect(response.body.message).toContain('המשימה הושלמה'); 
   });
 
 });

@@ -7,19 +7,15 @@ export interface WorkerTask {
   wigCode: string;
   customerName: string;
   isUrgent: boolean;
-  type: 'חדשה' | 'תיקון'; 
+  type: 'חדשה' | 'תיקון';
   imageUrl?: string; 
   internalNote?: string; 
   deadline?: string;
-
   category?: string;
   subCategory?: string;
   notes?: string;
-
-  // שדות בקרת איכות (QA) - התוספת החדשה
-  qaNote?: string;          
+  qaNote?: string;            
   qaRejectionPhoto?: string;
-
   subCategories?: string[];
   groupedNotes?: string[];
   taskIndexes?: number[];
@@ -35,7 +31,7 @@ interface TaskItemProps {
 export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpecs }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showImageFull, setShowImageFull] = useState(false);
-  const [showRejectionImageFull, setShowRejectionImageFull] = useState(false); // הגדלת תמונת פסילה
+  const [showRejectionImageFull, setShowRejectionImageFull] = useState(false);
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
@@ -43,42 +39,48 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
   };
 
   const handleCompleteClick = async () => {
+    // חסימת כפילויות לחיצה
+    if (isUpdating) return; 
     setIsUpdating(true);
+    
     try {
       if (task.type === 'חדשה') {
-          const response = await axios.patch(`/wigs/${task.repairId}/next-step`, {}, {
+          // שימוש בכתובת המלאה של השרת!
+          const response = await axios.patch(`http://localhost:5000/api/wigs/${task.repairId}/next-step`, {}, {
               headers: getAuthHeader()
           });
           
           const updatedWig = response.data;
           const nextStage = updatedWig.currentStage || 'לא ידוע';
           const nextWorkers = updatedWig.assignedWorkers && updatedWig.assignedWorkers.length > 0 
-              ? updatedWig.assignedWorkers.map((w: any) => w.username || w.fullName || 'עובדת').join(', ') 
-              : 'הנהלה (ממתין להקצאה או לבקרה)';
-
-          alert(`🎉 מעולה!\nהפאה עברה לשלב: ${nextStage}\nהועברה לטיפול של: ${nextWorkers}`);
+               ? updatedWig.assignedWorkers.map((w: any) => w.username || w.fullName || 'לא ידוע').join(', ') 
+               : 'לא שובץ';
+               
+          alert(`המשימה הושלמה בהצלחה!\nהתחנה הבאה: ${nextStage}\nאחראית: ${nextWorkers}`);
           await onComplete(task.repairId); 
-      } else {
-          let lastMessage = "המשימה עודכנה בהצלחה!";
+       } else {
+          let lastMessage = "המשימה עודכנה בהצלחה";
           if (task.taskIndexes && task.taskIndexes.length > 0) {
               for (const index of task.taskIndexes) {
-                  const response = await axios.patch(`/repairs/${task.repairId}/task/${index}`, {
+                  // שימוש בכתובת המלאה של השרת!
+                  const response = await axios.patch(`http://localhost:5000/api/repairs/${task.repairId}/task/${index}`, {
                     status: 'בוצע'
                   }, { headers: getAuthHeader() });
                   if (response.data.message) lastMessage = response.data.message;
               }
           } else if (task.taskIndex !== undefined) {
-              const response = await axios.patch(`/repairs/${task.repairId}/task/${task.taskIndex}`, {
-                 status: 'בוצע'
+              // שימוש בכתובת המלאה של השרת!
+              const response = await axios.patch(`http://localhost:5000/api/repairs/${task.repairId}/task/${task.taskIndex}`, { 
+                 status: 'בוצע' 
               }, { headers: getAuthHeader() });
               if (response.data.message) lastMessage = response.data.message;
           }
-          alert(`✅ ${lastMessage}`);
+          alert(`הצלחה: ${lastMessage}`);
           await onComplete(task.repairId, task.taskIndexes ? task.taskIndexes[0] : task.taskIndex);
       }
     } catch (error: any) {
       console.error("Complete task error:", error);
-      alert(`שגיאה מול השרת: ${error.response?.data?.message || 'לא ניתן לעדכן את הסטטוס'}`);
+      alert(`שגיאה: ${error.response?.data?.message || 'שגיאה כללית'}`);
     } finally {
       setIsUpdating(false);
     }
@@ -89,36 +91,37 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
     const date = new Date(dateString);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    
     let color = '#64748b'; 
     let text = date.toLocaleDateString('he-IL');
-    if (date < today) { color = '#ef4444'; text += ' (באיחור!)'; }
-    else if (date.getTime() === today.getTime()) { color = '#f59e0b'; text += ' (להיום)'; }
+    
+    if (date < today) { color = '#ef4444'; text += ' (איחור!)'; }
+    else if (date.getTime() === today.getTime()) { color = '#f59e0b'; text += ' (היום)'; }
+    
     return <span style={{ color, fontWeight: 'bold' }}>{text}</span>;
   };
 
   return (
     <>
-      {/* Overlay לתמונת מקור */}
       {showImageFull && task.imageUrl && (
         <div className="task-image-overlay" onClick={() => setShowImageFull(false)}>
-            <img src={task.imageUrl} alt="תמונת פאה מוגדלת" />
+            <img src={task.imageUrl} alt="מקור" />
         </div>
       )}
 
-      {/* Overlay לתמונת פסילה של המבקרת */}
       {showRejectionImageFull && task.qaRejectionPhoto && (
         <div className="task-image-overlay qa-overlay" onClick={() => setShowRejectionImageFull(false)}>
-            <img src={task.qaRejectionPhoto} alt="תמונת פסילה מוגדלת" />
-            <div className="qa-overlay-caption">צילום התקלה מהמבקרת</div>
+            <img src={task.qaRejectionPhoto} alt="תקלה" />
+            <div className="qa-overlay-caption">לחצי בכל מקום כדי לסגור</div>
         </div>
       )}
 
       <div className={`task-card ${task.isUrgent ? 'urgent-card' : ''} ${task.qaRejectionPhoto ? 'rejection-border' : ''}`}>
-        
+         
         {task.imageUrl && (
             <div className="task-image-container" onClick={() => setShowImageFull(true)}>
-                <img src={task.imageUrl} alt="מצב הפאה" className="task-thumbnail" />
-        <div className="zoom-hint">תמונת מקור</div>
+                <img src={task.imageUrl} alt="תקלה" className="task-thumbnail" />
+                <div className="zoom-hint">לחצי להגדלה</div>
             </div>
         )}
 
@@ -126,36 +129,35 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
             <div className="task-header">
                 <div className="task-titles">
                     {task.type === 'חדשה' ? (
-                        <span className="type-badge-new">✨ ייצור</span>
+                        <span className="type-badge-new">ייצור פאה</span>
                     ) : (
-                        <span className="type-badge-repair">🔧 תיקון</span>
+                        <span className="type-badge-repair">תיקון שוטף</span>
                     )}
                     
                     {task.type === 'חדשה' ? (
                         <h3>{task.category} <span className="arrow">←</span> {task.subCategory}</h3>
                     ) : (
-                        <h3>תיקונים: <span className="repair-tasks-inline">{task.subCategories?.join(' | ')}</span></h3>
+                        <h3>ביצוע: <span className="repair-tasks-inline">{task.subCategories?.join(' | ')}</span></h3>
                     )}
                     
-                    {task.isUrgent && <span className="urgent-badge">דחוף</span>}
-                    {task.qaRejectionPhoto && <span className="re-work-badge">סבב תיקון חוזר</span>}
+                    {task.isUrgent && <span className="urgent-badge">דחוף!</span>}
+                    {task.qaRejectionPhoto && <span className="re-work-badge">חזר מ-QA</span>}
                 </div>
                 <div className="task-meta">
                     <span className="wig-code-pill">{task.wigCode}</span>
-                    <span className="customer-name-pill">👤 {task.customerName}</span>
+                    <span className="customer-name-pill">לקוחה: {task.customerName}</span>
                 </div>
             </div>
 
             <div className="task-details-grid">
-                {/* --- בלוק בקרת איכות - מוצג רק אם המשימה נפסלה --- */}
                 {task.qaRejectionPhoto && (
                     <div className="detail-box qa-rejection-box">
-                        <div className="qa-rejection-header">המבקרת החזירה את הפאה לתיקון</div>
+                        <div className="qa-rejection-header">הערת בקרת איכות לתיקון:</div>
                         <div className="qa-rejection-content">
                             <p className="qa-note-text">"{task.qaNote}"</p>
                             <div className="qa-thumbnail-wrapper" onClick={() => setShowRejectionImageFull(true)}>
-                                <img src={task.qaRejectionPhoto} alt="צילום תקלה" className="qa-mini-thumbnail" />
-                                <div className="zoom-hint-mini">🔍 הגדילי צילום תקלה</div>
+                                <img src={task.qaRejectionPhoto} alt="תקלת QA" className="qa-mini-thumbnail" />
+                                <div className="zoom-hint-mini">הגדלה</div>
                             </div>
                         </div>
                     </div>
@@ -166,24 +168,21 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
                         <strong>תאריך יעד:</strong> {formatDeadline(task.deadline)}
                     </div>
                 )}
-
                 {task.internalNote && (
                     <div className="detail-box general-note-box">
-                        <strong>רקע מהקבלה:</strong>
+                        <strong>הערה כללית לפאה:</strong>
                         <p>{task.internalNote}</p>
                     </div>
                 )}
-
                 {task.type === 'חדשה' && task.notes && (
                     <div className="detail-box specific-note-box">
-                        <strong>הוראות לשלב:</strong>
+                        <strong>דגשים מיוחדים:</strong>
                         <p>{task.notes}</p>
                     </div>
                 )}
-
                 {task.type === 'תיקון' && task.groupedNotes && task.groupedNotes.length > 0 && (
                     <div className="detail-box specific-note-box">
-                        <strong>הוראות לתיקונים:</strong>
+                        <strong>הוראות תיקון:</strong>
                         {task.groupedNotes.map((note, idx) => (
                             <p key={idx}>• {note}</p>
                         ))}
@@ -196,7 +195,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, onComplete, onOpenSpec
                     <button onClick={onOpenSpecs} className="specs-btn">מפרט טכני</button>
                 )}
                 <button onClick={handleCompleteClick} disabled={isUpdating} className="complete-btn">
-                    {isUpdating ? 'מעדכן...' : 'סיימתי — העבר לבקרה'}
+                    {isUpdating ? 'מעדכן...' : 'סיימתי-העבר לשלב הבא'}
                 </button>
             </div>
         </div>

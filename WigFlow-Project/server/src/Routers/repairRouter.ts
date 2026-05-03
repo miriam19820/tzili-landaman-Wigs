@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import * as repairService from '../Models_Service/Repairs/repairService.js';
 import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware.js';
-import { sendSalonUpdate } from '../Services/notificationService.js'; // ייבוא התראות וואטסאפ
+import { sendSalonUpdate } from '../Services/notificationService.js';
 
 const repairRouter = Router();
 
@@ -35,7 +35,7 @@ repairRouter.patch('/:id/deliver', verifyToken, async (req: Request, res: Respon
   }
 });
 
-// --- שאר הנתיבים הקיימים (ללא שינוי או השמטה) ---
+// --- שאר הנתיבים הקיימים ---
 
 repairRouter.post('/', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -115,11 +115,17 @@ repairRouter.patch('/:id/task/:index', verifyWorker, async (req: Request, res: R
 
     const repair = await repairService.getRepairById(id);
     const taskIndex = parseInt(index);
+
+    // --- התיקון הקריטי למניעת קריסות (שגיאות 404) ---
+    if (!repair.tasks || !repair.tasks[taskIndex]) {
+        return res.status(404).json({ message: "המשימה לא קיימת יותר או שכבר בוצעה. אנא רענני את הדף." });
+    }
+    // ------------------------------------------------
+
     const taskName = repair.tasks[taskIndex].subCategory;
-    const wigCode = repair.wigCode;
 
     if (status === 'בוצע') {
-      const workflowResult = await repairService.updateTaskAndMoveToNext(wigCode, taskName);
+      const workflowResult = await repairService.updateTaskAndMoveToNext(id, taskName);
       const updatedRepair = await repairService.getRepairById(id);
 
       res.json({ 
