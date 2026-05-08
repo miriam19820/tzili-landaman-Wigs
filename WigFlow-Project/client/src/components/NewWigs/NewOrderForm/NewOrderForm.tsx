@@ -713,8 +713,14 @@ export const NewOrderForm: React.FC = () => {
 
             <div className="section-subtitle">תשלום</div>
             <div className="form-grid">
-              <input type="number" className="form-input" {...register('price', { required: true })} placeholder="מחיר סופי *" />
-              <input type="number" className="form-input" {...register('advancePayment')} placeholder="מקדמה" />
+              <div className="price-input-wrapper">
+                <input type="number" className="form-input" {...register('price', { required: true })} placeholder="מחיר סופי *" />
+                <span className="price-symbol">₪</span>
+              </div>
+              <div className="price-input-wrapper">
+                <input type="number" className="form-input" {...register('advancePayment')} placeholder="מקדמה" />
+                <span className="price-symbol">₪</span>
+              </div>
             </div>
 
             <div className="section-subtitle">תמונת לקוחה</div>

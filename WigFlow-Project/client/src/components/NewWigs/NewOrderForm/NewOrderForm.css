@@ -698,3 +698,23 @@ textarea.form-input {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ===== Price Input ===== */
+.price-input-wrapper {
+  position: relative;
+}
+
+.price-input-wrapper .form-input {
+  padding-left: 32px;
+}
+
+.price-symbol {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--zili-muted);
+  pointer-events: none;
+}

@@ -34,7 +34,7 @@ export const MainNavbar: React.FC = () => {
 
   return (
     <nav className="zili-navbar" dir="rtl">
-      <Link to="/" className="navbar-brand">
+      <Link to={isRegularWorker ? '/repairs/tasks' : isQAWorker ? '/qa' : '/'} className="navbar-brand">
         <img src={logo} alt="zili" className="navbar-logo-img" />
       </Link>
 

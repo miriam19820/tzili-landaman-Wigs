@@ -124,16 +124,30 @@ const TimelineItem: React.FC<{ item: any; type: 'production' | 'service' | 'repa
 
             {type === 'repair' && (
               <>
-                {/* תמונת ה"לפני" של התיקון */}
-                {item.beforeImageUrl && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <span className="item-meta-label">תמונת הבעיה בקבלת התיקון:</span>
-                    <img 
-                      src={item.beforeImageUrl} 
-                      alt="לפני התיקון" 
-                      style={{ display: 'block', marginTop: '6px', width: '120px', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--zili-border)', cursor: 'zoom-in' }} 
-                      onClick={() => onImageClick(item.beforeImageUrl)}
-                    />
+                {(item.beforeImageUrl || item.afterImageUrl) && (
+                  <div className="repair-before-after">
+                    {item.beforeImageUrl && (
+                      <div className="before-after-item">
+                        <span className="before-after-label before">לפני תיקון</span>
+                        <img
+                          src={item.beforeImageUrl}
+                          alt="לפני תיקון"
+                          className="before-after-img"
+                          onClick={() => onImageClick(item.beforeImageUrl)}
+                        />
+                      </div>
+                    )}
+                    {item.afterImageUrl && (
+                      <div className="before-after-item">
+                        <span className="before-after-label after">אחרי תיקון</span>
+                        <img
+                          src={item.afterImageUrl}
+                          alt="אחרי תיקון"
+                          className="before-after-img"
+                          onClick={() => onImageClick(item.afterImageUrl)}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
                 

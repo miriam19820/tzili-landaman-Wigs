@@ -26,12 +26,29 @@ export const getWigHistoryByBarcode = async (barcode: string) => {
         .populate('tasks.assignedTo', 'username fullName') 
         .sort({ createdAt: -1 });
 
+    // מצרפים תמונת "אחרי" מה-Service המתאים לכל תיקון
+    const repairsWithAfterImage = await Promise.all(
+        repairs.map(async (repair) => {
+            const repairObj = repair.toObject() as any;
+            if (!repairObj.afterImageUrl) {
+                const relatedService = await Service.findOne({
+                    repairReference: repair._id,
+                    afterImageUrl: { $exists: true, $ne: null }
+                }).select('afterImageUrl');
+                if (relatedService) {
+                    repairObj.afterImageUrl = (relatedService as any).afterImageUrl;
+                }
+            }
+            return repairObj;
+        })
+    );
+
     return {
         wigDetails: {
             ...wig.toObject(),
             images: (wig as any).images || [wig.imageUrl].filter(Boolean)
         },
-        repairHistory: repairs, 
+        repairHistory: repairsWithAfterImage,
         productionHistory: (wig as any).history || [], 
         serviceHistory: await Service.find({ newWigReference: wig._id })
             .populate('assignedTo', 'username fullName')
