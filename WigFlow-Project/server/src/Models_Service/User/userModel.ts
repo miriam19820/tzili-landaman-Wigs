@@ -8,6 +8,7 @@ export interface IUser extends Document {
   role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector';
   specialty: string;
   workload?: number; 
+isFrozen?: boolean;
 }
 
 const userSchema = new Schema<IUser>({
@@ -33,8 +34,10 @@ const userSchema = new Schema<IUser>({
   specialty: { 
     type: String, 
     required: true 
-  }
+  },
+  isFrozen: { type: Boolean, default: false }
 }, {
+  
   timestamps: true, 
   toJSON: { virtuals: true },
   toObject: { virtuals: true }

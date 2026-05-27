@@ -40,8 +40,11 @@ const seedData = async () => {
         fullName: 'שרה (התאמת שיער)', 
         password: hashedPassword, 
         role: 'Worker', 
-        specialty: 'התאמת שיער' 
-    });
+        specialty: 'התאמת שיער', 
+        isFrozen: false, // 💡 הוספנו כדי שהיא תיווצר כפעילה במאה אחוז!
+        isActive: true
+        } as any);
+  
 
     // עובדת לשלב 2: תפירת פאה (בשרת מוגדר כ'תפירה')
     await User.create({ 

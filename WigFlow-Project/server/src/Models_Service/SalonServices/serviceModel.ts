@@ -2,7 +2,7 @@ import { Schema, model, Document } from 'mongoose';
 
 export interface IService extends Document {
   customer: Schema.Types.ObjectId;
-  serviceType: 'Wash & Style' | 'Wash Only' | 'Style Only' | 'Production QA' | 'Repair QA';
+  serviceType: 'חפיפה וסירוק' | 'חפיפה בלבד' | 'סירוק בלבד' | 'בקרת ייצור' | 'בקרת תיקון';
   origin: 'Service' | 'NewWig' | 'Repair';
   newWigReference?: Schema.Types.ObjectId;
   repairReference?: Schema.Types.ObjectId;
@@ -15,7 +15,7 @@ export interface IService extends Document {
   };
   dryingStartTime?: Date;
   isUrgent: boolean;
-  status: 'Pending Wash' | 'Pending Style' | 'In Progress' | 'Drying' | 'QA' | 'Ready' | 'Rejected';
+  status: 'חפיפה וסירוק' | 'חפיפה בלבד' | 'סירוק בלבד' | 'בקרת ייצור' | 'בקרת תיקון';
   
   // --- שדות חדשים לתיעוד ויזואלי ובקרה ---
   beforeImageUrl?: string;    // תמונת הפאה/התקלה בעת הקבלה (היסטוריה "לפני")
@@ -30,7 +30,7 @@ const serviceSchema = new Schema<IService>({
   customer: { type: Schema.Types.ObjectId, ref: 'Customer', required: true },
   serviceType: { 
     type: String, 
-    enum: ['Wash & Style', 'Wash Only', 'Style Only', 'Production QA', 'Repair QA'], 
+    enum: ['חפיפה וסירוק', 'חפיפה בלבד', 'סירוק בלבד', 'בקרת ייצור', 'בקרת תיקון'],
     required: true 
   },
   origin: { 
@@ -56,8 +56,8 @@ const serviceSchema = new Schema<IService>({
   isUrgent: { type: Boolean, default: false }, 
   status: { 
     type: String, 
-    enum: ['Pending Wash', 'Pending Style', 'In Progress', 'Drying', 'QA', 'Ready', 'Rejected'], 
-    default: 'Pending Wash' 
+    enum: ['חפיפה וסירוק', 'חפיפה בלבד', 'סירוק בלבד', 'בקרת ייצור', 'בקרת תיקון'], 
+    default: 'חפיפה וסירוק' 
   },
   // הגדרת השדות החדשים ב-Schema
   beforeImageUrl: String,

@@ -85,8 +85,8 @@ export const NewOrderForm: React.FC = () => {
     axios.get('users')
       .then((res: any) => {
           const usersList = Array.isArray(res.data) ? res.data : res.data.data;
-          setWorkers(usersList.filter((u: any) => u.role === 'Worker'));
-      })
+           // התיקון: מציג רק עובדות שהן Worker וגם אינן מוקפאות!
+           setWorkers(usersList.filter((u: any) => u.role === 'Worker' && !u.isFrozen));      })
       .catch(err => {
           console.error('שגיאה בטעינת עובדות:', err);
           if (err.response?.status === 401) {

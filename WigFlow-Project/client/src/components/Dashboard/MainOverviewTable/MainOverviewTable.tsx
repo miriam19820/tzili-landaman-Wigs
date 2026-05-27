@@ -16,6 +16,7 @@ interface DashboardWig {
 
 export const MainOverviewTable: React.FC = () => {
   const [wigs, setWigs] = useState<DashboardWig[]>([]);
+  // const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [wigToDelete, setWigToDelete] = useState<string | null>(null);
   const [adminCode, setAdminCode] = useState('');
@@ -165,33 +166,47 @@ export const MainOverviewTable: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {wigs.map((wig) => (
-                <tr key={wig._id}>
-                  <td><strong>{wig.wigCode}</strong></td>
-                  <td>{wig.customerName}</td>
-                  <td><span className="badge badge-stage">{wig.overallStatus}</span></td>
-                  <td>{wig.currentStation}</td>
-                  <td>{renderWorkers(wig)}</td>
-                  <td>
-                    <span className={wig.isUrgent ? 'badge badge-urgent' : 'badge badge-normal'}>
-                      {wig.isUrgent ? 'דחוף' : 'רגיל'}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="actions-wrapper">
-                      <button className="btn-delete-wig" onClick={() => handleDeleteClick(wig._id)}>✕</button>
-                      <div className="deliver-slot">
-                        {isReadyForDelivery(wig) && (
-                          <button className="btn-deliver-wig" onClick={() => handleMarkAsDelivered(wig)}>
-                            📦 נמסר
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+  {wigs && wigs.length > 0 ? (
+    wigs.map((wig) => (
+      <tr key={wig?._id} className={wig?.type === 'repair' ? 'repair-row' : 'new-wig-row'}>
+        <td><strong>{wig?.wigCode || '---'}</strong></td>
+        <td>
+          <a href={`/history?search=${wig?.customerName}`} className="customer-link-style">
+            {wig?.customerName || 'שם חסר'}
+          </a>
+
+
+        </td>
+        <td><span className="badge badge-stage">{wig?.overallStatus || 'ממתין'}</span></td>
+        <td>{wig?.currentStation || '---'}</td>
+        <td>{renderWorkers(wig)}</td>
+        <td>
+          <span className={wig?.isUrgent ? 'badge badge-urgent' : 'badge badge-normal'}>
+            {wig?.isUrgent ? 'דחוף' : 'רגיל'}
+          </span>
+        </td>
+        <td>
+          <div className="actions-wrapper">
+            <button className="btn-delete-wig" onClick={() => wig?._id && handleDeleteClick(wig._id)}>✕</button>
+            <div className="deliver-slot">
+              {isReadyForDelivery(wig) && (
+                <button className="btn-deliver-wig" onClick={() => handleMarkAsDelivered(wig)}>
+                  📦 נמסר
+                </button>
+              )}
+            </div>
+          </div>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={7} className="no-data-cell">
+        אין נתונים להצגה
+      </td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
       )}

@@ -182,15 +182,20 @@ export const ProductionStation: React.FC = () => {
                         <label>צפייה כעובדת:</label>
                         <select 
                             value={currentWorkerId} 
-                            onChange={(e) => setCurrentWorkerId(e.target.value)}
-                        >
-                            <option value="">-- בחרי עובדת --</option>
-                            {allWorkers.map(worker => (
-                                <option key={worker._id || worker.id} value={worker._id || worker.id}>
-                                    {worker.username} ({worker.specialty})
-                                </option>
-                            ))}
-                        </select>
+                          onChange={(e) => setCurrentWorkerId(e.target.value)}
+    >
+                      <option value="">-- בחרי עובדת --</option>
+                          {allWorkers.map(worker => (
+                            <option 
+                              key={worker._id || worker.id} 
+                              value={worker._id || worker.id}
+                             disabled={worker.isFrozen} // 💡 חוסם את האפשרות ללחוץ עליה!
+                                  style={worker.isFrozen ? { color: '#999', fontStyle: 'italic' } : {}} // צובע באפור עדין
+            >
+                                   {worker.username} ({worker.specialty}) {worker.isFrozen ? ' [מוקפאת]' : ''}
+                                      </option>
+                                         ))}
+                      </select>
                     </div>
                 )}
             </header>

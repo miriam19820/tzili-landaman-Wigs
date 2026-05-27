@@ -130,3 +130,39 @@
   background: var(--zili-blush);
   color: var(--zili-deep);
 }
+
+
+/* 🌸 שורה של פאה חדשה - ורוד אפרסק בהיר, נקי ועדין מאוד */
+.new-wig-row {
+  background-color: #FFF2F0 !important; /* אפרסק-שמנת בהיר ורך */
+}
+
+/* 🍑 שורה של פאה בתיקון - ורוד אפרסק קצת יותר עמוק (בדיוק כמו הבאדג' של הודיה) */
+.repair-row {
+  background-color: #F7E5E2 !important; /* גוון אפרסק ורוד-עתיק מושלם */
+}
+
+/* ✨ אפקט מעבר עכבר (Hover) - הופך את השורה ללבן נקי וחלק */
+.new-wig-row:hover, .repair-row:hover {
+  background-color: #ffffff !important; /* הופך ללבן */
+  box-shadow: inset 0 0 0 9999px #ffffff !important; /* הגנה שלא ישאר זכר לאפרסק */
+  filter: none !important; /* מעיף לחלוטין את ה-brightness שהיה קודם */
+  transition: background-color 0.15s ease;
+}
+/* עיצוב שם הלקוחה כקישור לחיץ */
+.customer-link-style {
+    color: #4a3337; /* הצבע הכהה של המותג */
+    text-decoration: underline; /* קו תחתון כדי שיבינו שזה לחיץ */
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+
+.no-data-cell {
+    text-align: center;
+    padding: 30px;
+    color: var(--zili-muted); /* משתמש בצבע האפור העדין של המותג */
+    font-size: 1.1rem;
+    background-color: var(--zili-white);
+}

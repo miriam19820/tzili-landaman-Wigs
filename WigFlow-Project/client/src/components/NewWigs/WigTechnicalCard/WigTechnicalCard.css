@@ -1,5 +1,4 @@
-/* ===== WigTechnicalCard ===== */
-
+/* ===== WigTechnicalCard Overlay ===== */
 .technical-card-overlay {
   position: fixed;
   inset: 0;
@@ -13,10 +12,11 @@
   box-sizing: border-box;
 }
 
+/* הContainer המרכזי - רחב וברור */
 .technical-card-container {
   background: var(--zili-white);
   width: 100%;
-  max-width: 860px;
+  max-width: 1100px; 
   max-height: 90vh;
   overflow-y: auto;
   border-radius: var(--radius-lg);
@@ -24,9 +24,10 @@
   direction: rtl;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
-/* ===== Card Header ===== */
+/* ===== Card Header - האיקס בשמאל והכותרת בימין ===== */
 .card-header {
   background: linear-gradient(135deg, var(--zili-mauve), var(--zili-deep));
   color: white;
@@ -36,13 +37,15 @@
   align-items: center;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   flex-shrink: 0;
-}
+  flex-direction: row-reverse; /* הופך סדר: איקס לשמאל, כותרת לימין */
+ } 
+
+
 
 .card-header h2 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
   color: white;
 }
 
@@ -50,20 +53,19 @@
   background: rgba(255,255,255,0.15);
   border: none;
   color: white;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s;
-  line-height: 1;
+  transition: 0.2s;
 }
 .close-btn:hover { background: rgba(255,255,255,0.25); }
 
-/* ===== Card Content ===== */
+/* ===== Card Content - 3 טורים ===== */
 .card-content {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -80,11 +82,9 @@
 
 .info-column h3 {
   margin: 0 0 12px;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--zili-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
   border-bottom: 1px solid var(--zili-border);
   padding-bottom: 8px;
 }
@@ -97,19 +97,20 @@
 
 .info-column li {
   margin-bottom: 8px;
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--zili-text);
   line-height: 1.5;
 }
 
+/* מידות ראש - מוצג יפה בשורה */
 .measurements-list li {
   display: flex;
   justify-content: space-between;
   background: var(--zili-white);
-  padding: 5px 10px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--zili-border);
-  font-size: 13px;
 }
 
 .highlight-badge {
@@ -117,13 +118,13 @@
   color: var(--zili-deep);
   padding: 2px 10px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
 }
 
-/* ===== Reference Image ===== */
+/* ===== תמונה עם אפשרות לחיצה להגדלה ===== */
 .inspiration-image {
-  margin-top: 12px;
+  margin-top: 15px;
   text-align: center;
 }
 
@@ -131,30 +132,118 @@
   max-width: 100%;
   border-radius: var(--radius-sm);
   border: 1px solid var(--zili-border);
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-/* ===== Special Notes Footer ===== */
+.inspiration-image img:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ===== הערות מיוחדות למטה ===== */
 .special-notes-footer {
-  background: var(--zili-warm);
+  background: #fff9f0; 
   border-top: 1px solid var(--zili-border);
   padding: 16px 22px;
-  font-size: 13.5px;
+  font-size: 14px;
   color: var(--zili-text);
-  line-height: 1.6;
-  flex-shrink: 0;
 }
 
-.special-notes-footer strong {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--zili-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  display: block;
-  margin-bottom: 6px;
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
+/* ===== התאמה לנייד ===== */
+@media (max-width: 850px) {
   .card-content { grid-template-columns: 1fr; }
+}
+
+.close-btn {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none !important;
+  border: none !important;
+  color: #ffffff !important; /* ה-important דואג שאף קוד אחר לא יעז לדרוס את הלבן */
+  font-size: 32px !important;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 5px 10px;
+  line-height: 1;
+  z-index: 999;
+  transition: transform 0.2s ease;
+}
+
+/* אפקט קטן שהאיקס גדל כשנוגעים בו */
+.close-btn:hover {
+  transform: translateY(-50%) scale(1.15);
+  color: #f0f0f0 !important;
+}
+
+
+
+/* ===================================================
+   💡 הגדלת תמונה - שכבה שקופה ומטושטשת בדיוק כמו בהיסטוריה
+   =================================================== */
+
+/* הרקע השקוף בגוון ורוד עתיק/חום עדין שרואים את מה שמתחתיו */
+.fullscreen-photo-overlay {
+  position: fixed;
+  inset: 0;
+  /* 🌟 שימוש בצבע המדויק שלכן מהמשתנה עם 75% שקיפות */
+  background-color: rgba(61, 43, 46, 0.75); 
+  backdrop-filter: blur(5px); /* טשטוש יוקרתי של המפרט שמתחת */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+  cursor: zoom-out;
+  animation: fadeInFast 0.15s ease-out;
+}
+
+/* התמונה המרכזית - צפה מעל הרקע השקוף בלי שום מסגרת */
+.fullscreen-target-img {
+  max-width: 85%;
+  max-height: 85vh;
+  object-fit: contain;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  cursor: default;
+  animation: scaleInFast 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+}
+
+/* האיקס הלבן העגול המדויק - בפינה השמאלית העליונה של המסך */
+.fullscreen-close-btn {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  width: 42px;
+  height: 42px;
+  background-color: #ffffff;
+  color: #3d2b2e; /* הצבע הכהה שלכן לאיקס עצמו */
+  border: none;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000000;
+  transition: transform 0.2s;
+}
+
+.fullscreen-close-btn:hover {
+  transform: scale(1.1);
+  background-color: #fcf6f6;
+}
+
+/* אנמציות פתיחה חלקות */
+@keyframes fadeInFast {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleInFast {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

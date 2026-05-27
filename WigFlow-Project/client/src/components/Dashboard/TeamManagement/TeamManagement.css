@@ -188,3 +188,52 @@
   background: var(--zili-blush);
   color: var(--zili-deep);
 }
+
+
+/* 🌟 עיצוב כללי לכפתורים בטבלה - אליפטיים ונקיים 🌟 */
+.team-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    border-radius: 25px; /* אליפסה מושלמת כמו באתר */
+    font-size: 0.85rem;
+    font-weight: 600; /* הדגשת הכתב שיהיה ברור */
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-left: 8px;
+}
+
+/* 🌸 כפתורי עריכה והקפאה - בדיוק כמו השורה הראשונה שאהבת! 🌸 */
+.btn-toggle-status, 
+.btn-edit-worker {
+    background-color: #FDF3F2 !important; /* רקע אפרסק-ורוד בהיר ועדין מאוד */
+    color: #804E53 !important; /* הכיתוב בצבע הבורדו העמוק והקריא מהשורה הראשונה! */
+    border: 1px solid #EAA7A0 !important; /* מסגרת עדינה בצבע אפרסק שסוגרת את הלוק */
+}
+
+/* אפקט עמידה עדין על הכפתור */
+.btn-toggle-status:hover,
+.btn-edit-worker:hover {
+    background-color: #FBE6E3 !important; /* הרקע מתכהה ממש בקטנה בנגיעה */
+    border-color: #804E53 !important; /* המסגרת נהיית בולטת יותר */
+}
+
+/* ❄️ כשהעובדת מוקפאת - הופך לאפור עדין ותואם עם כיתוב כהה */
+tr.row-frozen .btn-toggle-status {
+    background-color: #F2F2F2 !important; 
+    color: #6D6E71 !important;
+    border: 1px solid #D1D1D1 !important;
+}
+
+/* 🗑️ כפתור "הוצאה לצמיתות" (מחיקה) - מתאים בול לאותו הסגנון */
+.btn-delete-worker-styled {
+    background-color: transparent !important;
+    color: #804E53 !important;
+    border: 1px solid #EAA7A0 !important;
+}
+
+.btn-delete-worker-styled:hover {
+    background-color: #FDF3F2 !important;
+    border-color: #804E53 !important;
+}

@@ -1,4 +1,5 @@
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 const bcrypt = require('bcryptjs');
 
 mongoose.connect('mongodb://localhost:27017/wigflow')

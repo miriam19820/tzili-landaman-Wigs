@@ -5,6 +5,7 @@ interface Worker {
   _id: string;
   fullName: string;
   specialty: string;
+  isFrozen?: boolean;
 }
 
 export const TeamManagement: React.FC = () => {
@@ -16,7 +17,7 @@ export const TeamManagement: React.FC = () => {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const fetchWorkers = async () => {
+const fetchWorkers = async () => {
     const token = localStorage.getItem('token');
     try {
       const res = await fetch('http://localhost:5000/api/users', {
@@ -25,14 +26,67 @@ export const TeamManagement: React.FC = () => {
       if (!res.ok) throw new Error('שגיאה בשליפת נתוני העובדים');
       const data = await res.json();
       const workersData = Array.isArray(data) ? data : (data.data || []);
-      setWorkers(workersData.filter((u: any) => u.role === 'Worker'));
-    } catch (err) {
+      
+      // כאן הקסם: ממפים את העובדים ומתרגמים את isActive ל-isFrozen האמיתי!
+      // const mappedWorkers = workersData.map((u: any) => ({
+      //   ...u,
+      //   isFrozen: u.isActive === false || u.isFrozen === true
+      // }));
+
+       setWorkers(workersData.filter((u: any) => u.role === 'Worker'));    } catch (err) {
       console.error('שגיאה בטעינת עובדות', err);
       setWorkers([]);
     }
   };
 
   useEffect(() => { fetchWorkers(); }, []);
+
+  // פונקציה חדשה: שינוי סטטוס הקפאה
+  const handleToggleFreeze = async (workerId: string, currentStatus: boolean) => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${workerId}/freeze`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ isFrozen: !currentStatus })
+      });
+
+      if (!response.ok) throw new Error('שגיאה בעדכון סטטוס הקפאה');
+
+      setMessage({ 
+        text: currentStatus ? 'העובדת הופעלה מחדש' : 'העובדת הוקפאה בהצלחה', 
+        type: 'success' 
+      });
+      
+      fetchWorkers(); // רענון הרשימה
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    } catch (error: any) {
+      setMessage({ text: error.message, type: 'error' });
+    }
+  };
+
+  const handleDeleteWorker = async (workerId: string, name: string) => {
+    if (!window.confirm(`האם את בטוחה שברצונך למחוק לחלוטין את ${name}?`)) return;
+    
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${workerId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('שגיאה במחיקת העובדת');
+
+      setMessage({ text: 'העובדת נמחקה בהצלחה מהמערכת', type: 'success' });
+      fetchWorkers(); // רענון הרשימה אוטומטית
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    } catch (error: any) {
+      setMessage({ text: error.message, type: 'error' });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,17 +192,47 @@ export const TeamManagement: React.FC = () => {
           <tr>
             <th>שם</th>
             <th>התמחות</th>
-            <th></th>
+            <th>סטטוס</th>
+            <th>פעולות</th>
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(workers) && workers.map(w => (
-            <tr key={w._id}>
-              <td>{w.fullName}</td>
+         {Array.isArray(workers) && workers.map(w => (
+            <tr key={w._id} className={w.isFrozen ? 'row-frozen' : ''}>
+              <td>{w.fullName} {w.isFrozen && <span className="frozen-tag">(מוקפאת)</span>}</td>
               <td><span className="specialty-badge">{w.specialty}</span></td>
-              <td>
-                <button className="btn-edit-worker" onClick={() => handleEditClick(w)} title="ערוך">✎</button>
-              </td>
+             
+                {/* כפתור הקפאה/הפעלה */}
+                <td>
+                <span className={w.isFrozen ? 'status-text-frozen' : 'status-text-active'}>
+                    {w.isFrozen ? 'מוקפאת' : 'פעילה'}
+                </span>
+                </td>
+
+    
+
+       <td>
+  <div className="team-actions">
+    {/* כפתור הקפאה/הפעלה ורוד */}
+    <button 
+      className="btn-toggle-status"
+      onClick={() => handleToggleFreeze(w._id, !!w.isFrozen)}>
+      {w.isFrozen ? 'החזירי לעבודה' : 'הקפיאי עובדת'}
+    </button>
+    
+    {/* כפתור עריכה ורוד */}
+    <button className="btn-edit-worker" onClick={() => handleEditClick(w)} title="ערוך">✎</button>
+    
+    {/* 🌟 כפתור מחיקה מעוצב ואליפטי 🌟 */}
+    <button 
+      className="btn-delete-worker-styled" 
+      onClick={() => handleDeleteWorker(w._id, w.fullName)} 
+      title="מחק עובדת"
+    >
+      הוצאה לצמיתות
+    </button>
+  </div>
+</td>
             </tr>
           ))}
         </tbody>

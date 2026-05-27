@@ -44,8 +44,10 @@ export const StaffAllocator: React.FC<StaffAllocatorProps> = ({ category, onSele
       <option value="">
         {loading ? 'טוען עובדות...' : `בחרי עובדת ל${category}...`}
       </option>
-      {workers.map(w => (
-        <option key={w.workerId} value={w.workerId}>
+      {workers
+        .filter(w => !w.isFrozen) // מסנן החוצה עובדות מוקפאות
+        .map(w => (
+          <option key={w.workerId} value={w.workerId}>
           {w.workerName} (עומס: {w.load} משימות)
         </option>
       ))}
