@@ -88,6 +88,36 @@ export const getQATasks = async () => {
   return tasksWithImages;
 };
 
+export const moveToDrying = async (serviceId: string) => {
+  return await Service.findByIdAndUpdate(
+    serviceId,
+    { status: 'Drying', dryingStartTime: new Date() },
+    { new: true }
+  );
+};
+
+export const finishDrying = async (serviceId: string) => {
+  const service = await Service.findById(serviceId);
+  if (!service) throw new Error('Service not found');
+
+  if (service.serviceType === 'Wash & Style') {
+    service.status = 'Pending Style';
+  } else if (service.serviceType === 'Wash Only') {
+    service.status = 'QA';
+  }
+
+  await service.save();
+  return service;
+};
+
+export const finishStyling = async (serviceId: string) => {
+  return await Service.findByIdAndUpdate(
+    serviceId,
+    { status: 'QA' },
+    { new: true }
+  );
+};
+
 export const approveService = async (serviceId: string, inspectorId: string, photoUrl: string) => {
   const service = await Service.findByIdAndUpdate(
     serviceId,

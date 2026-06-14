@@ -10,7 +10,7 @@ interface UserData {
     fullName: string;
     role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector';
     specialty: string;
-    isActive?: boolean; // הווספנו את השדה הזה כאופציונלי
+    isActive?: boolean;
 }
 
 const SECRET_KEY = process.env.JWT_SECRET || 'WIG_FLOW_SECRET_2026';
@@ -34,7 +34,8 @@ export const createUser = async (userData: UserData) => {
     const newUser = new User({
         ...userData,
         username: cleanUsername,
-        password: hashedPassword 
+        password: hashedPassword,
+        isActive: userData.isActive !== false
     });
 
     return await newUser.save();
@@ -67,6 +68,10 @@ export const loginUser = async (username: string, password: string) => {
         throw new Error('שם משתמש או סיסמה שגויים');
     }
 
+    if ((user as any).isActive === false) {
+        throw new Error('החשבון מוקפא. פני למנהלת המערכת.');
+    }
+
     console.log(`✅ התחברות הצליחה!`);
 
     const token = jwt.sign(
@@ -82,13 +87,14 @@ export const loginUser = async (username: string, password: string) => {
             username: user.username,
             fullName: user.fullName,
             role: user.role,
-            specialty: user.specialty
+            specialty: user.specialty,
+            isActive: user.isActive !== false
         }
     };
 };
 
 export const getAllUsers = async () => {
-    return await User.find({ isActive: true }).select('-password');
+    return await User.find({}).select('-password');
 };
 
 export const getUserById = async (userId: string) => {

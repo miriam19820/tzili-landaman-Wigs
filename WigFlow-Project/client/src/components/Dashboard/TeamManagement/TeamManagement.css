@@ -188,3 +188,93 @@
   background: var(--zili-blush);
   color: var(--zili-deep);
 }
+
+/* ===== Status & Actions ===== */
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-active {
+  background: #e8f5ec;
+  color: #2e7d32;
+}
+
+.status-frozen {
+  background: #fde8ea;
+  color: #c62828;
+}
+
+.worker-row-frozen td {
+  opacity: 0.75;
+}
+
+.btn-freeze-worker,
+.btn-delete-worker {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-freeze-worker {
+  color: #c62828;
+  border-color: #f5c6cb;
+  background: #fff5f5;
+}
+
+.btn-freeze-worker:hover {
+  background: #c62828;
+  color: white;
+}
+
+.btn-freeze-worker.btn-unfreeze {
+  color: #2e7d32;
+  border-color: #c3e6cb;
+  background: #e8f5ec;
+}
+
+.btn-freeze-worker.btn-unfreeze:hover {
+  background: #2e7d32;
+  color: white;
+}
+
+.btn-delete-worker {
+  color: var(--zili-deep);
+  border-color: var(--zili-border);
+  background: var(--zili-blush);
+}
+
+.btn-delete-worker:hover {
+  background: var(--zili-mauve);
+  color: white;
+  border-color: var(--zili-mauve);
+}
+
+.confirm-mode {
+  animation: teamConfirmShake 0.4s ease-in-out;
+  box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.3);
+}
+
+@keyframes teamConfirmShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}

@@ -80,7 +80,11 @@ async function getAvailableWorkersByCategory(category: string) {
     searchCategories = ['בקרה', 'בקרת איכות'];
   }
 
-  const workers = await User.find({ role: 'Worker', specialty: { $in: searchCategories } });
+  const workers = await User.find({
+    role: 'Worker',
+    specialty: { $in: searchCategories },
+    isActive: { $ne: false }
+  });
   
   return await Promise.all(workers.map(async (worker: any) => {
     const openTasks = await getWorkerLoadOpen(worker._id.toString());
