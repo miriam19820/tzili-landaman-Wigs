@@ -166,11 +166,19 @@ export const DiagnosisChecklist: React.FC = () => {
             <h3 className="category-title">{cat.name}</h3>
             
             <div className="category-worker-box">
+<<<<<<< Updated upstream
               <p className="category-worker-label">בחרי עובדת ל{cat.name}:</p>
               <StaffAllocator 
                 category={cat.name} 
                 onSelect={(workerId) => handleCategoryWorkerChange(cat.name, workerId)} 
               />
+=======
+              <label className="small-label">עובדת:</label>
+              <StaffAllocator category={cat.name} onSelect={(workerId) => handleCategoryWorkerChange(cat.name, workerId)} />
+              
+              <label className="small-label">תאריך יעד:</label>
+              <input type="date" className="deadline-input" min={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]} onChange={(e) => handleCategoryDeadlineChange(cat.name, e.target.value)} />
+>>>>>>> Stashed changes
             </div>
 
             {cat.subTypes.map(sub => {

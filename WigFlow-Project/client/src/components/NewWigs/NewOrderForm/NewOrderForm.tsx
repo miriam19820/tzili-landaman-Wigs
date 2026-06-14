@@ -247,6 +247,7 @@ export const NewOrderForm: React.FC = () => {
 
             <h4 className="section-subtitle highlight">👤 שיבוץ צוות (תכנון ייצור)</h4>
             <div className="form-grid">
+<<<<<<< Updated upstream
               {REQUIRED_STAGES.map(stage => (
                 <div className="input-group" key={stage.name}>
                   <label className="input-label">{stage.name} {stage.name === 'התאמת שיער' && '*'}</label>
@@ -263,6 +264,44 @@ export const NewOrderForm: React.FC = () => {
                   </select>
                 </div>
               ))}
+=======
+              {REQUIRED_STAGES.map(stage => {
+                const stageWorkers = workers.filter(w => w.specialty === stage.specialty);
+                return (
+                  <div className="stage-card" key={stage.name}>
+                    <div className="stage-card-title">
+                      {stage.name}{stage.name === 'התאמת שיער' && ' *'}
+                    </div>
+                    {stageWorkers.length === 0 ? (
+                      <span className="stage-no-workers">אין עובדות זמינות</span>
+                    ) : (
+                      stageWorkers.map(w => (
+                        <label key={w._id} className="stage-worker-row">
+                          <input
+                            type="checkbox"
+                            checked={(plannedAssignments[stage.name] || []).includes(w._id)}
+                            onChange={() => toggleWorkerForStage(stage.name, w._id)}
+                          />
+                          {w.fullName || w.username}
+                        </label>
+                      ))
+                    )}
+                    {stageWorkers.length > 0 && (
+                      <div className="stage-deadline">
+                        <label>תאריך יעד לשלב</label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          min={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]}
+                          value={stageDeadlines[stage.name] || ''}
+                          onChange={(e) => setStageDeadlines({ ...stageDeadlines, [stage.name]: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+>>>>>>> Stashed changes
             </div>
 
             <h4 className="section-subtitle">💳 תשלום</h4>
