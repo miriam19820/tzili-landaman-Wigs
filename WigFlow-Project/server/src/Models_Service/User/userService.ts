@@ -10,6 +10,7 @@ interface UserData {
     fullName: string;
     role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector';
     specialty: string;
+    isActive?: boolean; // הווספנו את השדה הזה כאופציונלי
 }
 
 const SECRET_KEY = process.env.JWT_SECRET || 'WIG_FLOW_SECRET_2026';
@@ -87,7 +88,7 @@ export const loginUser = async (username: string, password: string) => {
 };
 
 export const getAllUsers = async () => {
-    return await User.find().select('-password');
+    return await User.find({ isActive: true }).select('-password');
 };
 
 export const getUserById = async (userId: string) => {

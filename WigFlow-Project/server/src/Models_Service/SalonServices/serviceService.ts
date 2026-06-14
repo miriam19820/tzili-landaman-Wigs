@@ -1,7 +1,8 @@
 import { Service } from './serviceModel.js';
 import { NewWig } from '../NewWigs/newWigModel.js'; 
 import { Repair } from '../Repairs/repairModel.js';
-import * as customerService from '../Customer/customerService.js'; 
+import * as customerService from '../Customer/customerService.js';
+import { addHistoryEvent } from '../WigHistory/wigHistoryService.js'; 
 
 export const createService = async (serviceData: any) => {
   // 1. טיפול במזהה הלקוחה
@@ -31,7 +32,19 @@ export const createService = async (serviceData: any) => {
     serviceData.status = 'Pending Wash';
   }
 
-  return await Service.create(serviceData);
+  const newService = await Service.create(serviceData);
+
+  await addHistoryEvent({
+    wigCode: serviceData.wigCode || 'סירוק כללי',
+    actionType: 'סירוק',
+    stage: 'פתיחת הזמנת שירות',
+    workerName: 'מזכירות',
+    description: `הוזמן שירות: ${newService.serviceType}`,
+    beforeImageUrl: (newService as any).beforeImageUrl || undefined,
+    notes: (newService as any).notes?.secretary || undefined
+  }).catch((err: any) => console.error('History event failed:', err));
+
+  return newService;
 };
 
 // =========================================================================

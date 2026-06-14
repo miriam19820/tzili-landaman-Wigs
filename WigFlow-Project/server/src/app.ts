@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 
+import wigHistoryRouter from './Routers/wigHistoryRouter.js';
 import userRouter from './Routers/userRouter.js';
 import customerRouter from './Routers/customerRouter.js'; 
 import newWigRouter from './Routers/newWigRouter.js';
@@ -20,6 +21,7 @@ app.use('/api/customers', customerRouter);
 app.use('/api/wigs', newWigRouter);
 app.use('/api/repairs', repairRouter);
 app.use('/api/services', serviceRouter);
+app.use('/api/wig-history', wigHistoryRouter);
 
 // Middleware לטיפול בשגיאות
 app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

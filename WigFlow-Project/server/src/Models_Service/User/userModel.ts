@@ -7,6 +7,7 @@ export interface IUser extends Document {
   fullName: string;
   role: 'Admin' | 'Worker' | 'QC' | 'Secretary' | 'Inspector';
   specialty: string;
+  isActive?: boolean;
   workload?: number; 
 }
 
@@ -33,7 +34,8 @@ const userSchema = new Schema<IUser>({
   specialty: { 
     type: String, 
     required: true 
-  }
+  },
+  isActive: { type: Boolean, default: true }
 }, {
   timestamps: true, 
   toJSON: { virtuals: true },

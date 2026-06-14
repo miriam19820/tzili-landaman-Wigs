@@ -1,7 +1,8 @@
 import { Repair } from './repairModel.js';
 import { User } from '../User/userModel.js';
 import { AppError } from '../../Utils/AppError.js';
-import { Service } from '../SalonServices/serviceModel.js'; 
+import { Service } from '../SalonServices/serviceModel.js';
+import { addHistoryEvent } from '../WigHistory/wigHistoryService.js'; 
 
 async function getRepairById(id: string) {
   const repair = await Repair.findById(id)
@@ -253,7 +254,19 @@ async function createRepairOrder(repairData: any) {
     internalNote: repairData.internalNote 
   });
 
-  return await newRepair.save();
+  const savedRepair = await newRepair.save();
+
+  await addHistoryEvent({
+    wigCode: savedRepair.wigCode,
+    actionType: 'תיקון',
+    stage: 'פתיחת תיקון',
+    workerName: 'מזכירות',
+    description: 'הפאה נכנסה לתיקון',
+    beforeImageUrl: photoUrl,
+    notes: repairData.internalNote
+  }).catch((err: any) => console.error('History event failed:', err));
+
+  return savedRepair;
 }
 
 async function finalizeRepairWithQA(repairId: string, afterImageUrl: string) {
@@ -265,7 +278,20 @@ async function finalizeRepairWithQA(repairId: string, afterImageUrl: string) {
 
   repair.tasks.forEach((task: any) => { task.status = 'בוצע'; });
 
-  return await repair.save();
+  const savedRepair = await repair.save();
+
+  await addHistoryEvent({
+    wigCode: savedRepair.wigCode,
+    actionType: 'תיקון',
+    stage: 'סיום תיקון ובקרה',
+    workerName: 'בקרת איכות',
+    description: 'התיקון הושלם בהצלחה',
+    beforeImageUrl: savedRepair.beforeImageUrl,
+    afterImageUrl,
+    notes: savedRepair.internalNote
+  }).catch((err: any) => console.error('History event failed:', err));
+
+  return savedRepair;
 }
 
 async function getDashboardView() {
