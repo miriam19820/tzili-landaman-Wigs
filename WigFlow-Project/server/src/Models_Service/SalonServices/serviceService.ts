@@ -26,9 +26,9 @@ export const createService = async (serviceData: any) => {
 
   // 2. טיפול בסטטוס התחלתי
   if (serviceData.serviceType === 'Style Only') {
-    serviceData.status = 'Pending Style'; 
+    serviceData.status = 'סירוק בלבד'; 
   } else {
-    serviceData.status = 'Pending Wash';
+    serviceData.status = 'חפיפה בלבד';
   }
 
   return await Service.create(serviceData);
@@ -38,7 +38,7 @@ export const createService = async (serviceData: any) => {
 // שולפת את כל משימות ה-QA שפתוחות כרגע (כולל תמונות מקור)
 // =========================================================================
 export const getQATasks = async () => {
-  const tasks = await Service.find({ status: 'QA' })
+  const tasks = await Service.find({ status: 'בקרת ייצור' })
     .populate('customer', 'firstName lastName')
     .populate('newWigReference', 'orderCode imageUrl')
     .populate('repairReference', 'wigCode')
@@ -79,7 +79,7 @@ export const approveService = async (serviceId: string, inspectorId: string, pho
   const service = await Service.findByIdAndUpdate(
     serviceId,
     { 
-      status: 'Ready',
+      status: 'מוכנה למסירה',
       afterImageUrl: photoUrl, 
       inspectedBy: inspectorId,
       inspectedAt: new Date(),
@@ -125,7 +125,7 @@ export const rejectService = async (
   
   service.notes.qa = qaNote;
   service.qaRejectionPhoto = photoUrl;
-  service.status = 'Rejected';
+  service.status = 'בקרת תיקון';
 
   if (service.origin === 'NewWig' && service.newWigReference) {
     const firstStage = (returnStages && returnStages.length > 0) ? returnStages[0] : 'תפירת פאה';
@@ -174,10 +174,10 @@ export const rejectService = async (
           }
           await repair.save();
       }
-      service.status = 'Pending Wash'; 
+      service.status = 'בקרת תיקון'; 
 
   } else {
-    service.status = 'Pending Wash'; 
+    service.status = 'חפיפה בלבד'; 
   }
 
   await service.save();
