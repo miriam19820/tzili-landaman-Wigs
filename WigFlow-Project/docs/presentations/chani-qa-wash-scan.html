@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>חני — בקרת איכות, חפיפה וסריקה | WigFlow</title>
+  <link rel="stylesheet" href="presentation.css" />
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a href="index.html">← חזרה לדף הראשי</a>
+  <button class="btn-print" onclick="window.print()">הדפסה ל-PDF</button>
+</nav>
+
+<div class="page-wrapper">
+
+  <header class="doc-header">
+    <h1>חני — בקרת איכות, חפיפה וסריקה</h1>
+    <p class="subtitle">לוח QA, אישור ופסילה, שירותי חפיפה וחיפוש ברקוד</p>
+    <span class="badge">מפתחת 4 · Services &amp; QA Module</span>
+  </header>
+
+  <section>
+    <h2>1. פתיחה — מה לומר (30 שניות)</h2>
+    <p class="opening-quote">
+      "שלום, אני חני. אחראית על בקרת האיכות, חפיפה וסריקה.
+      בניתי את לוח הבקרה לבודקות, את מערכת האישור והפסילה עם צילום חובה,
+      את זרימת שירותי החפיפה, ואת חיפוש ההיסטוריה לפי ברקוד פאה."
+    </p>
+  </section>
+
+  <section>
+    <h2>2. מה עשיתי</h2>
+    <ul class="feature-list">
+      <li><strong>לוח בקרת איכות (QADashboard)</strong> — כל הפאות שממתינות לאישור במקום אחד.</li>
+      <li><strong>אישור עם צילום חובה</strong> — לא ניתן לאשר בלי לצלם את הפאה המוגמרת.</li>
+      <li><strong>פסילה עם החזרה לשלבים (RejectionModal)</strong> — בחירת שלבים + תמונת ליקוי + הערה.</li>
+      <li><strong>שירותי חפיפה וסירוק (ServiceOrderForm)</strong> — הזמנת שירותי סלון עם זרימה ל-QA.</li>
+      <li><strong>Middleware verifyQC</strong> — גישה ל-QA רק לבודקות מורשות.</li>
+      <li><strong>חיפוש היסטוריה לפי ברקוד (WigHistorySearch)</strong> — מעקב מלא אחרי חיי הפאה.</li>
+      <li><strong>תצוגת פסילות לעובדות</strong> — "חזר מ-QA" + תמונה + הערה בכרטיס המשימה.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>3. קבצים מרכזיים</h2>
+    <table>
+      <thead>
+        <tr><th>שכבה</th><th>קובץ</th><th>תפקיד</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Client</td><td><code>components/ServicesAndQA/QADashboard/QADashboard.tsx</code></td><td>לוח בקרת איכות</td></tr>
+        <tr><td>Client</td><td><code>components/ServicesAndQA/RejectionModal/RejectionModal.tsx</code></td><td>מודל פסילה</td></tr>
+        <tr><td>Client</td><td><code>components/ServicesAndQA/ServiceOrderForm/ServiceOrderForm.tsx</code></td><td>הזמנת חפיפה/סירוק</td></tr>
+        <tr><td>Client</td><td><code>components/History/WigHistorySearch.tsx</code></td><td>חיפוש היסטוריה לפי ברקוד</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/SalonServices/serviceService.ts</code></td><td>getQATasks, approve, reject</td></tr>
+        <tr><td>Server</td><td><code>Routers/serviceRouter.ts</code></td><td>API — <code>/api/services</code></td></tr>
+        <tr><td>Server</td><td><code>Middlewares/authMiddleware.ts</code> → verifyQC</td><td>הרשאות בקרת איכות</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/NewWigs/newWigService.ts</code> → getWigHistoryByBarcode</td><td>חיפוש היסטוריה</td></tr>
+        <tr><td>Tests</td><td><code>tests/service_qa.test.ts</code></td><td>בדיקות QA approve/reject</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>4. הסבר על קטעי קוד</h2>
+
+    <h3>קטע 1 — אישור עם צילום חובה (Client)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> QADashboard.tsx — handleApprove</p>
+    <div class="code-block">const handleApprove = async (taskId) => {
+  const photo = approvePhoto[taskId];
+  if (!photo) {
+    alert('חובה לצלם את הפאה לפני אישור סופי!');
+    startCamera(taskId);
+    return;
+  }
+  await axios.patch(`/api/services/${taskId}/approve`, {
+    photoUrl: photo
+  });
+  alert('הפאה אושרה בהצלחה! התמונה נשמרה בהיסטוריה.');
+  fetchQATasks();
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>לפני אישור — המערכת <strong>חוסמת</strong> אם אין תמונה ופותחת מצלמה.</li>
+        <li>התמונה נשלחת לשרת ונשמרת כ-<code>afterImageUrl</code>.</li>
+        <li>פאה חדשה → סטטוס <strong>"מוכנה למסירה"</strong>. תיקון → <strong>"מוכן"</strong>.</li>
+        <li>התמונה נשמרת בהיסטוריה ונראית בחיפוש ברקוד.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 2 — פסילה והחזרה לייצור (Client + Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> QADashboard.tsx — handleRejectConfirm</p>
+    <div class="code-block">const handleRejectConfirm = async (reason, returnStages, photoUrl) => {
+  await axios.patch(`/api/services/${selectedTask._id}/reject`, {
+    qaNote: reason,          // סיבת הפסילה (חובה)
+    returnStages,            // שלבים להחזרה (למשל: ['צבע', 'עבודת יד'])
+    photoUrl                 // תמונת הליקוי (חובה)
+  });
+  alert('הפאה נפסלה. התמונה וההערות נשלחו לעובדת.');
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>בפסילה חובה: <strong>סיבה</strong>, <strong>תמונת ליקוי</strong>, ובחירת <strong>שלבים להחזרה</strong>.</li>
+        <li>בשרת — <code>rejectService</code> מעדכן את הפאה/תיקון: שומר <code>qaNote</code> ו-<code>qaRejectionPhoto</code>.</li>
+        <li>לפאה חדשה — השלבים נשמרים ב-<code>pendingRepairStages</code> והפאה חוזרת לייצור.</li>
+        <li>לתיקון — המשימות הרלוונטיות חוזרות לסטטוס <code>ממתין</code>.</li>
+        <li>העובדת רואה "חזר מ-QA" + התמונה + ההערה בכרטיס המשימה.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 3 — חיפוש היסטוריה לפי ברקוד (Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> newWigService.ts — getWigHistoryByBarcode</p>
+    <div class="code-block">export const getWigHistoryByBarcode = async (barcode) => {
+  const wig = await NewWig.findOne({
+    orderCode: { $regex: new RegExp(`^${barcode.trim()}$`, 'i') }
+  }).populate('customer');
+
+  if (!wig) throw new AppError('לא נמצאה פאה עם קוד זה', 404);
+
+  const repairs = await Repair.find({ wigCode: wig.orderCode });
+  const serviceHistory = await Service.find({ newWigReference: wig._id });
+
+  return {
+    wigDetails: wig,
+    repairHistory: repairs,
+    productionHistory: wig.history,
+    serviceHistory: serviceHistory
+  };
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>חיפוש לפי <code>orderCode</code> — לא רגיש לאותיות גדולות/קטנות.</li>
+        <li>מחזיר היסטוריה מלאה: פרטי פאה, ייצור, תיקונים, שירותים ו-QA.</li>
+        <li>ב-Client (<code>WigHistorySearch</code>) — מזינים קוד בדף <code>/history</code> ורואים הכל.</li>
+        <li>סורק ברקוד פיזי עובד כהקלדה אוטומטית בשדה הטקסט.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 4 — חפיפה בזרימת הייצור</h3>
+    <p class="code-caption"><strong>קובץ:</strong> workflowHelper.ts</p>
+    <div class="code-block">const STAGE_WORKFLOW = {
+  'עבודת יד': { next: 'חפיפה', specialty: 'חפיפה' },
+  'חפיפה':    { next: 'בקרה',   specialty: 'בקרת איכות' },
+  'בקרה':     { next: 'הושלם',  specialty: null }
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li><strong>חפיפה</strong> = שלב שטיפה ועיצוב לפני מסירה ללקוחה (לא "חפיפת משמרות").</li>
+        <li>בפאה חדשה: שלב 5 מתוך 6, לפני בקרה.</li>
+        <li>בתיקונים: נוצרת אוטומטית על ידי מרימי בסיום התיקונים.</li>
+        <li>גם שירותי סלון (חפיפה וסירוק) עוברים דרך אותו לוח QA.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. תסריט הדגמה</h2>
+    <ol class="demo-steps">
+      <li>התחברי כ-<code>רחלי</code> / <code>password123</code> (בקרת איכות) → מגיעים ל-<code>/qa</code>.</li>
+      <li>הציגי רשימת פאות ממתינות — פאה חדשה (תג "פאה חדשה") + תיקון (תג "תיקון").</li>
+      <li>לחצי על פאה — ראי תמונת "לפני" מהייצור/תיקון.</li>
+      <li>לחצי "צלם לאישור" — צלמי את הפאה המוגמרת.</li>
+      <li>לחצי "אשר" — הפאה עוברת ל"מוכנה למסירה".</li>
+      <li>(אופציונלי) הדגימי פסילה — בחרי שלבים להחזרה, צלמי ליקוי, כתבי הערה.</li>
+      <li>עברי ל-<code>/history</code> — הזיני קוד פאה וראי היסטוריה מלאה כולל תמונות QA.</li>
+      <li>עברי ל-<code>/service/new</code> — הדגימי הזמנת שירות חפיפה וסירוק.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>6. טכנולוגיות</h2>
+    <div class="tech-tags">
+      <span class="tech-tag">React</span>
+      <span class="tech-tag">TypeScript</span>
+      <span class="tech-tag">MediaDevices API (מצלמה)</span>
+      <span class="tech-tag">Axios</span>
+      <span class="tech-tag">Mongoose</span>
+      <span class="tech-tag">Express Middleware (verifyQC)</span>
+      <span class="tech-tag">MongoDB Regex Search</span>
+      <span class="tech-tag">Jest</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. שאלות ותשובות למורה</h2>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: למה חובה צילום לפני אישור?</div>
+      <div class="qa-answer">
+        הצילום (<code>afterImageUrl</code>) הוא הוכחה ויזואלית שהפאה נבדקה ואושרה.
+        הוא נשמר ב-DB ומופיע בהיסטוריה — כך אפשר לעקוב אחרי מצב הפאה בכל שלב.
+        בלי תמונה — כפתור האישור חסום (validation ב-client).
+        זה מבטיח שכל פאה שיוצאת מהסלון עברה בדיקה פיזית.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה קורה בפסילה?</div>
+      <div class="qa-answer">
+        הבודקת בוחרת שלבים להחזרה (למשל: צבע, עבודת יד), מצלמת את הליקוי, וכותבת הערה.
+        בשרת: לפאה חדשה — השלבים נשמרים ב-<code>pendingRepairStages</code> והפאה חוזרת לייצור.
+        לתיקון — המשימות הרלוונטיות חוזרות ל-<code>ממתין</code>.
+        העובדת רואה בכרטיס: "חזר מ-QA" + תמונת הליקוי + ההערה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך עובד חיפוש ברקוד?</div>
+      <div class="qa-answer">
+        בדף <code>/history</code>, מזינים את קוד הפאה (<code>orderCode</code>).
+        השרת מחפש ב-MongoDB עם Regex (לא רגיש לאותיות).
+        מחזיר: פרטי לקוחה, היסטוריית ייצור (מי עבדה על מה), תיקונים, שירותים, תמונות QA.
+        סורק ברקוד פיזי ממלא את השדה אוטומטית (כמו הקלדה).
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה זה verifyQC?</div>
+      <div class="qa-answer">
+        Middleware בשרת שמגביל גישה לנתיבי QA (<code>/api/services/qa-tasks</code>, approve, reject).
+        מאפשר גישה ל: תפקיד <code>QC</code> או <code>Inspector</code>, מנהלת, או עובדת עם
+        התמחות "בקרת איכות" / "בקרה". עובדת רגילה תקבל 403.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה ההבדל בין Production QA ל-Repair QA?</div>
+      <div class="qa-answer">
+        שניהם מופיעים באותו לוח QA (<code>/qa</code>), אבל:
+        <strong>Production QA</strong> (<code>origin: 'NewWig'</code>) — נוצר אוטומטית כשפאה חדשה מסיימת ייצור (מרים).
+        <strong>Repair QA</strong> (<code>origin: 'Repair'</code>) — נוצר אוטומטית כשתיקון מגיע לבקרה (מרימי).
+        בלוח QA יש תג שמבדיל ביניהם. הלוגיקה של אישור/פסילה זהה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה זה חפיפה במערכת?</div>
+      <div class="qa-answer">
+        חפיפה = שלב שטיפה, ייבוש ועיצוב הפאה לפני מסירה ללקוחה.
+        בפאה חדשה — זה שלב 5 בזרימת הייצור. בתיקונים — נוצר אוטומטית בסיום.
+        גם יש שירותי סלון נפרדים: "חפיפה בלבד" או "חפיפה וסירוק" דרך <code>ServiceOrderForm</code>,
+        שגם הם עוברים דרך QA לפני מסירה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך QA מתחבר לשאר המודולים?</div>
+      <div class="qa-answer">
+        מרים (פאה חדשה) — בסיום ייצור, <code>newWigService</code> יוצר <code>Service</code> עם <code>status: 'QA'</code>.
+        מרימי (תיקונים) — בהגעה לבקרה, <code>repairService</code> יוצר <code>Repair QA</code>.
+        חני (QA) — רואה הכל ב-<code>QADashboard</code>, מאשרת/פוסלת, והתוצאה חוזרת למודול המקור.
+        אילה (דאשבורד) — רואה את הסטטוס המעודכן בטבלת הסקירה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: אילו בדיקות כתבת?</div>
+      <div class="qa-answer">
+        <code>service_qa.test.ts</code> — בדיקות: שליפת משימות QA, אישור עם תמונה,
+        פסילה עם החזרה לשלבים, בדיקה שהערות ותמונות נשמרות נכון.
+        <code>e2e_workflow.test.ts</code> — זרימה מלאה כולל פסילת QA והחזרה לייצור.
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    חני · WigFlow · <a href="index.html">חזרה לדף הראשי</a>
+  </footer>
+
+</div>
+</body>
+</html>

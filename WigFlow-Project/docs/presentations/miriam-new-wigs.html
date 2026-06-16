@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מרים — פאה חדשה | WigFlow</title>
+  <link rel="stylesheet" href="presentation.css" />
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a href="index.html">← חזרה לדף הראשי</a>
+  <button class="btn-print" onclick="window.print()">הדפסה ל-PDF</button>
+</nav>
+
+<div class="page-wrapper">
+
+  <header class="doc-header">
+    <h1>מרים — פאה חדשה (New Wigs)</h1>
+    <p class="subtitle">הזמנת פאה חדשה, זרימת ייצור ותחנת עבודה</p>
+    <span class="badge">מפתחת 2 · New Wigs Module</span>
+  </header>
+
+  <section>
+    <h2>1. פתיחה — מה לומר (30 שניות)</h2>
+    <p class="opening-quote">
+      "שלום, אני מרים. אחראית על מודול הפאה החדשה — מהזמנת פאה חדשה ועד סיום הייצור.
+      בניתי את טופס ההזמנה, את תחנת הייצור לעובדות, ואת זרימת 6 השלבים שמעבירה כל פאה
+      מהתאמת שיער ועד בקרת איכות."
+    </p>
+  </section>
+
+  <section>
+    <h2>2. מה עשיתי</h2>
+    <ul class="feature-list">
+      <li><strong>טופס הזמנת פאה חדשה</strong> — 3 שלבים: זיהוי לקוחה, רישום מהיר, מפרט טכני מלא.</li>
+      <li><strong>שיבוץ עובדות לכל שלב</strong> — עם תאריכי יעד לכל שלב ייצור.</li>
+      <li><strong>זרימת 6 שלבים</strong> — התאמת שיער → תפירה → צבע → עבודת יד → חפיפה → בקרה.</li>
+      <li><strong>תחנת ייצור (Production Station)</strong> — עובדות רואות משימות ומסמנות "בוצע".</li>
+      <li><strong>כרטיס מפרט טכני (Technical Card)</strong> — עובדות רואות מפרט מלא (ללא פרטי תשלום).</li>
+      <li><strong>חתימה דיגיטלית + צילום + PDF</strong> — בסיום ההזמנה נשלח מייל עם סיכום עסקה.</li>
+      <li><strong>אינטגרציה עם QA</strong> — בסיום ייצור נוצרת משימת בקרת איכות אוטומטית.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>3. קבצים מרכזיים</h2>
+    <table>
+      <thead>
+        <tr><th>שכבה</th><th>קובץ</th><th>תפקיד</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Client</td><td><code>components/NewWigs/NewOrderForm/NewOrderForm.tsx</code></td><td>טופס הזמנה (797 שורות)</td></tr>
+        <tr><td>Client</td><td><code>components/NewWigs/ProductionStation/ProductionStation.tsx</code></td><td>תחנת ייצור לעובדות</td></tr>
+        <tr><td>Client</td><td><code>components/NewWigs/WigTechnicalCard/WigTechnicalCard.tsx</code></td><td>כרטיס מפרט טכני</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/NewWigs/newWigModel.ts</code></td><td>מודל MongoDB — NewWig</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/NewWigs/newWigService.ts</code></td><td>לוגיקת שלבים + QA</td></tr>
+        <tr><td>Server</td><td><code>Routers/newWigRouter.ts</code></td><td>API — <code>/api/wigs</code></td></tr>
+        <tr><td>Tests</td><td><code>tests/newWig.test.ts</code></td><td>בדיקות CRUD, שלבים, דחיפות</td></tr>
+        <tr><td>Tests</td><td><code>tests/e2e_workflow.test.ts</code></td><td>זרימה מלאה עד QA ופסילה</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>4. הסבר על קטעי קוד</h2>
+
+    <h3>קטע 1 — שליחת הזמנה חדשה (Client)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> NewOrderForm.tsx — פונקציית onSubmit</p>
+    <div class="code-block">const onSubmit = async (data) => {
+  if (!signatureData) { alert('חובה להחתים את הלקוחה!'); return; }
+  const firstStageWorkers = plannedAssignments['התאמת שיער'] || [];
+  if (firstStageWorkers.length === 0) {
+    alert("חובה לשבץ לפחות עובדת אחת לשלב 'התאמת שיער'!");
+    return;
+  }
+
+  const payload = {
+    ...data,
+    orderCode: data.orderCode.trim(),
+    customer: finalCustomerId,
+    assignedWorkers: firstStageWorkers,
+    stageAssignments: plannedAssignments,
+    stageDeadlines: stageDeadlines,
+    currentStage: 'התאמת שיער',
+    customerSignature: signatureData,
+    imageUrl: capturedImage,
+    internalNote: internalNote
+  };
+
+  const response = await axios.post('wigs/new', payload);
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>לפני שליחה — בודקים שיש <strong>חתימת לקוחה</strong> ושיבוץ לשלב הראשון.</li>
+        <li>ה-Payload כולל: מפרט טכני, שיבוץ עובדות לכל שלב, תאריכי יעד, חתימה ותמונה.</li>
+        <li>השלב הראשון תמיד: <strong>"התאמת שיער"</strong>.</li>
+        <li>הנתונים נשלחים ל-<code>POST /api/wigs/new</code> ונשמרים ב-MongoDB.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 2 — זרימת השלבים (Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> newWigService.ts — STAGES_FLOW</p>
+    <div class="code-block">const STAGES_FLOW = [
+  'התאמת שיער',
+  'תפירת פאה',
+  'צבע',
+  'עבודת יד',
+  'חפיפה',
+  'בקרה'
+];
+
+// כשעובדת לוחצת "בוצע":
+const currentStageIndex = STAGES_FLOW.findIndex(s => s.trim() === wig.currentStage.trim());
+if (currentStageIndex === STAGES_FLOW.length - 2) {
+  nextStage = 'בקרה';
+  isMovingToQA = true;
+} else {
+  nextStage = STAGES_FLOW[currentStageIndex + 1];
+}</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>כל פאה עוברת 6 שלבים בסדר קבוע.</li>
+        <li>כשעובדת לוחצת "בוצע", <code>moveToNextStage()</code> מוצאת את השלב הבא במערך.</li>
+        <li>רושמת בהיסטוריה מי סיימה ומתי, ומשבצת את העובדת הבאה.</li>
+        <li>בשלב האחרון לפני בקרה — יוצרת <strong>משימת QA</strong> אוטומטית.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 3 — יצירת QA אוטומטית (Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> newWigService.ts — בסיום ייצור</p>
+    <div class="code-block">if (isMovingToQA || nextStage === 'בקרה') {
+  await Service.create({
+    customer: wig.customer,
+    serviceType: 'Production QA',
+    origin: 'NewWig',
+    newWigReference: wig._id,
+    status: 'QA',
+    notes: { secretary: 'פאה הגיעה לבקרת איכות מסיום ייצור' }
+  });
+
+  return await NewWig.findByIdAndUpdate(wigId, {
+    currentStage: 'בקרה',
+    assignedWorkers: [],
+    $push: { history: historyEntry }
+  });
+}</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>כשהפאה מסיימת את כל שלבי הייצור — נוצרת רשומת <code>Service</code> עם <code>status: 'QA'</code>.</li>
+        <li>חני (מודול QA) רואה את המשימה בלוח הבקרה שלה (<code>/qa</code>).</li>
+        <li>הפאה עוברת לסטטוס <strong>"בקרה"</strong> וממתינה לאישור.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. תסריט הדגמה</h2>
+    <ol class="demo-steps">
+      <li>התחברי כ-<code>admin</code> / <code>password123</code> → מגיעים ל-<code>/</code> (טופס הזמנה).</li>
+      <li>חפשי לקוחה לפי ת.ז. (למשל: <code>329520449</code> — מרים גליק).</li>
+      <li>מלאי מפרט טכני: מידות, סוג שיער, צבע, סגנון קדמי.</li>
+      <li>שבצי עובדות לכל שלב ייצור (שרה, ליפשי, הודיה...).</li>
+      <li>חתמי את הלקוחה דיגיטלית + צלמי אותה.</li>
+      <li>שלחי — הודעת הצלחה + PDF נשלח למייל הסלון.</li>
+      <li>עברי ל-<code>/production</code> — הציגי את המשימה אצל העובדת המשובצת.</li>
+      <li>לחצי "בוצע" — הסבירי שהפאה עוברת לשלב הבא.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>6. טכנולוגיות</h2>
+    <div class="tech-tags">
+      <span class="tech-tag">React Hook Form</span>
+      <span class="tech-tag">TypeScript</span>
+      <span class="tech-tag">html2canvas + jsPDF</span>
+      <span class="tech-tag">Axios</span>
+      <span class="tech-tag">Mongoose</span>
+      <span class="tech-tag">Express Router</span>
+      <span class="tech-tag">Jest</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. שאלות ותשובות למורה</h2>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה 6 שלבי הייצור?</div>
+      <div class="qa-answer">
+        1. התאמת שיער — 2. תפירת פאה — 3. צבע — 4. עבודת יד — 5. חפיפה — 6. בקרה.
+        השלבים מוגדרים במערך <code>STAGES_FLOW</code> ב-<code>newWigService.ts</code>.
+        כל שלב משובץ לעובדת עם התמחות מתאימה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: למה חובה חתימת לקוחה?</div>
+      <div class="qa-answer">
+        החתימה הדיגיטלית (<code>customerSignature</code>) נשמרת כתמונת Base64 ב-DB.
+        היא מהווה אישור הלקוחה על המפרט הטכני והמחיר. בלי חתימה — הטופס לא נשלח (validation ב-client).
+        זה גם נכלל ב-PDF שנשלח למייל הסלון.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה קורה כש-QA פוסל פאה?</div>
+      <div class="qa-answer">
+        חני פוסלת דרך <code>RejectionModal</code> — בוחרת שלבים להחזרה (למשל: צבע, עבודת יד).
+        השרת שומר את השלבים ב-<code>pendingRepairStages</code> בפאה.
+        <code>moveToNextStage</code> מזהה שיש שלבים ממתינים ומחזיר את הפאה לשלב הראשון ברשימה,
+        עם <code>qaNote</code> שמוצג לעובדת בכרטיס המפרט הטכני.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך עובדת שיבוץ העובדות?</div>
+      <div class="qa-answer">
+        בזמן ההזמנה, המזכירה בוחרת עובדות לכל שלב ושומרת ב-<code>stageAssignments</code> (Map).
+        כשפאה עוברת לשלב הבא, השרת מחפש את העובדת המשובצת מראש.
+        אם לא שובצה — הוא מחפש עובדת לפי <code>specialty</code> (התמחות) ב-DB.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה ההבדל בין NewOrderForm ל-ProductionStation?</div>
+      <div class="qa-answer">
+        <code>NewOrderForm</code> — מיועד למזכירה: יצירת הזמנה חדשה, מפרט מלא, תשלום, חתימה.
+        <code>ProductionStation</code> — מיועד לעובדות: רואות רק את המשימות שלהן, מסמנות "בוצע",
+        רואות כרטיס מפרט טכני (בלי פרטי תשלום). שני המסכים עובדים על אותו מודל <code>NewWig</code>.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך נוצר ה-PDF?</div>
+      <div class="qa-answer">
+        אחרי שליחת ההזמנה, הקוד משתמש ב-<code>html2canvas</code> לצילום הטופס כתמונה,
+        ואז ב-<code>jsPDF</code> ליצירת קובץ PDF. ה-PDF נשלח למייל הסלון דרך
+        <code>POST /api/wigs/send-summary-email</code>.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה קורה בלחיצה כפולה על "בוצע"?</div>
+      <div class="qa-answer">
+        ב-<code>moveToNextStage</code> יש בדיקה: אם הפאה כבר ב-<code>בקרה</code> או <code>נמסר</code>,
+        הפונקציה מחזירה את הפאה בלי שגיאה (idempotent). זה מונע באגים מלחיצה כפולה או מפקודה קולית כפולה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: אילו בדיקות כתבת?</div>
+      <div class="qa-answer">
+        <code>newWig.test.ts</code> — יצירת פאה, שליפת משימות לעובדת, שינוי דחיפות, מעבר שלב.
+        <code>e2e_workflow.test.ts</code> — זרימה מלאה: יצירה → כל השלבים → QA → פסילה → חזרה לייצור.
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    מרים · WigFlow · <a href="index.html">חזרה לדף הראשי</a>
+  </footer>
+
+</div>
+</body>
+</html>

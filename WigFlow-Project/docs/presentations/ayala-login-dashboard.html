@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>אילה — התחברות ודאשבורד | WigFlow</title>
+  <link rel="stylesheet" href="presentation.css" />
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a href="index.html">← חזרה לדף הראשי</a>
+  <button class="btn-print" onclick="window.print()">הדפסה ל-PDF</button>
+</nav>
+
+<div class="page-wrapper">
+
+  <header class="doc-header">
+    <h1>אילה — התחברות ודאשבורד</h1>
+    <p class="subtitle">שכבת האבטחה, ניהול משתמשים ודאשבורד מנהלת</p>
+    <span class="badge">מפתחת 1 · Infrastructure &amp; Admin</span>
+  </header>
+
+  <!-- 1. פתיחה -->
+  <section>
+    <h2>1. פתיחה — מה לומר (30 שניות)</h2>
+    <p class="opening-quote">
+      "שלום, אני אילה. אחראית על שכבת האבטחה והדאשבורד של WigFlow — מערכת ניהול סלון הפאות.
+      בניתי את מערכת ההתחברות, ניהול המשתמשים והדאשבורד שמאפשר למנהלת לראות את כל הפאות והתיקונים
+      במקום אחד, לנהל את הצוות ולעקוב אחרי עומס העובדות."
+    </p>
+  </section>
+
+  <!-- 2. מה עשיתי -->
+  <section>
+    <h2>2. מה עשיתי</h2>
+    <ul class="feature-list">
+      <li><strong>מערכת התחברות (Login)</strong> — שם משתמש וסיסמה, אימות מאובטח, והפניה אוטומטית לפי תפקיד.</li>
+      <li><strong>אבטחה (JWT + bcrypt)</strong> — Token לכל בקשה, סיסמאות מוצפנות, Middleware להרשאות.</li>
+      <li><strong>ניהול צוות (Team Management)</strong> — הוספה, עריכה, הקפאה ומחיקה של עובדות.</li>
+      <li><strong>דאשבורד מנהלת</strong> — טבלת סקירה מאוחדת של פאות חדשות + תיקונים.</li>
+      <li><strong>עומס עובדות (Workers Load)</strong> — כרטיסיות עם מספר משימות פעילות לכל עובדת.</li>
+      <li><strong>פעולות מנהלת</strong> — סימון "נמסר", מחיקה עם קוד אישור, ניהול דחיפות.</li>
+      <li><strong>ניווט חכם</strong> — תפריט שונה לכל תפקיד (מנהלת / עובדת / בקרת איכות).</li>
+    </ul>
+  </section>
+
+  <!-- 3. קבצים -->
+  <section>
+    <h2>3. קבצים מרכזיים</h2>
+    <table>
+      <thead>
+        <tr><th>שכבה</th><th>קובץ</th><th>תפקיד</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Client</td><td><code>components/Auth/LoginForm/LoginForm.tsx</code></td><td>מסך התחברות + ניתוב חכם</td></tr>
+        <tr><td>Client</td><td><code>components/Dashboard/TeamManagement/TeamManagement.tsx</code></td><td>ניהול צוות</td></tr>
+        <tr><td>Client</td><td><code>components/Dashboard/MainOverviewTable/MainOverviewTable.tsx</code></td><td>טבלת סקירה כללית</td></tr>
+        <tr><td>Client</td><td><code>components/Dashboard/WorkersLoadStatus/WorkersLoadStatus.tsx</code></td><td>עומס עובדות</td></tr>
+        <tr><td>Client</td><td><code>axiosConfig.ts</code></td><td>שליחת Token בכל בקשה</td></tr>
+        <tr><td>Server</td><td><code>Middlewares/authMiddleware.ts</code></td><td>verifyToken, verifyAdmin, verifyWorker, verifyQC</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/User/userService.ts</code></td><td>loginUser, createUser, bcrypt + JWT</td></tr>
+        <tr><td>Server</td><td><code>Routers/userRouter.ts</code></td><td>API משתמשים — login, CRUD, workload</td></tr>
+        <tr><td>Tests</td><td><code>tests/admin_infra.test.ts</code></td><td>בדיקות login, RBAC, dashboard API</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 4. הסבר קוד -->
+  <section>
+    <h2>4. הסבר על קטעי קוד</h2>
+
+    <h3>קטע 1 — התחברות וניתוב חכם (Client)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> LoginForm.tsx — שורות 20–45</p>
+    <div class="code-block">try {
+  const response = await axios.post('/users/login', {
+    username, password
+  });
+
+  const { token, user } = response.data;
+  localStorage.setItem('token', token);
+  localStorage.setItem('user', JSON.stringify(user));
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+  // ניתוב חכם אחרי ההתחברות
+  if (user.role === 'Admin') {
+    window.location.href = '/';
+  } else if (user.role === 'Worker') {
+    if (user.specialty?.includes('בקר') || user.specialty?.includes('איכות')) {
+      window.location.href = '/qa';
+    } else {
+      window.location.href = '/repairs/tasks';
+    }
+  } else if (user.role === 'QC' || user.role === 'Inspector') {
+    window.location.href = '/qa';
+  }
+}</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>המשתמשת שולחת שם משתמש וסיסמה לשרת (<code>POST /api/users/login</code>).</li>
+        <li>השרת מחזיר <strong>Token</strong> (מפתח אבטחה) ופרטי משתמש.</li>
+        <li>ה-Token נשמר ב-<code>localStorage</code> ונשלח בכל בקשה הבאה דרך Axios.</li>
+        <li><strong>ניתוב חכם:</strong> מנהלת → דף ראשי, עובדת רגילה → משימות, בקרת איכות → <code>/qa</code>.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 2 — Middleware לאבטחה (Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> authMiddleware.ts — שורות 11–35</p>
+    <div class="code-block">export const verifyToken = (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  if (!token) {
+    return res.status(401).json({ message: 'גישה נדחתה: לא סופק טוקן אבטחה' });
+  }
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    res.status(401).json({ message: 'טוקן לא תקין או פג תוקף' });
+  }
+};
+
+export const verifyAdmin = (req, res, next) => {
+  verifyToken(req, res, () => {
+    if (req.user && req.user.role === 'Admin') {
+      next();
+    } else {
+      res.status(403).json({ message: 'גישה חסומה: נדרשת הרשאת מנהלת' });
+    }
+  });
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li><code>verifyToken</code> — בודק שיש Token תקין בכל בקשה לשרת. אם אין — שגיאה 401.</li>
+        <li><code>verifyAdmin</code> — מאפשר גישה רק למנהלת. עובדת רגילה תקבל 403.</li>
+        <li>זה מגן על נתונים רגישים — רק מי שמורשה יכול לראות את הדאשבורד.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 3 — הנפקת JWT בשרת (Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> userService.ts — פונקציית loginUser</p>
+    <div class="code-block">// השוואת סיסמה מוצפנת
+const isMatch = await bcrypt.compare(password, user.password);
+if (!isMatch) throw new AppError('שם משתמש או סיסמה שגויים', 401);
+
+// חסימת חשבון מוקפא
+if (user.isActive === false) {
+  throw new AppError('החשבון הוקפא. פנה למנהלת.', 403);
+}
+
+// הנפקת Token
+const token = jwt.sign(
+  { id: user._id, role: user.role },
+  SECRET_KEY,
+  { expiresIn: '1d' }
+);</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>הסיסמה לא נשמרת בטקסט גלוי — היא מוצפנת עם <strong>bcrypt</strong>.</li>
+        <li>אם החשבון מוקפא (<code>isActive: false</code>) — ההתחברות נחסמת.</li>
+        <li>ה-Token מכיל את ה-ID והתפקיד של המשתמשת, ותקף ליום אחד.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 5. תסריט הדגמה -->
+  <section>
+    <h2>5. תסריט הדגמה</h2>
+    <ol class="demo-steps">
+      <li>פתחי את האפליקציה → מסך Login. הזיני: <code>admin</code> / <code>password123</code>.</li>
+      <li>הסבירי: "אחרי Login, המערכת מפנה אותי לדף הראשי כי אני מנהלת."</li>
+      <li>עברי ל-<code>/dashboard</code> — הציגי את <strong>טבלת הסקירה</strong> (פאות + תיקונים).</li>
+      <li>הציגי <strong>עומס עובדות</strong> — כמה משימות פעילות לכל עובדת.</li>
+      <li>ב-<strong>ניהול צוות</strong> — הוסיפי עובדת חדשה (שם, תפקיד, התמחות).</li>
+      <li>הקפיאי חשבון עובדת → נסי להתחבר כעובדת הזו (תקבלי הודעת שגיאה).</li>
+      <li>סמני פאה כ<strong>"נמסרה"</strong> מהטבלה — הסבירי שהסטטוס מתעדכן ב-DB.</li>
+    </ol>
+  </section>
+
+  <!-- 6. טכנולוגיות -->
+  <section>
+    <h2>6. טכנולוגיות</h2>
+    <div class="tech-tags">
+      <span class="tech-tag">React 18</span>
+      <span class="tech-tag">TypeScript</span>
+      <span class="tech-tag">Axios</span>
+      <span class="tech-tag">JWT (jsonwebtoken)</span>
+      <span class="tech-tag">bcryptjs</span>
+      <span class="tech-tag">Express Middleware</span>
+      <span class="tech-tag">MongoDB / Mongoose</span>
+      <span class="tech-tag">Jest + Supertest</span>
+    </div>
+  </section>
+
+  <!-- 7. שאלות ותשובות -->
+  <section>
+    <h2>7. שאלות ותשובות למורה</h2>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך JWT עובד במערכת שלך?</div>
+      <div class="qa-answer">
+        כשמשתמשת מתחברת, השרת בודק את הסיסמה עם bcrypt ומנפיק Token (JWT) שמכיל את ה-ID והתפקיד.
+        ה-Token נשמר ב-localStorage ונשלח בכל בקשה ב-Header: <code>Authorization: Bearer &lt;token&gt;</code>.
+        Middleware בשרת (<code>verifyToken</code>) בודק את ה-Token לפני כל פעולה רגישה. ה-Token תקף ליום אחד.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה קורה כשעובדת מוקפאת?</div>
+      <div class="qa-answer">
+        המנהלת מקפיאה חשבון דרך Team Management (שדה <code>isActive: false</code>).
+        בפונקציית <code>loginUser</code> בשרת יש בדיקה: אם <code>isActive === false</code> — השרת מחזיר שגיאה 403
+        עם הודעה "החשבון הוקפא". העובדת לא יכולה להתחבר עד שהמנהלת מפעילה אותה מחדש.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך הדאשבורד מאחד פאות חדשות ותיקונים?</div>
+      <div class="qa-answer">
+        <code>MainOverviewTable</code> מבצע שני קריאות API במקביל:
+        <code>GET /api/wigs</code> (פאות חדשות) ו-<code>GET /api/repairs/dashboard-view</code> (תיקונים).
+        הוא מאחד את שני המערכים לטבלה אחת עם עמודות: קוד פאה, לקוחה, סטטוס, תחנה נוכחית, עובדת משובצת.
+        כך המנהלת רואה הכל במקום אחד.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה ההבדל בין verifyToken ל-verifyAdmin?</div>
+      <div class="qa-answer">
+        <code>verifyToken</code> בודק רק שהמשתמשת מחוברת (יש Token תקין) — מתאים לכל משתמשת מחוברת.
+        <code>verifyAdmin</code> בודק גם Token וגם שהתפקיד הוא <code>Admin</code> — מתאים לפעולות מנהלת בלבד
+        (צפייה בכל המשתמשים, מחיקת פאות, ניהול צוות).
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: למה השתמשת ב-localStorage ולא ב-Session?</div>
+      <div class="qa-answer">
+        JWT הוא Stateless — השרת לא שומר מידע על ההתחברות. ה-Token עצמו מכיל את כל המידע הנדרש.
+        localStorage שומר את ה-Token בדפדפן כך שהמשתמשת נשארת מחוברת גם אחרי רענון הדף.
+        Axios Interceptor (<code>axiosConfig.ts</code>) מצרף את ה-Token אוטומטית לכל בקשה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך עובד הניתוב החכם אחרי Login?</div>
+      <div class="qa-answer">
+        ב-<code>LoginForm.tsx</code>, אחרי קבלת ה-Token, הקוד בודק את <code>user.role</code> ו-<code>user.specialty</code>:
+        Admin → <code>/</code>, Worker רגילה → <code>/repairs/tasks</code>,
+        Worker עם התמחות בקרה → <code>/qa</code>, QC/Inspector → <code>/qa</code>.
+        כך כל משתמשת מגיעה ישירות למסך הרלוונטי לה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך מחשבים את עומס העובדות?</div>
+      <div class="qa-answer">
+        <code>WorkersLoadStatus</code> שולף את כל העובדות מ-<code>GET /api/users</code>,
+        ואז סופר כמה פאות חדשות ותיקונים משובצים לכל עובדת (לפי <code>assignedWorkers</code> בפאות
+        ו-<code>assignedTo</code> במשימות תיקון). התוצאה מוצגת בכרטיסיות ויזואליות.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: אילו בדיקות כתבת?</div>
+      <div class="qa-answer">
+        ב-<code>admin_infra.test.ts</code>: בדיקה ש-Login מחזיר Token, שעובדת רגילה מקבלת 403 על נתיבי Admin,
+        וש-<code>GET /api/repairs/dashboard-view</code> מחזיר מערך תקין. הבדיקות רצות ב-CI עם Jest + Supertest.
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    אילה · WigFlow · <a href="index.html">חזרה לדף הראשי</a>
+  </footer>
+
+</div>
+</body>
+</html>

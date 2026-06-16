@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "seed": "tsx src/seed.ts",
-    "test": "jest --detectOpenHandles --forceExit"
+    "test": "jest --detectOpenHandles --forceExit",
+    "generate-presentations": "node ../docs/presentations/generate-pdfs.mjs"
   },
   "dependencies": {
     "@types/nodemailer": "^7.0.11",

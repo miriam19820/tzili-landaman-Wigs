@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מרימי — תיקונים | WigFlow</title>
+  <link rel="stylesheet" href="presentation.css" />
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a href="index.html">← חזרה לדף הראשי</a>
+  <button class="btn-print" onclick="window.print()">הדפסה ל-PDF</button>
+</nav>
+
+<div class="page-wrapper">
+
+  <header class="doc-header">
+    <h1>מרימי — תיקונים (Repairs)</h1>
+    <p class="subtitle">קבלת תיקון, זרימת משימות ואינטגרציה עם QA</p>
+    <span class="badge">מפתחת 3 · Repairs Module</span>
+  </header>
+
+  <section>
+    <h2>1. פתיחה — מה לומר (30 שניות)</h2>
+    <p class="opening-quote">
+      "שלום, אני מרימי. אחראית על מודול התיקונים — מקבלת פאה לתיקון ועד מסירה ללקוחה.
+      בניתי את טופס קבלת התיקון, את מנוע המשימות שמעביר אוטומטית לחפיפה ולבקרה,
+      ואת מסך המשימות לעובדות."
+    </p>
+  </section>
+
+  <section>
+    <h2>2. מה עשיתי</h2>
+    <ul class="feature-list">
+      <li><strong>טופס קבלת תיקון (DiagnosisChecklist)</strong> — זיהוי לקוחה, צילום פאה, בחירת סוגי תיקון.</li>
+      <li><strong>קטגוריות תיקון מוגדרות (CATEGORY_MAP)</strong> — צבע, מכונה, עבודת יד, חפיפה, בקרה.</li>
+      <li><strong>שיבוץ עובדות לפי קטגוריה (StaffAllocator)</strong> — עם הצגת עומס נוכחי.</li>
+      <li><strong>מנוע זרימת משימות</strong> — כשעובדת מסיימת, המערכת מעבירה אוטומטית לשלב הבא.</li>
+      <li><strong>יצירה אוטומטית של חפיפה + בקרה</strong> — בסיום כל התיקונים, גם אם לא נבחרו מראש.</li>
+      <li><strong>מסך משימות לעובדות</strong> — <code>/repairs/tasks</code> + שילוב בתחנת הייצור.</li>
+      <li><strong>אינטגרציה עם QA</strong> — יצירת משימת בקרה אוטומטית בסיום (מודול חני).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>3. קבצים מרכזיים</h2>
+    <table>
+      <thead>
+        <tr><th>שכבה</th><th>קובץ</th><th>תפקיד</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Client</td><td><code>components/Repairs/DiagnosisChecklist/DiagnosisChecklist.tsx</code></td><td>טופס קבלת תיקון</td></tr>
+        <tr><td>Client</td><td><code>components/Repairs/StaffAllocator/StaffAllocator.tsx</code></td><td>שיבוץ עובדות לפי קטגוריה</td></tr>
+        <tr><td>Client</td><td><code>components/Repairs/RepairWorkerList/RepairWorkerList.tsx</code></td><td>רשימת משימות לעובדת</td></tr>
+        <tr><td>Client</td><td><code>components/Repairs/TaskItem/TaskItem.tsx</code></td><td>כרטיס משימה (משותף עם ייצור)</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/Repairs/repairModel.ts</code></td><td>מודל + CATEGORY_MAP + Validation</td></tr>
+        <tr><td>Server</td><td><code>Models_Service/Repairs/repairService.ts</code></td><td>לוגיקת תיקונים + זרימה</td></tr>
+        <tr><td>Server</td><td><code>Routers/repairRouter.ts</code></td><td>API — <code>/api/repairs</code></td></tr>
+        <tr><td>Tests</td><td><code>tests/repair.test.ts</code></td><td>בדיקות יצירה, משימות, מעבר שלב</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>4. הסבר על קטעי קוד</h2>
+
+    <h3>קטע 1 — קטגוריות תיקון (Server Model)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> repairModel.ts — CATEGORY_MAP</p>
+    <div class="code-block">const CATEGORY_MAP = {
+  'צבע': ['גוונים', 'שורש', 'שטיפה לעש', 'הבהרה לבלונד'],
+  'מכונה': [
+    'העברת רשת', 'תיקון רשת', 'התקנת לייס',
+    'התקנת ריבן', 'הארכת פאה', 'קיצור פאה'
+  ],
+  'עבודת יד': ['מילוי לייס', 'בייביהייר', 'גובה בקודקוד'],
+  'חפיפה': ['חלק', 'מוברש', 'גלי', 'תלתלים', 'ייבוש טבעי'],
+  'בקרה': ['בדיקה סופית']
+};
+
+// Validation — תת-קטגוריה חייבת להיות ברשימה של הקטגוריה
+validate: {
+  validator: function(value) {
+    return CATEGORY_MAP[this.category]?.includes(value);
+  }
+}</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>כל תיקון שייך ל<strong>קטגוריה</strong> (צבע, מכונה...) ו<strong>תת-קטגוריה</strong> ספציפית.</li>
+        <li>ה-Validation ב-Mongoose מוודא שתת-הקטגוריה תקינה — מונע הזנת נתונים שגויים.</li>
+        <li>המזכירה בוחרת מתוך רשימה קבועה, לא מקלידה טקסט חופשי.</li>
+      </ul>
+    </div>
+
+    <h3>קטע 2 — מנוע הזרימה האוטומטי (Server)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> repairService.ts — updateTaskAndMoveToNext</p>
+    <div class="code-block">// סימון משימה כהושלמה
+currentTask.status = 'בוצע';
+await repair.save();
+
+// חיפוש המשימה הבאה
+let nextTask = repair.tasks.find(t => t.status === 'ממתין');
+
+// יצירת חפיפה ובקרה אוטומטית אם אין יותר משימות
+if (!nextTask) {
+  const hasWash = repair.tasks.some(t => t.category === 'חפיפה');
+  const hasQA   = repair.tasks.some(t => t.category === 'בקרה');
+  if (!hasWash || !hasQA) {
+    repair.tasks.push({ category: 'חפיפה', subCategory: 'חלק', status: 'ממתין' });
+    repair.tasks.push({ category: 'בקרה',  subCategory: 'בדיקה סופית', status: 'ממתין' });
+    await repair.save();
+    nextTask = repair.tasks.find(t => t.status === 'ממתין');
+  }
+}
+
+if (nextTask.category === 'בקרה') {
+  repair.overallStatus = 'בבקרה';
+  await Service.create({
+    serviceType: 'Repair QA', origin: 'Repair', status: 'QA'
+  });
+} else if (nextTask.category === 'חפיפה') {
+  repair.overallStatus = 'בחפיפה';
+}</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>כשעובדת מסיימת משימה — הסטטוס משתנה ל-<strong>"בוצע"</strong>.</li>
+        <li>אם אין משימות נוספות — המערכת <strong>מוסיפה אוטומטית</strong> חפיפה ובקרה.</li>
+        <li>הסטטוס הכללי: <code>בתיקון</code> → <code>בחפיפה</code> → <code>בבקרה</code>.</li>
+        <li>בהגעה לבקרה — נוצרת משימת QA (חני מטפלת באישור/פסילה).</li>
+      </ul>
+    </div>
+
+    <h3>קטע 3 — שליחת תיקון חדש (Client)</h3>
+    <p class="code-caption"><strong>קובץ:</strong> DiagnosisChecklist.tsx — handleSubmit</p>
+    <div class="code-block">const handleSubmit = async () => {
+  if (!customerId || !wigCode || selectedTasks.length === 0) {
+    alert("נא לוודא זיהוי לקוחה, קוד פאה ובחירת תיקונים");
+    return;
+  }
+
+  const repairData = {
+    customerId,
+    wigCode,
+    isUrgent,
+    tasks: selectedTasks,       // מערך משימות עם קטגוריה + עובדת
+    washerId,                   // עובדת חפיפה
+    adminId,                    // בודקת QA
+    images: capturedImages,     // צילומי הפאה
+    overallStatus: 'בתיקון',
+    internalNote: internalNote
+  };
+
+  const response = await axios.post('/repairs', repairData);
+};</div>
+    <div class="code-explain">
+      <strong>מה קורה כאן:</strong>
+      <ul>
+        <li>Validation: חובה לקוחה, קוד פאה, ולפחות תיקון אחד.</li>
+        <li>כל משימה כוללת: קטגוריה, תת-קטגוריה, עובדת משובצת, תאריך יעד.</li>
+        <li>צילומי הפאה (לפני) נשמרים ב-<code>beforeImageUrl</code> / <code>images[]</code>.</li>
+        <li>הנתונים נשלחים ל-<code>POST /api/repairs</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. תסריט הדגמה</h2>
+    <ol class="demo-steps">
+      <li>התחברי כ-<code>admin</code> → עברי ל-<code>/repairs/new</code> (קבלת תיקון).</li>
+      <li>חפשי לקוחה לפי ת.ז. והזיני קוד פאה (למשל: <code>WIG-1234</code>).</li>
+      <li>צלמי את הפאה (עד 2 תמונות) — לפני ותקלה.</li>
+      <li>בחרי סוגי תיקון: למשל "גוונים" (צבע) + "תיקון רשת" (מכונה).</li>
+      <li>שבצי עובדת לכל קטגוריה + עובדת חפיפה + בודקת QA.</li>
+      <li>שלחי — הודעת הצלחה, התיקון נוצר ב-DB.</li>
+      <li>התחברי כעובדת (<code>הודיה</code> / <code>password123</code>) → <code>/repairs/tasks</code>.</li>
+      <li>לחצי "בוצע" — הסבירי שהמערכת מודיעה על התחנה הבאה.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>6. טכנולוגיות</h2>
+    <div class="tech-tags">
+      <span class="tech-tag">React</span>
+      <span class="tech-tag">TypeScript</span>
+      <span class="tech-tag">Axios</span>
+      <span class="tech-tag">Mongoose Schema Validation</span>
+      <span class="tech-tag">Express Router</span>
+      <span class="tech-tag">MediaDevices API (צילום)</span>
+      <span class="tech-tag">Jest + Supertest</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. שאלות ותשובות למורה</h2>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך נוצרת חפיפה אוטומטית?</div>
+      <div class="qa-answer">
+        ב-<code>updateTaskAndMoveToNext</code>, כשכל המשימות הידניות (צבע, מכונה, עבודת יד) הושלמו,
+        הקוד בודק אם יש משימת חפיפה ומשימת בקרה. אם חסרות — הוא מוסיף אותן אוטומטית לרשימת המשימות.
+        כך גם אם המזכירה שכחה לבחור חפיפה — הפאה לא "נתקעת" אלא ממשיכה בזרימה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה ההבדל בין קטגוריה לתת-קטגוריה?</div>
+      <div class="qa-answer">
+        <strong>קטגוריה</strong> = תחום עבודה רחב (צבע, מכונה, עבודת יד, חפיפה, בקרה).
+        <strong>תת-קטגוריה</strong> = סוג תיקון ספציפי בתוך הקטגוריה (למשל: "גוונים" תחת "צבע").
+        ה-<code>CATEGORY_MAP</code> מגדיר את הקשר ביניהם, וה-Validation מוודא שההתאמה נכונה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך עובדת האינטגרציה עם QA (חני)?</div>
+      <div class="qa-answer">
+        כשהתיקון מגיע לשלב "בקרה", השרת יוצר רשומת <code>Service</code> עם
+        <code>serviceType: 'Repair QA'</code> ו-<code>origin: 'Repair'</code>.
+        חני רואה את זה בלוח QA שלה (<code>/qa</code>) ומאשרת/פוסלת.
+        באישור — התיקון עובר ל-<code>מוכן</code>. בפסילה — המשימות חוזרות ל-<code>ממתין</code>
+        עם <code>qaNote</code> ו-<code>qaRejectionPhoto</code>.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה קורה כשעובדת לוחצת "בוצע" פעמיים?</div>
+      <div class="qa-answer">
+        הקוד בודק אם המשימה כבר בסטטוס <code>בוצע</code>. אם כן — הוא מחזיר הודעה
+        "המשימה נרשמה כהושלמה" בלי לזרוק שגיאה. זה מונע באגים מלחיצה כפולה.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: איך עובד StaffAllocator?</div>
+      <div class="qa-answer">
+        <code>StaffAllocator</code> קורא ל-<code>GET /api/repairs/available-workers/:category</code>.
+        השרת מחזיר עובדות עם התמחות מתאימה + מספר משימות פתוחות (עומס).
+        המזכירה רואה מי פנויה ושובצת בהתאם.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מה ההבדל בין RepairWorkerList ל-ProductionStation?</div>
+      <div class="qa-answer">
+        <code>RepairWorkerList</code> (<code>/repairs/tasks</code>) — מציג רק משימות תיקון.
+        <code>ProductionStation</code> (<code>/production</code>) — מציג גם פאות חדשות וגם תיקונים
+        דרך <code>getWorkerUnifiedTasks</code> — תצוגה מאוחדת לעובדת.
+        שני המסכים משתמשים ב-<code>TaskItem</code> המשותף.
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: מהם סטטוסי התיקון?</div>
+      <div class="qa-answer">
+        <code>בתיקון</code> — משימות ייצור/תיקון פעילות.
+        <code>בחפיפה</code> — הפאה בשלב שטיפה ועיצוב.
+        <code>בבקרה</code> — ממתינה לאישור QA.
+        <code>מוכן</code> — אושרה, ממתינה למסירה.
+        <code>נמסר</code> — נמסרה ללקוחה (עם התראת WhatsApp).
+      </div>
+    </div>
+
+    <div class="qa-item">
+      <div class="qa-question">ש: אילו בדיקות כתבת?</div>
+      <div class="qa-answer">
+        <code>repair.test.ts</code> — יצירת תיקון, שליפת משימות לעובדת, סימון "בוצע",
+        בדיקה שהמערכת מעבירה אוטומטית לשלב הבא. הבדיקות רצות ב-CI עם Jest.
+      </div>
+    </div>
+  </section>
+
+  <footer class="doc-footer">
+    מרימי · WigFlow · <a href="index.html">חזרה לדף הראשי</a>
+  </footer>
+
+</div>
+</body>
+</html>
