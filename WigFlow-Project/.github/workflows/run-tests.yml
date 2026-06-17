@@ -1,0 +1,39 @@
+name: Backend Tests (CI)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    # הרמת מסד נתונים (MongoDB) וירטואלי במיוחד בשביל הטסטים
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+    steps:
+    # 1. מוריד את הקוד שלכן לשרת הווירטואלי
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # 2. מתקין Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+
+    # 3. נכנס לתיקיית השרת ומתקין את כל הספריות
+    - name: Install Dependencies
+      working-directory: ./server
+      run: npm install
+
+    # 4. מריץ את הטסטים של מפתחת 2!
+    - name: Run Tests
+      working-directory: ./server
+      run: npm test

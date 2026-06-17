@@ -1,119 +1,132 @@
 .overview-container {
-  max-width: 1200px; /* הגדלתי מעט כדי שיהיה מרווח */
-  margin: 30px auto;
-  padding: 30px;
-  direction: rtl;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 0;
+  width: 100%;
 }
 
-.overview-title {
-  text-align: center;
-  color: #6f42c1;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 15px;
-}
-
-/* --- שורת חיפוש וסינון חדשה --- */
-.filter-bar {
+.overview-header {
   display: flex;
-  gap: 15px;
-  margin-bottom: 25px;
-  background-color: #f8f5ff; /* סגול בהיר מאוד שמתאים לעיצוב */
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid #e0d4f7;
   align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
-.search-input {
-  flex: 3; /* נותן לחיפוש את רוב המקום */
-  padding: 12px 15px;
-  border: 1px solid #dcd0f3;
-  border-radius: 8px;
-  font-size: 16px;
-  outline: none;
+.overview-header h2 {
+  font-size: 1.1rem;
+  color: var(--zili-deep);
+  margin: 0;
+}
+
+/* הגדרות הטבלה למניעת שבירת עיצוב */
+.zili-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.zili-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.zili-table th,
+.zili-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid #f0e8e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.zili-table th {
+  background-color: #fdf6f6;
+  font-weight: 600;
+  color: #6b4c4c;
+  font-size: 12px;
+}
+
+.zili-table tr:hover td {
+  background-color: #fdf9f9;
+}
+
+/* רוחב עמודות קבוע */
+.zili-table th:nth-child(1), .zili-table td:nth-child(1) { width: 10%; }
+.zili-table th:nth-child(2), .zili-table td:nth-child(2) { width: 18%; }
+.zili-table th:nth-child(3), .zili-table td:nth-child(3) { width: 14%; }
+.zili-table th:nth-child(4), .zili-table td:nth-child(4) { width: 16%; }
+.zili-table th:nth-child(5), .zili-table td:nth-child(5) { width: 18%; }
+.zili-table th:nth-child(6), .zili-table td:nth-child(6) { width: 10%; }
+.zili-table th:nth-child(7), .zili-table td:nth-child(7) { width: 120px; min-width: 120px; text-align: center; }
+
+/* הגבלת רוחב עמודת הפעולות */
+.col-actions {
+  width: 110px;
+  min-width: 110px;
+  text-align: center;
+}
+
+.actions-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 6px;
+  width: 120px;
+}
+
+.deliver-slot {
+  width: 80px;
+  min-width: 80px;
+}
+
+.btn-deliver-wig {
+  background-color: #4a705e;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-deliver-wig:hover {
+  background-color: #3b5c4d;
+}
+
+/* כפתור מחיקה - קטן יותר כדי לא להפריע */
+.btn-delete-wig {
+  background: none;
+  border: 1px solid var(--zili-border);
+  color: var(--zili-muted);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
   transition: all 0.2s;
 }
 
-.search-input:focus {
-  border-color: #6f42c1;
-  box-shadow: 0 0 8px rgba(111, 66, 193, 0.15);
+.btn-delete-wig:hover {
+  background: #fff5f5;
+  color: #d9534f;
+  border-color: #d9534f;
 }
 
-.status-select {
-  flex: 1; /* תיבת הסינון קטנה יותר */
-  padding: 12px;
-  border: 1px solid #dcd0f3;
-  border-radius: 8px;
-  background-color: white;
-  font-size: 15px;
-  color: #444;
-  cursor: pointer;
-  outline: none;
-}
-
-.status-select:focus {
-  border-color: #6f42c1;
-}
-/* ------------------------------- */
-
-.overview-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.overview-table th {
-  background-color: #6f42c1;
-  color: white;
-  padding: 15px 12px;
-  text-align: right;
-  font-weight: bold;
-}
-
-.overview-table td {
-  padding: 15px 12px;
-  border-bottom: 1px solid #f0f0f0;
-  color: #2c3e50;
-  font-size: 15px;
-}
-
-.overview-table tr:hover {
-  background-color: #fbfaff;
-}
-
-.badge-urgent {
-  background-color: #dc3545;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.badge-normal {
-  background-color: #f1f3f5;
-  color: #6c757d;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+/* באדג'ים (Badge) */
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .badge-stage {
-  background-color: #eef2ff;
-  color: #6f42c1;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  border: 1px solid #dcd0f3;
-}
-
-.loading-text {
-  text-align: center;
-  color: #6c757d;
-  padding: 40px;
-  font-size: 18px;
+  background: var(--zili-blush);
+  color: var(--zili-deep);
 }

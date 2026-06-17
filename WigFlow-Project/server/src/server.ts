@@ -1,30 +1,33 @@
-import app from './app';
-import 'dotenv/config';
-import { connectDB } from './Utils/connectDB';
+// 1. טעינת משתני הסביבה (חייב להיות ראשון)
+import 'dotenv/config'; 
 
-// ייבוא המודלים (חשוב מאוד לרישום הסכמות ב-Mongoose)
-import './Models_Service/Customer/customerModel';
-import './Models_Service/User/userModel';
-import './Models_Service/NewWigs/newWigModel';
-import './Models_Service/SalonServices/serviceModel';
-import './Models_Service/Repairs/repairModel';
+import app from './app.js'; 
+// 2. התיקון: הוספנו סוגריים מסולסלים סביב connectDB
+import { connectDB } from './Utils/connectDB.js'; 
 
-// פורט 5000 עדיף כדי לא להתנגש עם ה-React
-const PORT = 5000;
+// ייבוא המודלים
+import './Models_Service/Customer/customerModel.js';
+import './Models_Service/User/userModel.js';
+import './Models_Service/NewWigs/newWigModel.js';
+import './Models_Service/SalonServices/serviceModel.js';
+import './Models_Service/Repairs/repairModel.js';
+
+const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   try {
-    // 1. התחברות למסד הנתונים
+    // חיבור למסד הנתונים
     await connectDB();
     console.log('✅ Connected to MongoDB Successfully');
     
-    // 2. הפעלת השרת
+    // בדיקת הגדרות מייל בטרמינל
+    console.log(`-----------------------------------------`);
+    console.log(`📧 בדיקת הגדרות מייל: ${process.env.EMAIL_USER ? '✅ נטען' : '❌ חסר'}`);
+    console.log(`-----------------------------------------`);
+
     app.listen(PORT, () => {
-      console.log(`-----------------------------------------`);
       console.log(`🚀 השרת פועל בהצלחה בפורט: ${PORT}`);
       console.log(`🔗 Waiting for you at: http://localhost:${PORT}`);
-      console.log(`✅ כעת ניתן לשלוח בקשות מ-Postman`);
-      console.log(`-----------------------------------------`);
     });
 
   } catch (error) {

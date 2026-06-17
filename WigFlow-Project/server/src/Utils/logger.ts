@@ -1,6 +1,8 @@
 import winston from 'winston';
 import path from 'path';
 
+const logsDir = path.join(process.cwd(), 'logs');
+
 const getLogFileName = () => {
   const today = new Date();
   const year = today.getFullYear();
@@ -20,7 +22,8 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.File({ 
-      filename: path.join(__dirname, '../../logs', getLogFileName()),
+      // עכשיו __dirname יעבוד פה בצורה מושלמת!
+      filename: path.join(logsDir, getLogFileName()),
       level: 'error'
     }),
     new winston.transports.Console({

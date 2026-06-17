@@ -1,62 +1,104 @@
 import { Service } from './serviceModel.js';
 import { NewWig } from '../NewWigs/newWigModel.js'; 
 import { Repair } from '../Repairs/repairModel.js';
-// שים לב: אם יש שגיאה על השורה הזו, וודאי שבקובץ customerService יש export לפונקציה הזו
-import * as customerService from '../Customer/customerService.js'; 
-import { addHistoryEvent } from '../WigHistory/wigHistoryService.js';
-import { AppError } from '../../Utils/AppError.js';
+import * as customerService from '../Customer/customerService.js';
+import { addHistoryEvent } from '../WigHistory/wigHistoryService.js'; 
 
 export const createService = async (serviceData: any) => {
+  // 1. טיפול במזהה הלקוחה
   if (typeof serviceData.customer === 'string' && serviceData.customer.length < 24) {
-    // שימוש ב-as any כדי לעקוף את השגיאה אם TS לא מזהה את הפונקציה בייבוא
-    const foundCustomer = await (customerService as any).findCustomerByName(serviceData.customer);
+    const foundCustomer = await customerService.findCustomerByName(serviceData.customer);
     if (!foundCustomer) {
-      throw new AppError(`הלקוחה "${serviceData.customer}" לא נמצאה במערכת. יש להוסיף אותה קודם.`, 404);
+      throw new Error(`הלקוחה "${serviceData.customer}" לא נמצאה במערכת. יש להוסיף אותה קודם.`);
     }
     serviceData.customer = foundCustomer._id;
   }
 
+  // קישור לקוד הפאה
+  if (serviceData.wigCode) {
+    const wig = await NewWig.findOne({ orderCode: serviceData.wigCode.trim() });
+    if (wig) {
+      serviceData.newWigReference = wig._id;
+      serviceData.origin = 'NewWig';
+    } else {
+      throw new Error(`לא נמצאה פאה עם הקוד ${serviceData.wigCode}`);
+    }
+  }
+
+  // 2. טיפול בסטטוס התחלתי
   if (serviceData.serviceType === 'Style Only') {
     serviceData.status = 'Pending Style'; 
   } else {
     serviceData.status = 'Pending Wash';
   }
 
-  // 1. יצירת השירות
   const newService = await Service.create(serviceData);
 
-  // 2. רישום להיסטוריה
   await addHistoryEvent({
-    wigCode: serviceData.wigCode || "סירוק כללי", 
+    wigCode: serviceData.wigCode || 'סירוק כללי',
     actionType: 'סירוק',
     stage: 'פתיחת הזמנת שירות',
     workerName: 'מזכירות',
-    description: `הוזמן שירות: ${newService.serviceType} (סגנון: ${(newService as any).styleCategory || 'לא נקבע'})`,
+    description: `הוזמן שירות: ${newService.serviceType}`,
     beforeImageUrl: (newService as any).beforeImageUrl || undefined,
-    notes: (newService as any).notes?.secretary || undefined 
-  }).catch((err: any) => console.error("History event failed:", err));
+    notes: (newService as any).notes?.secretary || undefined
+  }).catch((err: any) => console.error('History event failed:', err));
 
   return newService;
 };
 
-export const getServiceById = async (id: string) => {
-  return await Service.findById(id).populate('customer');
+// =========================================================================
+// שולפת את כל משימות ה-QA שפתוחות כרגע (כולל תמונות מקור)
+// =========================================================================
+export const getQATasks = async () => {
+  const tasks = await Service.find({ status: 'QA' })
+    .populate('customer', 'firstName lastName')
+    .populate('newWigReference', 'orderCode imageUrl')
+    .populate('repairReference', 'wigCode')
+    .sort({ createdAt: -1 }); // מציג את החדשים ביותר קודם
+
+  // עוברים על המשימות כדי לצרף אליהן את תמונת ה"לפני" של הפאה/תיקון
+  const tasksWithImages = await Promise.all(tasks.map(async (task) => {
+    let beforeImageUrl = task.beforeImageUrl;
+    
+    // אם אין תמונה על משימת השירות עצמה, נשאב אותה מהפאה או מהתיקון המקוריים
+    if (!beforeImageUrl) {
+      if (task.origin === 'NewWig' && task.newWigReference) {
+        const wig = await NewWig.findById(task.newWigReference).select('imageUrl');
+        // שימוש ב-as any כדי למנוע שגיאות TypeScript
+        if (wig) beforeImageUrl = (wig as any).imageUrl;
+      } else if (task.origin === 'Repair' && task.repairReference) {
+        // שליפה מורחבת של שדות תמונה אפשריים בתיקון
+        const repair = await Repair.findById(task.repairReference).select('imageUrl beforeImageUrl images');
+        if (repair) {
+          // שימוש ב-as any ועדיפות למספר שדות כדי לוודא שתמיד תוצג תמונה
+          beforeImageUrl = (repair as any).imageUrl || 
+                           (repair as any).beforeImageUrl || 
+                           ((repair as any).images && (repair as any).images.length > 0 ? (repair as any).images[0] : undefined);
+        }
+      }
+    }
+    
+    return {
+      ...task.toObject(),
+      beforeImageUrl
+    };
+  }));
+
+  return tasksWithImages;
 };
 
 export const moveToDrying = async (serviceId: string) => {
   return await Service.findByIdAndUpdate(
     serviceId,
-    { 
-      status: 'Drying',
-      dryingStartTime: new Date() 
-    },
+    { status: 'Drying', dryingStartTime: new Date() },
     { new: true }
   );
 };
 
 export const finishDrying = async (serviceId: string) => {
   const service = await Service.findById(serviceId);
-  if (!service) throw new AppError('Service not found', 404);
+  if (!service) throw new Error('Service not found');
 
   if (service.serviceType === 'Wash & Style') {
     service.status = 'Pending Style';
@@ -76,33 +118,109 @@ export const finishStyling = async (serviceId: string) => {
   );
 };
 
-export const approveService = async (serviceId: string) => {
-  return await Service.findByIdAndUpdate(
+export const approveService = async (serviceId: string, inspectorId: string, photoUrl: string) => {
+  const service = await Service.findByIdAndUpdate(
     serviceId,
-    { status: 'Ready' },
+    { 
+      status: 'Ready',
+      afterImageUrl: photoUrl, 
+      inspectedBy: inspectorId,
+      inspectedAt: new Date(),
+      qaRejectionPhoto: null
+    },
     { new: true }
   );
+
+  if (!service) throw new Error('Service not found');
+
+  if (service.origin === 'NewWig' && service.newWigReference) {
+    await NewWig.findByIdAndUpdate(service.newWigReference, { 
+      currentStage: 'מוכנה למסירה',
+      finalPhotoUrl: photoUrl, 
+      inspectorName: inspectorId,
+      inspectionDate: new Date(),
+      assignedWorkers: []
+    });
+  } else if (service.origin === 'Repair' && service.repairReference) {
+    await Repair.findByIdAndUpdate(service.repairReference, {
+      overallStatus: 'מוכן',
+      afterImageUrl: photoUrl, 
+      inspectedBy: inspectorId,
+      inspectedAt: new Date()
+    });
+  }
+
+  return service;
 };
 
 export const rejectService = async (
   serviceId: string, 
   qaNote: string, 
-  returnTo?: 'Wash' | 'Style', 
-  repairTaskId?: string
+  photoUrl: string,
+  returnStages?: string[]
 ) => {
   const service = await Service.findById(serviceId);
-  if (!service) throw new AppError('Service not found', 404);
+  if (!service) throw new Error('Service not found');
 
-  // טיפול יסודי בשגיאת ה-Object is possibly undefined
-  const currentNotes = (service as any).notes || { secretary: '', worker: '', qa: '' };
-  currentNotes.qa = qaNote;
+  if (!service.notes) {
+    service.notes = { secretary: '', worker: '', qa: '' };
+  }
   
-  (service as any).notes = currentNotes;
+  service.notes.qa = qaNote;
+  service.qaRejectionPhoto = photoUrl;
+  service.status = 'Rejected';
 
-  if ((service as any).origin === 'Service') {
-    service.status = returnTo === 'Wash' ? 'Pending Wash' : 'Pending Style';
+  if (service.origin === 'NewWig' && service.newWigReference) {
+    const firstStage = (returnStages && returnStages.length > 0) ? returnStages[0] : 'תפירת פאה';
+    
+    const wig = await NewWig.findById(service.newWigReference);
+    let originalWorkers: any[] = [];
+    
+    if (wig && wig.stageAssignments) {
+      originalWorkers = typeof wig.stageAssignments.get === 'function' 
+        ? wig.stageAssignments.get(firstStage) 
+        : (wig.stageAssignments as any)[firstStage];
+    }
+
+    await NewWig.findByIdAndUpdate(service.newWigReference, {
+       currentStage: firstStage,
+       assignedWorkers: originalWorkers || [],
+       qaNote: qaNote,
+       qaRejectionPhoto: photoUrl, 
+       pendingRepairStages: returnStages 
+    });
+
+  // --- הטיפול המלא בחזרת תיקון ---
+  } else if (service.origin === 'Repair' && service.repairReference) {
+      const repair = await Repair.findById(service.repairReference);
+      if (repair) {
+          repair.overallStatus = 'בתיקון';
+          repair.qaNote = qaNote;
+          repair.qaRejectionPhoto = photoUrl;
+
+          // אנו עוברים על המשימות בתיקון. אם הקטגוריה שלהן נבחרה בחלון הפסילה, נחזיר ל'ממתין'
+          if (returnStages && returnStages.length > 0) {
+              repair.tasks.forEach((task: any) => {
+                  if (returnStages.includes(task.category)) {
+                      task.status = 'ממתין';
+                      // אנחנו מוסיפים את הערת המבקרת ישירות למשימה של העובדת
+                      task.notes = `❌ הוחזר מ-QA: ${qaNote}`; 
+                  }
+              });
+          } else {
+              // מחזירים את כל המשימות ל'ממתין' למקרה שהמבקרת לא סימנה תחנות ספציפיות
+              repair.tasks.forEach((task: any) => {
+                  if (task.category !== 'בקרה' && task.category !== 'חפיפה') {
+                      task.status = 'ממתין';
+                  }
+              });
+          }
+          await repair.save();
+      }
+      service.status = 'Pending Wash'; 
+
   } else {
-    service.status = 'In Progress';
+    service.status = 'Pending Wash'; 
   }
 
   await service.save();

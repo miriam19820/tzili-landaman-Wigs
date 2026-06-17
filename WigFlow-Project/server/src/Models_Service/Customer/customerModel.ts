@@ -7,7 +7,16 @@ const customerSchema = new Schema({
   phoneNumber: { type: String, required: true },
   email: { type: String, required: true },
   address: { type: String },
-  city: { type: String } 
-});
+  city: { type: String },
+  imageUrl: { type: String },
+  
+
+  internalNotes: [{
+    content: { type: String, required: true },    
+    createdAt: { type: Date, default: Date.now },
+    author: { type: String },                     
+    context: { type: String }                     
+  }]
+}, { timestamps: true });
 
 export const Customer = model('Customer', customerSchema);

@@ -1,105 +1,199 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import './MainOverviewTable.css';
 
-interface Wig {
+interface DashboardWig {
   _id: string;
-  orderCode: string;
-  customer: { firstName: string; lastName: string };
-  currentStage: string;
-  assignedWorker: { fullName: string };
-  targetDate: string;
+  wigCode: string;
+  customerName: string;
+  overallStatus: string;
+  currentStation: string;
+  assignedTo?: any;      
+  assignedWorkers?: any; 
   isUrgent: boolean;
+  type?: 'wig' | 'repair';
 }
 
 export const MainOverviewTable: React.FC = () => {
-  const [wigs, setWigs] = useState<Wig[]>([]);
+  const [wigs, setWigs] = useState<DashboardWig[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // משתנים חדשים לחיפוש וסינון
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('הכל');
+  const [wigToDelete, setWigToDelete] = useState<string | null>(null);
+  const [adminCode, setAdminCode] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const fetchAllData = () => {
+    setLoading(true);
+    const token = localStorage.getItem('token');
+    
+    Promise.all([
+      fetch('http://localhost:5000/api/wigs', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()),
+      fetch('http://localhost:5000/api/repairs/dashboard-view', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json())
+    ])
+      .then(([wigsData, repairsData]) => { 
+        const newWigs = Array.isArray(wigsData.data) ? wigsData.data.map((w: any) => ({...w, type: 'wig'})) : [];
+        const repairs = Array.isArray(repairsData.data) ? repairsData.data.map((r: any) => ({...r, type: 'repair'})) : [];
+        setWigs([...newWigs, ...repairs]); 
+        setLoading(false); 
+      })
+      .catch(err => {
+        console.error("שגיאה בטעינה:", err);
+        setWigs([]);
+        setLoading(false);
+      });
+  };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('http://localhost:5000/api/wigs', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => { setWigs(data.data || []); setLoading(false); })
-      .catch(() => setLoading(false));
+    fetchAllData();
   }, []);
 
-  // --- לוגיקת הסינון החכמה ---
-  const filteredWigs = wigs.filter(wig => {
-    // 1. בדיקת חיפוש (לפי שם לקוחה או קוד הזמנה)
-    const fullName = `${wig.customer?.firstName} ${wig.customer?.lastName}`.toLowerCase();
-    const matchesSearch = 
-      fullName.includes(searchTerm.toLowerCase()) || 
-      wig.orderCode?.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleDeleteClick = (id: string) => {
+    setWigToDelete(id);
+    setAdminCode('');
+  };
+  
+  const cancelDelete = () => {
+    setWigToDelete(null);
+    setAdminCode('');
+  };
 
-    // 2. בדיקת סטטוס
-    const matchesStatus = statusFilter === 'הכל' || wig.currentStage === statusFilter;
+  const confirmDelete = async () => {
+    if (!adminCode) {
+      alert("יש להזין קוד מנהל");
+      return;
+    }
+    const item = wigs.find(w => w._id === wigToDelete);
+    if (!item) return;
 
-    return matchesSearch && matchesStatus;
-  });
+    setIsDeleting(true);
+    const token = localStorage.getItem('token');
+    const endpoint = item.type === 'repair' 
+      ? `http://localhost:5000/api/repairs/${wigToDelete}` 
+      : `http://localhost:5000/api/wigs/${wigToDelete}`;
+
+    try {
+      await axios.delete(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { adminCode: adminCode } 
+      });
+      alert('המחיקה בוצעה בהצלחה');
+      setWigToDelete(null);
+      fetchAllData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'שגיאה במחיקה.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleMarkAsDelivered = async (item: DashboardWig) => {
+    const isConfirmed = window.confirm('האם את בטוחה שהפריט נמסר ללקוחה?');
+    if (!isConfirmed) return;
+
+    const token = localStorage.getItem('token');
+    // הבחנה חשובה בין נתיב פאה לנתיב תיקון למניעת 404
+    const endpoint = item.type === 'repair' 
+      ? `http://localhost:5000/api/repairs/${item._id}/deliver` 
+      : `http://localhost:5000/api/wigs/${item._id}/deliver`;
+    
+    try {
+      await axios.patch(endpoint, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert('עודכן כנמסר בהצלחה!');
+      fetchAllData();
+    } catch (error: any) {
+      alert('אירעה שגיאה. ודאי שהשרת מעודכן בנתיב deliver.');
+    }
+  };
+
+  const isReadyForDelivery = (wig: DashboardWig) => {
+    const station = (wig.currentStation || '').trim();
+    const status = (wig.overallStatus || '').trim();
+    return station.includes('מוכנה למסירה') || station.includes('מוכן') || 
+           status.includes('מוכנה למסירה') || status.includes('מוכן');
+  };
+
+  const renderWorkers = (wig: DashboardWig) => {
+    const workers = wig.assignedWorkers || wig.assignedTo;
+    if (!workers) return 'לא שובץ';
+    if (Array.isArray(workers)) return workers.map((w: any) => w.username || w.fullName || w).join(', ');
+    return workers.username || workers.fullName || workers.toString();
+  };
 
   return (
     <div className="overview-container">
-      <h2 className="overview-title">📋 סקירה כללית - כל הפאות הפעילות</h2>
-
-      {/* שורת כלי חיפוש וסינון */}
-      <div className="filter-bar">
-        <input 
-          type="text" 
-          placeholder="חפשי לפי שם לקוחה או קוד..." 
-          className="search-input"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        
-        <select 
-          className="status-select"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="הכל">כל השלבים</option>
-          <option value="שיער">שיער</option>
-          <option value="תפירה">תפירה</option>
-          <option value="צבע">צבע</option>
-          <option value="QC">בקרת איכות (QC)</option>
-          <option value="מוכן">מוכן למסירה</option>
-        </select>
+      <div className="overview-header">
+        <h2>סקירה כללית — פאות ותיקונים</h2>
+        {!loading && <span className="overview-count">{wigs.length} פריטים</span>}
       </div>
 
+      {wigToDelete && (
+        <div className="zili-modal-overlay">
+          <div className="zili-modal">
+            <h3>⚠️ מחיקה לצמיתות</h3>
+            <p>הזן קוד מנהל לאישור</p>
+            <input
+              type="text"
+              className="admin-code-input"
+              value={adminCode}
+              onChange={(e) => setAdminCode(e.target.value)}
+              placeholder="קוד"
+              autoFocus
+            />
+            <div className="admin-modal-actions">
+              <button className="btn-danger" onClick={confirmDelete} disabled={isDeleting}>
+                {isDeleting ? 'מוחק...' : 'אשר'}
+              </button>
+              <button className="btn-secondary" onClick={cancelDelete}>ביטול</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
-        <p className="loading-text">טוען נתונים...</p>
-      ) : filteredWigs.length === 0 ? (
-        <p className="loading-text">לא נמצאו פאות התואמות לחיפוש</p>
+        <div className="loading-state">טוען נתונים...</div>
       ) : (
-        <table className="overview-table">
-          <thead>
-            <tr>
-              <th>קוד הזמנה</th>
-              <th>שם לקוחה</th>
-              <th>שלב נוכחי</th>
-              <th>עובדת מוקצית</th>
-              <th>תאריך יעד</th>
-              <th>דחיפות</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredWigs.map(wig => (
-              <tr key={wig._id}>
-                <td>{wig.orderCode || '-'}</td>
-                <td>{wig.customer?.firstName} {wig.customer?.lastName}</td>
-                <td><span className="badge-stage">{wig.currentStage}</span></td>
-                <td>{wig.assignedWorker?.fullName || '-'}</td>
-                <td>{wig.targetDate ? new Date(wig.targetDate).toLocaleDateString('he-IL') : '-'}</td>
-                <td>{wig.isUrgent ? <span className="badge-urgent">דחוף!</span> : <span className="badge-normal">רגיל</span>}</td>
+        <div className="zili-table-wrapper">
+          <table className="zili-table">
+            <thead>
+              <tr>
+                <th>קוד</th>
+                <th>לקוחה</th>
+                <th>סטטוס</th>
+                <th>תחנה</th>
+                <th>עובדת</th>
+                <th>דחיפות</th>
+                <th style={{ textAlign: 'center' }}>פעולות</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {wigs.map((wig) => (
+                <tr key={wig._id}>
+                  <td><strong>{wig.wigCode}</strong></td>
+                  <td>{wig.customerName}</td>
+                  <td><span className="badge badge-stage">{wig.overallStatus}</span></td>
+                  <td>{wig.currentStation}</td>
+                  <td>{renderWorkers(wig)}</td>
+                  <td>
+                    <span className={wig.isUrgent ? 'badge badge-urgent' : 'badge badge-normal'}>
+                      {wig.isUrgent ? 'דחוף' : 'רגיל'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="actions-wrapper">
+                      <button className="btn-delete-wig" onClick={() => handleDeleteClick(wig._id)}>✕</button>
+                      <div className="deliver-slot">
+                        {isReadyForDelivery(wig) && (
+                          <button className="btn-deliver-wig" onClick={() => handleMarkAsDelivered(wig)}>
+                            📦 נמסר
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

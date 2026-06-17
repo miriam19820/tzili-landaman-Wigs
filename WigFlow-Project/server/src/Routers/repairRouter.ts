@@ -1,12 +1,43 @@
-import { Router } from 'express';
-// הוספת .js בסוף הייבוא (קריטי ב-Node.js עם Modules)
+import { Router, Request, Response, NextFunction } from 'express';
 import * as repairService from '../Models_Service/Repairs/repairService.js';
 import { verifyToken, verifyAdmin, verifyWorker } from '../Middlewares/authMiddleware.js';
+import { sendSalonUpdate } from '../Services/notificationService.js';
 
 const repairRouter = Router();
 
-// 1. פתיחת כרטיס תיקון חדש (רק מנהלת/מזכירה)
-repairRouter.post('/', verifyAdmin, async (req: any, res: any, next: any) => {
+/**
+ * נתיב חדש: סימון תיקון כנמסר ושליחת התראה למנהלת
+ * פותר את שגיאת ה-404 בעת לחיצה על "נמסר" בדאשבורד
+ */
+repairRouter.patch('/:id/deliver', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const updatedRepair = await repairService.markRepairAsDelivered(req.params.id);
+    
+    // שליחת התראת וואטסאפ אוטומטית למנהלת על מסירת התיקון
+    if (updatedRepair) {
+      const notifyData = {
+        orderCode: updatedRepair.wigCode,
+        customerName: updatedRepair.customer ? `${(updatedRepair.customer as any).firstName} ${(updatedRepair.customer as any).lastName}` : 'לקוחה'
+      };
+      
+      // שליחת ההודעה (מטופל ברקע)
+      sendSalonUpdate(notifyData, 'התיקון הסתיים והפאה נמסרה ללקוחה! ✅').catch(err => 
+        console.error("שגיאה בשליחת הודעת וואטסאפ על מסירה:", err)
+      );
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'התיקון עודכן כנמסר והוסר מהדאשבורד בהצלחה' 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- שאר הנתיבים הקיימים ---
+
+repairRouter.post('/', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const newRepair = await repairService.createRepairOrder(req.body);
     res.status(201).json({ success: true, data: newRepair });
@@ -15,39 +46,34 @@ repairRouter.post('/', verifyAdmin, async (req: any, res: any, next: any) => {
   }
 });
 
-// 2. שליפת נתונים מרוכזים למסך המזכירה (רק מנהלת)
-repairRouter.get('/dashboard-view', verifyAdmin, async (req: any, res: any, next: any) => {
+repairRouter.get('/dashboard-view', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // השתקת שגיאה אם הפונקציה עדיין לא קיימת ב-Service
-    const dashboard = await (repairService as any).getDashboardView();
+    const dashboard = await repairService.getDashboardView();
     res.json({ success: true, data: dashboard });
   } catch (error) {
     next(error);
   }
 });
 
-// 3. שליפת דוח עומסי עבודה של הצוות (רק מנהלת)
-repairRouter.get('/worker-load', verifyAdmin, async (req: any, res: any, next: any) => {
+repairRouter.get('/worker-load', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const report = await (repairService as any).FullWorkloadReportOpenJobs();
+    const report = await repairService.FullWorkloadReportOpenJobs();
     res.json({ success: true, data: report });
   } catch (error) {
     next(error);
   }
 });
 
-// 4. שליפת עובדות פנויות לפי קטגוריית תיקון (מחוברים בלבד)
-repairRouter.get('/available-workers/:category', verifyToken, async (req: any, res: any, next: any) => {
+repairRouter.get('/available-workers/:category', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const workers = await (repairService as any).getAvailableWorkersByCategory(req.params.category);
+    const workers = await repairService.getAvailableWorkersByCategory(req.params.category);
     res.json({ success: true, data: workers });
   } catch (error) {
     next(error);
   }
 });
 
-// 5. שליפת הרשימה האישית של המשימות לעובדת המחוברת (עובדת ומנהלת)
-repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req: any, res: any, next: any) => {
+repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const tasks = await repairService.getTasksByWorker(req.params.workerId);
     res.json({ success: true, data: tasks });
@@ -56,39 +82,79 @@ repairRouter.get('/worker-tasks/:workerId', verifyWorker, async (req: any, res: 
   }
 });
 
-// 6. שליפת תיקון בודד לפי ה-ID שלו (מחוברים בלבד)
-repairRouter.get('/:id', verifyToken, async (req: any, res: any, next: any) => {
+repairRouter.patch('/:id/reject-task/:index', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // השתקת שגיאה אם הפונקציה חסרה ב-Service
-    const repair = await (repairService as any).getRepairById(req.params.id);
+    const { id, index } = req.params;
+    const { note } = req.body;
+    
+    const updatedRepair = await repairService.rejectTask(id, parseInt(index), note);
+    
+    res.json({ 
+      success: true, 
+      message: 'הפאה הוחזרה לתיקון עם ההערה המבוקשת',
+      data: updatedRepair 
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+repairRouter.get('/:id', verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const repair = await repairService.getRepairById(req.params.id);
     res.json({ success: true, data: repair });
   } catch (error) {
     next(error);
   }
 });
 
-// 7. עדכון סטטוס המשימה ובדיקה האם התיקון כולו הסתיים (עובדת ומנהלת)
-repairRouter.patch('/:id/task/:index', verifyWorker, async (req: any, res: any, next: any) => {
+repairRouter.patch('/:id/task/:index', verifyWorker, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id, index } = req.params;
     const { status } = req.body;
-    
-    // מעדכנים את המשימה הספציפית
-    const updatedRepair = await (repairService as any).updateTaskStatus(id, parseInt(index), status);
-    
-    // תיקון שגיאת ה-Property 'tasks' does not exist
-    const tasks = (updatedRepair as any).tasks || [];
-    const isComplete = tasks.every((task: any) => task.status === "בוצע");
-    
-    if (isComplete) {
-      console.log(`✅ כל התיקונים של פאה ${(updatedRepair as any).wigCode} הסתיימו בהצלחה!`);
+
+    const repair = await repairService.getRepairById(id);
+    const taskIndex = parseInt(index);
+
+    // --- התיקון הקריטי למניעת קריסות (שגיאות 404) ---
+    if (!repair.tasks || !repair.tasks[taskIndex]) {
+        return res.status(404).json({ message: "המשימה לא קיימת יותר או שכבר בוצעה. אנא רענני את הדף." });
+    }
+    // ------------------------------------------------
+
+    const taskName = repair.tasks[taskIndex].subCategory;
+
+    if (status === 'בוצע') {
+      const workflowResult = await repairService.updateTaskAndMoveToNext(id, taskName);
+      const updatedRepair = await repairService.getRepairById(id);
+
+      res.json({ 
+        success: true, 
+        data: updatedRepair, 
+        message: workflowResult.message
+      });
+    } else {
+      const updatedRepair = await repairService.updateTaskStatus(id, taskIndex, status);
+      res.json({ success: true, data: updatedRepair });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+repairRouter.delete('/:id', verifyAdmin, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { adminCode } = req.body;
+
+    if (!adminCode || adminCode !== process.env.ADMIN_DELETE_CODE) {
+      res.status(403).json({ message: 'קוד מנהל שגוי או חסר. הפעולה נדחתה.' });
+      return; 
     }
 
-    res.json({ 
-      success: true, 
-      data: updatedRepair, 
-      message: isComplete ? 'המשימה והתיקונים כולם הסתיימו!' : 'המשימה עודכנה בהצלחה'
-    });
+    const { id } = req.params;
+    await repairService.deleteRepair(id); 
+
+    res.status(200).json({ message: 'התיקון נמחק בהצלחה.' });
   } catch (error) {
     next(error);
   }

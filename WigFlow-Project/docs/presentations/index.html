@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WigFlow — מסמכי הגשה</title>
+  <link rel="stylesheet" href="presentation.css" />
+</head>
+<body>
+
+<nav class="nav-bar">
+  <span>WigFlow — מערכת ניהול סלון פאות</span>
+  <button class="btn-print" onclick="window.print()">הדפסה ל-PDF</button>
+</nav>
+
+<div class="page-wrapper">
+
+  <header class="doc-header">
+    <h1>מסמכי הגשה — פרויקט WigFlow</h1>
+    <p class="subtitle">מערכת ניהול סלון פאות — הגשת פרויקט גמר</p>
+    <span class="badge">4 מפתחות · React + TypeScript + Express + MongoDB</span>
+  </header>
+
+  <section>
+    <h2>סדר הגשה מומלץ</h2>
+    <p>מומלץ להציג לפי סדר הזרימה של המערכת — כך המורה רואה את הפרויקט כמערכת שלמה:</p>
+
+    <div class="flow-diagram">
+      <div class="flow-step"><strong>1. אילה</strong><br>התחברות ודאשבורד</div>
+      <span class="flow-arrow">←</span>
+      <div class="flow-step"><strong>2. מרים</strong><br>פאה חדשה</div>
+      <span class="flow-arrow">←</span>
+      <div class="flow-step"><strong>3. מרימי</strong><br>תיקונים</div>
+      <span class="flow-arrow">←</span>
+      <div class="flow-step"><strong>4. חני</strong><br>בקרת איכות · חפיפה · סריקה</div>
+      <span class="flow-arrow">←</span>
+      <div class="flow-step"><strong>מסירה</strong><br>ללקוחה</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>בחרי את המסמך שלך</h2>
+    <div class="cards-grid">
+      <a class="card" href="ayala-login-dashboard.html">
+        <span class="card-num">1</span>
+        <h3>אילה — התחברות ודאשבורד</h3>
+        <p>מערכת Login, JWT, ניהול צוות, דאשבורד מנהלת — טבלת סקירה ועומס עובדות.</p>
+      </a>
+      <a class="card" href="miriam-new-wigs.html">
+        <span class="card-num">2</span>
+        <h3>מרים — פאה חדשה</h3>
+        <p>טופס הזמנה, 6 שלבי ייצור, תחנת עבודה, חתימה דיגיטלית, PDF ומייל.</p>
+      </a>
+      <a class="card" href="merimi-repairs.html">
+        <span class="card-num">3</span>
+        <h3>מרימי — תיקונים</h3>
+        <p>קבלת תיקון, קטגוריות תיקון, זרימת משימות אוטומטית, חפיפה ובקרה.</p>
+      </a>
+      <a class="card" href="chani-qa-wash-scan.html">
+        <span class="card-num">4</span>
+        <h3>חני — בקרת איכות, חפיפה וסריקה</h3>
+        <p>לוח QA, אישור ופסילה עם צילום, שירותי חפיפה, חיפוש היסטוריה לפי ברקוד.</p>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>איך להשתמש</h2>
+    <ol class="feature-list">
+      <li>כל מפתחת פותחת את <strong>הדף שלה</strong> מהרשימה למעלה.</li>
+      <li>קוראת את <strong>משפט הפתיחה</strong> בקול (30 שניות).</li>
+      <li>מדגימה את המערכת לפי <strong>תסריט ההדגמה</strong> בדף.</li>
+      <li>מסבירה <strong>קטע קוד אחד</strong> לפחות — מה נכנס, מה יוצא, ולמה.</li>
+      <li>מוכנה לענות על <strong>שאלות המורה</strong> — התשובות מוכנות בסוף כל דף.</li>
+      <li>לשמירה כ-PDF: לחצי <strong>Ctrl+P</strong> → "שמור כ-PDF".</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>פרטי כניסה לבדיקה (Seed)</h2>
+    <table>
+      <thead>
+        <tr><th>משתמש</th><th>סיסמה</th><th>תפקיד</th><th>לאן מגיע אחרי Login</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>admin</code></td><td><code>password123</code></td><td>מנהלת</td><td><code>/</code> (הזמנת פאה) + גישה לדאשבורד</td></tr>
+        <tr><td><code>שרה</code></td><td><code>password123</code></td><td>עובדת — התאמת שיער</td><td><code>/repairs/tasks</code></td></tr>
+        <tr><td><code>רחלי</code></td><td><code>password123</code></td><td>בקרת איכות (QC)</td><td><code>/qa</code></td></tr>
+        <tr><td><code>תמי</code></td><td><code>password123</code></td><td>עובדת — חפיפה</td><td><code>/repairs/tasks</code></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.9rem;color:#666;">הרצת seed: <code>npm run seed</code> בתיקיית השרת.</p>
+  </section>
+
+  <footer class="doc-footer">
+    WigFlow · פרויקט גמר · צוות: אילה, מרים, מרימי, חני
+  </footer>
+
+</div>
+</body>
+</html>

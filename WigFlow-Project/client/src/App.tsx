@@ -1,72 +1,18 @@
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-
-// ייבוא הקומפוננטות
+import './index.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { MainNavbar } from './components/Shared/MainNavbar/MainNavbar';
+import { WigHistorySearch } from './components/History/WigHistorySearch';
 import { ProductionStation } from './components/NewWigs/ProductionStation/ProductionStation';
 import { NewOrderForm } from './components/NewWigs/NewOrderForm/NewOrderForm';
 import { LoginForm } from './components/Auth/LoginForm/LoginForm';
 import { DiagnosisChecklist } from './components/Repairs/DiagnosisChecklist/DiagnosisChecklist';
 import { RepairWorkerList } from './components/Repairs/RepairWorkerList/RepairWorkerList';
-import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister';
+import { QuickCustomerRegister } from './components/Repairs/QuickCustomerRegister/QuickCustomerRegister';
 import { ServiceOrderForm } from './components/ServicesAndQA/ServiceOrderForm/ServiceOrderForm';
 import { QADashboard } from './components/ServicesAndQA/QADashboard/QADashboard';
-import { MainOverviewTable } from './components/Dashboard/MainOverviewTable';
+import { MainOverviewTable } from './components/Dashboard/MainOverviewTable/MainOverviewTable';
 import { WorkersLoadStatus } from './components/Dashboard/WorkersLoadStatus/WorkersLoadStatus';
-
-const Navigation = () => {
-  const location = useLocation();
-  const userString = localStorage.getItem('user');
-  const user = userString ? JSON.parse(userString) : null;
-  
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
-
-  const linkStyle = (path: string) => ({
-    padding: '10px 20px', 
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '5px', 
-    textDecoration: 'none',
-    backgroundColor: location.pathname === path ? '#6f42c1' : '#6c757d',
-    fontWeight: 'bold',
-    transition: 'background-color 0.3s'
-  });
-
-  return (
-    <nav style={{ padding: '20px', backgroundColor: '#f5f5f5', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '8px' }}>
-      <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-        {/* תפריט מנהלת / מזכירה */}
-        {(user?.role === 'Admin' || user?.role === 'Secretary') && (
-          <>
-            <Link to="/" style={linkStyle('/')}>הזמנת פאה חדשה</Link>
-            <Link to="/repairs/new" style={linkStyle('/repairs/new')}>קבלת פאה לתיקון</Link>
-            <Link to="/service/new" style={linkStyle('/service/new')}>הזמנת שירות</Link>
-            <Link to="/dashboard" style={linkStyle('/dashboard')}>דאשבורד עומס</Link>
-          </>
-        )}
-
-        {/* תפריט עובדות ייצור ותיקונים */}
-        {(user?.role === 'Worker' || user?.role === 'Admin') && (
-          <>
-            <Link to="/production" style={linkStyle('/production')}>תחנת ייצור</Link>
-            <Link to="/repairs/tasks" style={linkStyle('/repairs/tasks')}>תחנת תיקונים</Link>
-          </>
-        )}
-
-        {/* תפריט בקרת איכות */}
-        {(user?.role === 'Inspector' || user?.role === 'QC' || user?.role === 'Admin') && (
-          <Link to="/qa" style={linkStyle('/qa')}>בקרת איכות (QA)</Link>
-        )}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <span style={{ fontWeight: 'bold' }}>שלום, {user?.username} ({user?.role})</span>
-        <button onClick={handleLogout} style={{ padding: '8px 15px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>התנתק</button>
-      </div>
-    </nav>
-  );
-};
+import { TeamManagement } from './components/Dashboard/TeamManagement/TeamManagement';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const token = localStorage.getItem('token');
@@ -81,25 +27,32 @@ function App() {
 
   return (
     <Router>
-      <div className="App" dir="rtl" style={{ fontFamily: 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif' }}>
-        {token && <h1 style={{ textAlign: 'center', color: '#6f42c1', marginTop: '20px' }}>מערכת WigFlow ✂️</h1>}
-        {token && <Navigation />}
-        <div style={{ padding: '0 20px' }}>
-          <Routes>
-            <Route path="/login" element={token ? <Navigate to={user?.role === 'Worker' ? "/repairs/tasks" : "/"} replace /> : <LoginForm />} />
-            
-            <Route path="/" element={<ProtectedRoute><NewOrderForm /></ProtectedRoute>} />
-            <Route path="/production" element={<ProtectedRoute><ProductionStation /></ProtectedRoute>} />
-            <Route path="/repairs/new" element={<ProtectedRoute><DiagnosisChecklist /></ProtectedRoute>} />
-            <Route path="/repairs/quick-customer" element={<ProtectedRoute><QuickCustomerRegister /></ProtectedRoute>} />
-            <Route path="/repairs/tasks" element={<ProtectedRoute><RepairWorkerList workerId={user?.id || user?._id || ''} /></ProtectedRoute>} />
-            <Route path="/service/new" element={<ProtectedRoute><ServiceOrderForm /></ProtectedRoute>} />
-            <Route path="/qa" element={<ProtectedRoute><QADashboard /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><div><MainOverviewTable /><WorkersLoadStatus /></div></ProtectedRoute>} />
-            
-            <Route path="*" element={<Navigate to={token ? "/" : "/login"} replace />} />
-          </Routes>
-        </div>
+      {token && <MainNavbar />}
+      <div className="page-container">
+        <Routes>
+          <Route
+            path="/login"
+            element={token ? <Navigate to={user?.role === 'Worker' ? '/repairs/tasks' : '/'} replace /> : <LoginForm />}
+          />
+          <Route path="/" element={<ProtectedRoute><NewOrderForm /></ProtectedRoute>} />
+          <Route path="/production" element={<ProtectedRoute><ProductionStation /></ProtectedRoute>} />
+          <Route path="/repairs/new" element={<ProtectedRoute><DiagnosisChecklist /></ProtectedRoute>} />
+          <Route path="/repairs/quick-customer" element={<ProtectedRoute><QuickCustomerRegister /></ProtectedRoute>} />
+          <Route path="/repairs/tasks" element={<ProtectedRoute><RepairWorkerList workerId={user?.id || user?._id || ''} /></ProtectedRoute>} />
+          <Route path="/service/new" element={<ProtectedRoute><ServiceOrderForm /></ProtectedRoute>} />
+          <Route path="/qa" element={<ProtectedRoute><QADashboard /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><WigHistorySearch /></ProtectedRoute>} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <div className="dashboard-layout">
+                <TeamManagement />
+                <div className="zili-card"><MainOverviewTable /></div>
+                <WorkersLoadStatus />
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to={token ? '/' : '/login'} replace />} />
+        </Routes>
       </div>
     </Router>
   );

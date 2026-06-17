@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import logo from '../../../assets/images/zili-logo.png';
 import './LoginForm.css';
 
 axios.defaults.baseURL = 'http://localhost:5000/api';
@@ -17,32 +18,34 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
 
     try {
-      // שימוש בנתיב יחסי - Axios משתמש ב-BaseURL שהגדרנו ב-App.tsx
       const response = await axios.post('/users/login', {
         username,
         password
       });
-
-      // 1. שמירת הטוקן ופרטי המשתמש בדפדפן (localStorage)
+      
       const { token, user } = response.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
-
-      // הגדרת הטוקן כברירת מחדל לכל הקריאות באותה ריצה
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-      // 2. ניתוב חכם לפי תפקיד (Role)
+      // הניתוב החכם אחרי ההתחברות
       if (user.role === 'Admin') {
         window.location.href = '/'; 
       } else if (user.role === 'Worker') {
-        window.location.href = '/repairs/tasks'; 
+        // אם מדובר ברחלי או כל עובדת בקרה - ניתוב ישיר ללוח הבקרה
+        if (user.specialty?.includes('בקר') || user.specialty?.includes('איכות')) {
+           window.location.href = '/qa';
+        } else {
+           window.location.href = '/repairs/tasks'; 
+        }
       } else if (user.role === 'QC' || user.role === 'Inspector') {
         window.location.href = '/qa'; 
       } else {
         window.location.href = '/';
       }
+
     } catch (err: any) {
-      setError(err.response?.data?.message || 'שם משתמש או סיסמה שגויים. אנא נסי שוב.');
+      setError(err.response?.data?.message || 'שגיאה בהתחברות.');
     } finally {
       setLoading(false);
     }
@@ -51,53 +54,45 @@ export const LoginForm: React.FC = () => {
   return (
     <div className="login-wrapper" dir="rtl">
       <div className="login-box">
-        <h2>WigFlow</h2>
-        <p>התחברות למערכת ניהול הסלון</p>
-        
+        <div className="login-brand">
+          <img src={logo} alt="zili" className="login-logo-img" />
+          <span className="login-subtitle">מערכת ניהול סלון פאות</span>
+          <div className="login-divider" />
+        </div>
+
         <form onSubmit={handleLogin} className="login-form">
           {error && <div className="error-message">{error}</div>}
           
-          <div className="input-group">
-            <label>שם משתמש:</label>
-            <input 
-              type="text" 
+          <div className="form-group">
+            <label>שם משתמש</label>
+            <input
+              className="zili-input"
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="הזיני שם משתמש"
-              required 
+              placeholder="הקלידי שם משתמש"
+              required
             />
           </div>
 
-          <div className="input-group">
-            <label>סיסמה:</label>
-            <div style={{ position: 'relative' }}>
-              <input 
+          <div className="form-group">
+            <label>סיסמה</label>
+            <div className="password-field">
+              <input
+                className="zili-input"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="הזיני סיסמה"
-                required 
+                placeholder="הקלידי סיסמה"
+                required
               />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  left: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '18px'
-                }}
-              >
-                {showPassword ? '🙈' : '👁️'}
+              <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? '👁️' : '🙈'}
               </button>
             </div>
           </div>
 
-          <button type="submit" className="login-btn" disabled={loading}>
+          <button type="submit" className="btn-primary login-btn" disabled={loading}>
             {loading ? 'מתחבר...' : 'כניסה למערכת'}
           </button>
         </form>

@@ -62,7 +62,7 @@ export const EditWorkerModal: React.FC<EditWorkerModalProps> = ({ worker, onClos
 
     try {
       const response = await fetch(`http://localhost:5000/api/users/${worker._id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`

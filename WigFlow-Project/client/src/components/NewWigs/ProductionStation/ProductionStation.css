@@ -1,256 +1,165 @@
-/* --- קונטיינר ראשי --- */
+/* ===== ProductionStation ===== */
+
 .station-container {
-  max-width: 1200px;
-  margin: 20px auto;
-  padding: 20px;
-  direction: rtl;
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: #fcfcfc;
-  min-height: 100vh;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 36px 24px;
 }
 
-/* --- כותרת התחנה --- */
+/* ===== Header ===== */
 .station-header {
-  border-bottom: 3px solid #004085;
   padding-bottom: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--zili-border);
 }
 
 .header-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
   flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
 }
 
 .header-actions h2 {
-  color: #004085;
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
+  color: var(--zili-deep);
+  letter-spacing: 0.3px;
 }
 
-/* קבוצת כפתורים (קול + סריקה) */
-.btn-group {
-  display: flex;
-  gap: 15px;
-}
+.btn-group { display: flex; gap: 10px; }
 
+/* ===== Worker Selector ===== */
 .worker-selector {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #ffffff;
-  padding: 12px 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  margin-top: 15px;
+  background: var(--zili-warm);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-top: 16px;
   width: fit-content;
 }
 
-.worker-selector select {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: 1px solid #ced4da;
-  font-size: 1rem;
+.worker-selector label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--zili-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-/* --- כפתורים מעוצבים --- */
-.voice-btn, .scan-btn {
-  color: white;
-  border: none;
-  padding: 12px 25px;
-  font-size: 1rem;
-  border-radius: 50px;
+.worker-selector select {
+  padding: 7px 12px;
+  border: 1.5px solid var(--zili-border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--zili-text);
+  background: var(--zili-white);
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 200px;
+}
+.worker-selector select:focus { border-color: var(--zili-rose); }
+
+/* ===== Voice Button ===== */
+.voice-btn {
+  background: var(--zili-blush);
+  color: var(--zili-deep);
+  border: 1.5px solid var(--zili-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 600;
+  gap: 8px;
+  transition: background 0.2s;
 }
-
-.voice-btn { 
-  background: linear-gradient(135deg, #007bff, #0069d9); 
-}
-
-.scan-btn { 
-  background: linear-gradient(135deg, #6f42c1, #59359a); 
-}
-
-.voice-btn:hover, .scan-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
-}
+.voice-btn:hover { background: var(--zili-border); }
 
 .voice-btn.listening {
-  background: linear-gradient(135deg, #dc3545, #c82333);
+  background: #fde8ea;
+  color: var(--zili-danger);
+  border-color: var(--zili-danger);
   animation: pulse-recording 1.5s infinite;
 }
 
-/* --- אזור סורק ה-QR (חלונית Overlay) --- */
-.qr-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-  backdrop-filter: blur(5px);
+@keyframes pulse-recording {
+  0%   { box-shadow: 0 0 0 0 rgba(192, 97, 107, 0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(192, 97, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(192, 97, 107, 0); }
 }
 
-.qr-window {
-  background: white;
-  padding: 30px;
-  border-radius: 20px;
-  width: 90%;
-  max-width: 450px;
-  text-align: center;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-}
-
-#qr-reader {
-  width: 100%;
-  border: none !important;
-  margin-bottom: 15px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-#qr-reader button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 5px;
-}
-
-/* --- הודעות קופצות (Toasts) --- */
+/* ===== Notification Toast ===== */
 .notification-toast {
   position: fixed;
   top: 20px;
   left: 50%;
+  transform: translateX(-50%);
   z-index: 3000;
-  min-width: 350px;
-  padding: 15px 25px;
-  border-radius: 12px;
-  overflow: hidden;
+  min-width: 320px;
+  padding: 13px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: var(--zili-shadow-lg);
+}
+.notification-toast.success {
+  background: #e8f5ec;
+  color: var(--zili-success);
+  border: 1px solid #c3e6cb;
+}
+.notification-toast.error {
+  background: #fde8ea;
+  color: var(--zili-danger);
+  border: 1px solid #f5c6cb;
 }
 
-.notification-toast.success { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white;}
-.notification-toast.error { background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%); color: white;}
+/* ===== Tasks Area ===== */
+.tasks-display-area { margin-top: 4px; }
 
-/* --- אנימציות --- */
-@keyframes fadeInSimple {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideDownFadeCenter {
-  0% { top: -50px; opacity: 0; transform: translateX(-50%) scale(0.9); }
-  100% { top: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
-}
-
-.animate-in {
-  animation: fadeInSimple 0.4s ease-out forwards;
-}
-
-.notification-toast.animate-in {
-  animation: slideDownFadeCenter 0.5s ease-out forwards;
-}
-
-@keyframes pulse-recording {
-  0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6); }
-  70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-}
-
-/* --- רשימת פאות וכרטיסי משימה --- */
 .wigs-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 25px;
-  margin-top: 30px;
-}
-
-.wig-task-card {
-  background-color: #ffffff;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-  border: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s ease;
-  overflow: hidden;
+  gap: 16px;
 }
 
-.wig-task-card:hover {
-  transform: translateY(-5px);
+/* ===== Empty View ===== */
+.empty-view {
+  text-align: center;
+  padding: 60px 40px;
+  background: var(--zili-white);
+  border: 1px solid var(--zili-border);
+  border-radius: var(--radius-md);
+  color: var(--zili-muted);
 }
 
-.card-top {
-  background-color: #004085;
-  color: white;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.empty-view h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--zili-muted);
+  margin: 0;
 }
 
-.stage-badge {
-  background-color: #ffc107;
-  color: #212529;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: bold;
+/* ===== Animations ===== */
+@keyframes fadeInSimple {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+.animate-in { animation: fadeInSimple 0.35s ease-out forwards; }
 
-.card-details { 
-  padding: 20px; 
-  flex-grow: 1;
-}
-
-.done-button {
-  width: 100%;
-  padding: 15px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.done-button:hover { 
-  background-color: #218838; 
-}
-
-/* --- התאמה למובייל --- */
+/* ===== Responsive ===== */
 @media (max-width: 650px) {
-  .header-actions { 
-    flex-direction: column; 
-    align-items: stretch; 
-  }
-  .btn-group { 
-    width: 100%; 
-    flex-direction: column; 
-  }
-  .voice-btn, .scan-btn { 
-    width: 100%; 
-    justify-content: center; 
-  }
-  .wigs-list { 
-    grid-template-columns: 1fr; 
-  }
-  .station-container { 
-    padding: 15px; 
-  }
+  .header-actions { flex-direction: column; align-items: stretch; }
+  .btn-group { width: 100%; }
+  .voice-btn { width: 100%; justify-content: center; }
+  .station-container { padding: 20px 14px; }
 }

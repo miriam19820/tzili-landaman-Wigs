@@ -12,18 +12,38 @@ export const StaffAllocator: React.FC<StaffAllocatorProps> = ({ category, onSele
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // וידוא שהטוקן קיים בבקשה (במידה והאינטרספטור לא הוגדר)
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+
     setLoading(true);
-    axios.get(`/repairs/available-workers/${category}`)
+    
+    // התיקון: הסרת הלוכסן (/) לפני המילה repairs
+    axios.get(`repairs/available-workers/${encodeURIComponent(category)}`)
       .then(res => {
-        if (res.data.success) setWorkers(res.data.data);
+        // השרת מחזיר אובייקט עם success ו-data
+        if (res.data.success) {
+          setWorkers(res.data.data);
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error("שגיאה בטעינת עובדות:", err);
+        setLoading(false);
+      });
   }, [category]);
 
   return (
-    <select onChange={(e) => onSelect(e.target.value)} className="staff-select" disabled={loading}>
-      <option value="">{loading ? 'טוען עובדות...' : `בחרי עובדת ל${category}...`}</option>
+    <select 
+      onChange={(e) => onSelect(e.target.value)} 
+      className="staff-select" 
+      disabled={loading}
+    >
+      <option value="">
+        {loading ? 'טוען עובדות...' : `בחרי עובדת ל${category}...`}
+      </option>
       {workers.map(w => (
         <option key={w.workerId} value={w.workerId}>
           {w.workerName} (עומס: {w.load} משימות)

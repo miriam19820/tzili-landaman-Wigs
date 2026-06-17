@@ -64,8 +64,9 @@ export const SignaturePad: React.FC<SignaturePadProps> = ({ onSave }) => {
         onMouseLeave={stopDrawing}
       />
       <div>
-        <button onClick={clear}>נקה</button>
-        <button onClick={save}>שמור חתימה</button>
+        {/* התיקון שלנו: הוספת type="button" כדי למנוע סגירת עסקה בטעות */}
+        <button type="button" onClick={clear}>נקה</button>
+        <button type="button" onClick={save}>שמור חתימה</button>
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
-import { Router } from 'express';
-import { User } from '../Models_Service/User/userModel';
-import * as userService from '../Models_Service/User/userService';
-import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware';
+import express from 'express';
 
-const userRouter = Router();
+import * as userService from '../Models_Service/User/userService.js';
+import { User } from '../Models_Service/User/userModel.js';
+
+import { verifyToken, verifyAdmin } from '../Middlewares/authMiddleware.js';
+
+const userRouter = express.Router();
 
 // התחברות
 userRouter.post('/login', async (req, res) => {
@@ -16,58 +18,69 @@ userRouter.post('/login', async (req, res) => {
   }
 });
 
-// שליפת כל המשתמשים (בסיסי)
-userRouter.get('/', verifyToken, async (req, res) => {
-  try {
-    const users = await User.find({}).select('-password');
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: 'שגיאה בשליפת משתמשים' });
-  }
+userRouter.get('/', verifyAdmin, async (req, res) => {
+    try {
+        const users = await userService.getAllUsers();
+        res.status(200).json(users);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
-// --- נתיבים חדשים שנוספו ---
-
-// שליפת עובדות כולל חישוב עומס (Workload) - למסך ניהול צוות
 userRouter.get('/workload', verifyAdmin, async (req, res) => {
   try {
     const users = await User.find({})
       .select('-password')
-      .populate('workload'); // כאן קורה הקסם של ספירת המשימות
+      .populate('workload');
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: 'שגיאה בשליפת נתוני עומס' });
   }
 });
 
-// יצירת עובדת חדשה
-userRouter.post('/', verifyAdmin, async (req, res) => {
-  try {
-    const newUser = await userService.createUser(req.body);
-    res.status(201).json(newUser);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
-  }
+userRouter.post('/', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const newUser = await userService.createUser(req.body);
+        res.status(201).json(newUser);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
-// עדכון עובדת (שם, סיסמה, התמחות או סטטוס פעיל)
-userRouter.patch('/:id', verifyAdmin, async (req, res) => {
-  try {
-    const updatedUser = await userService.updateUser(req.params.id, req.body);
-    res.json(updatedUser);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
-  }
+userRouter.put('/:id', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const updatedUser = await userService.updateUser(req.params.id, req.body);
+        res.status(200).json(updatedUser);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
 });
 
-// מחיקת עובדת מהמערכת
-userRouter.delete('/:id', verifyAdmin, async (req, res) => {
-  try {
-    const result = await userService.deleteUser(req.params.id);
-    res.json(result);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
-  }
+userRouter.patch('/:id', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        const updatedUser = await userService.updateUser(req.params.id, req.body);
+        res.status(200).json(updatedUser);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+userRouter.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
+    try {
+        await userService.deleteUser(req.params.id);
+        res.status(200).json({ message: 'העובדת נמחקה בהצלחה' });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+});
+
+userRouter.get('/:workerId/unified-tasks', verifyToken, async (req, res) => {
+    try {
+        const tasks = await userService.getWorkerUnifiedTasks(req.params.workerId);
+        res.status(200).json({ success: true, data: tasks });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 export default userRouter;
